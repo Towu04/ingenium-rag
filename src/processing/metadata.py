@@ -16,6 +16,5 @@ def extract_metadata(source_path: str, rules: dict[str, Any]) -> DocumentMetadat
 
 
 def apply_metadata(document: ParsedDoc, rules: dict[str, Any]) -> ParsedDoc:
-    metadata = extract_metadata(document.source_path, rules)
-    metadata.document_id = document.document_id
+    metadata = extract_metadata(document.metadata.source_path, rules)
     return document.model_copy(update={"metadata": metadata})

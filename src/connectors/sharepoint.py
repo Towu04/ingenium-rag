@@ -1,7 +1,10 @@
+import hashlib
 from collections.abc import Iterator
 from pathlib import Path
 
 from domain import RawFile
+
+RawFile.model_rebuild(_types_namespace={"Path": Path})
 
 
 class SharePointConnector:
@@ -19,6 +22,8 @@ class SharePointConnector:
                 content = source.read_bytes()
                 yield RawFile(
                     document_id=str(source.relative_to(root)),
-                    source_path=str(source),
-                    content=content,
+                    source_path=str(source.relative_to(root)),
+                    local_path=source,
+                    content_hash=hashlib.sha256(content).hexdigest(),
+                    file_extension=source.suffix.lower(),
                 )

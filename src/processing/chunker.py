@@ -14,15 +14,22 @@ class ParentChildChunker:
         for parent_index, start in enumerate(range(0, len(document.markdown), self.parent_size)):
             parent_text = document.markdown[start : start + self.parent_size]
             parent_id = f"{document.document_id}:p{parent_index}"
-            parents.append(ParentChunk(
-                id=parent_id, document_id=document.document_id,
-                text=parent_text, metadata=document.metadata,
-            ))
+            parent = ParentChunk(
+                id=parent_id,
+                document_id=document.document_id,
+                parent_index=parent_index,
+                text=parent_text,
+                metadata=document.metadata,
+            )
+            parents.append(parent)
             for child_index, child_start in enumerate(range(0, len(parent_text), self.child_size)):
                 children.append(ChildChunk(
-                    id=f"{parent_id}:c{child_index}", parent_id=parent_id,
+                    id=f"{parent_id}:c{child_index}",
+                    parent_id=parent_id,
                     document_id=document.document_id,
+                    child_index=child_index,
                     text=parent_text[child_start : child_start + self.child_size],
                     metadata=document.metadata,
                 ))
+            parent.child_ids = [child.id for child in children if child.parent_id == parent_id]
         return parents, children

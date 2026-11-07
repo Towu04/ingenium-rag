@@ -7,7 +7,7 @@ class Reranker:
         return sorted(
             results,
             key=lambda result: result.score + sum(
-                term in result.chunk.text.lower() for term in terms
+                term in result.parent_chunk.text.lower() for term in terms
             ),
             reverse=True,
         )[:top_k]

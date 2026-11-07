@@ -24,14 +24,14 @@ class IndexingPipeline:
         indexed = 0
         for raw_file in files:
             if self.state_tracker and not self.state_tracker.has_changed(
-                raw_file.document_id, raw_file.content
+                raw_file.document_id, raw_file.content_hash
             ):
                 continue
             document = self.parser.parse(raw_file)
-            _, children = self.chunker.chunk(document)
+            parents, children = self.chunker.chunk(document)
             self.repository.delete_by_document(document.document_id)
-            self.repository.upsert(children)
+            self.repository.upsert(parents, children)
             if self.state_tracker:
-                self.state_tracker.record(raw_file.document_id, raw_file.content)
+                self.state_tracker.record(raw_file.document_id, raw_file.content_hash)
             indexed += len(children)
         return indexed

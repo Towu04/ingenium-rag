@@ -11,7 +11,7 @@ class Searcher:
         seen_parents: set[str] = set()
         deduplicated: list[SearchResult] = []
         for result in results:
-            if result.chunk.parent_id not in seen_parents:
-                seen_parents.add(result.chunk.parent_id)
+            if result.parent_chunk.id not in seen_parents:
+                seen_parents.add(result.parent_chunk.id)
                 deduplicated.append(result)
         return deduplicated[:top_k]

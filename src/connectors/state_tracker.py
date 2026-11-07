@@ -1,4 +1,3 @@
-import hashlib
 import json
 from pathlib import Path
 
@@ -17,15 +16,11 @@ class StateTracker:
             raise ValueError(f"State tracker must contain an object: {self.path}")
         return {str(key): str(digest) for key, digest in value.items()}
 
-    @staticmethod
-    def content_hash(content: bytes) -> str:
-        return hashlib.sha256(content).hexdigest()
+    def has_changed(self, document_id: str, content_hash: str) -> bool:
+        return self._state.get(document_id) != content_hash
 
-    def has_changed(self, document_id: str, content: bytes) -> bool:
-        return self._state.get(document_id) != self.content_hash(content)
-
-    def record(self, document_id: str, content: bytes) -> None:
-        self._state[document_id] = self.content_hash(content)
+    def record(self, document_id: str, content_hash: str) -> None:
+        self._state[document_id] = content_hash
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self.path.open("w", encoding="utf-8") as file:
             json.dump(self._state, file, indent=2, sort_keys=True)
