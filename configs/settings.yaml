@@ -1,0 +1,13 @@
+chunking:
+  parent_size: 1000
+  child_size: 250
+  overlap: 40
+embedding:
+  model: BAAI/bge-m3
+retrieval:
+  top_k: 10
+  rerank_k: 5
+  rrf_k: 60
+paths:
+  raw: data/raw
+  processed: data/processed

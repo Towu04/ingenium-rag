@@ -1,0 +1,9 @@
+project:
+  - pattern: "(?i)project[-_ ]([A-Z0-9]+)"
+    group: 1
+building:
+  - pattern: "(?i)(?:building|blok)[-_ ]([A-Z0-9]+)"
+    group: 1
+phase:
+  - pattern: "(?i)(?:phase|fase)[-_ ]([A-Z0-9]+)"
+    group: 1
