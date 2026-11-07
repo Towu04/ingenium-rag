@@ -1,6 +1,6 @@
 import hashlib
 
-from ingenium_rag.domain import DocumentMetadata, ParsedDoc, RawFile
+from domain import DocumentMetadata, ParsedDoc, RawFile
 
 
 class DocumentParser:

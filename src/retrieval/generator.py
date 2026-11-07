@@ -1,4 +1,4 @@
-from ingenium_rag.models import Answer, SearchResult
+from models import Answer, SearchResult
 
 
 class GroundedGenerator:

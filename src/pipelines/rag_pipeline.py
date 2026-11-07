@@ -1,7 +1,7 @@
-from ingenium_rag.domain import Answer
-from ingenium_rag.generation.generator import GroundedGenerator
-from ingenium_rag.retrieval.reranker import Reranker
-from ingenium_rag.retrieval.searcher import Searcher
+from domain import Answer
+from generation.generator import GroundedGenerator
+from retrieval.reranker import Reranker
+from retrieval.searcher import Searcher
 
 
 class RAGPipeline:

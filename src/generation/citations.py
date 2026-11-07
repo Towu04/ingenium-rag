@@ -1,4 +1,4 @@
-from ingenium_rag.domain import Citation, SearchResult
+from domain import Citation, SearchResult
 
 
 def citations_for(results: list[SearchResult]) -> list[Citation]:

@@ -1,4 +1,4 @@
-from ingenium_rag.processing.metadata import extract_metadata
+from processing.metadata import extract_metadata
 
 
 def test_metadata_rules():

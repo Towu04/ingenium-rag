@@ -1,5 +1,5 @@
-from ingenium_rag.domain import ChildChunk, DocumentMetadata, SearchResult
-from ingenium_rag.retrieval.reranker import Reranker
+from domain import ChildChunk, DocumentMetadata, SearchResult
+from retrieval.reranker import Reranker
 
 
 def test_metadata_filter():

@@ -1,5 +1,5 @@
-from ingenium_rag.domain import SearchResult
-from ingenium_rag.storage.repository import InMemoryRepository
+from domain import SearchResult
+from storage.repository import InMemoryRepository
 
 
 class Searcher:

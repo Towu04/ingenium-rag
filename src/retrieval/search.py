@@ -1,6 +1,6 @@
 from collections.abc import Mapping
 
-from ingenium_rag.models import SearchResult
+from models import SearchResult
 
 
 def filter_results(

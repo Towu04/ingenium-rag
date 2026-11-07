@@ -1,7 +1,7 @@
 from collections.abc import Iterator
 from pathlib import Path
 
-from ingenium_rag.domain import RawFile
+from domain import RawFile
 
 
 class SharePointConnector:

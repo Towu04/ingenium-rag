@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from ingenium_rag.connectors.sharepoint import SharePointConnector
-from ingenium_rag.pipelines.indexing_pipeline import IndexingPipeline
-from ingenium_rag.storage.repository import InMemoryRepository
+from connectors.sharepoint import SharePointConnector
+from pipelines.indexing_pipeline import IndexingPipeline
+from storage.repository import InMemoryRepository
 
 
 def ingest(path: str) -> int:

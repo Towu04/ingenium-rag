@@ -1,4 +1,4 @@
-from ingenium_rag.domain import SearchResult
+from domain import SearchResult
 
 
 class Reranker:

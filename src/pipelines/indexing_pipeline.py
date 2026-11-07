@@ -1,10 +1,10 @@
 from collections.abc import Iterable
 
-from ingenium_rag.connectors.state_tracker import StateTracker
-from ingenium_rag.domain import RawFile
-from ingenium_rag.processing.chunker import ParentChildChunker
-from ingenium_rag.processing.parser import DocumentParser
-from ingenium_rag.storage.repository import InMemoryRepository
+from connectors.state_tracker import StateTracker
+from domain import RawFile
+from processing.chunker import ParentChildChunker
+from processing.parser import DocumentParser
+from storage.repository import InMemoryRepository
 
 
 class IndexingPipeline:

@@ -1,4 +1,4 @@
-from ingenium_rag.api.app import pipeline
+from api.app import pipeline
 
 
 def main() -> None:

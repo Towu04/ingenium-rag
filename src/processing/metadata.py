@@ -1,7 +1,7 @@
 import re
 from typing import Any
 
-from ingenium_rag.domain import DocumentMetadata, ParsedDoc
+from domain import DocumentMetadata, ParsedDoc
 
 
 def extract_metadata(source_path: str, rules: dict[str, Any]) -> DocumentMetadata:

@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 
-from ingenium_rag.domain import ChildChunk, SearchResult
+from domain import ChildChunk, SearchResult
 
 
 class InMemoryRepository:

@@ -1,4 +1,4 @@
-from ingenium_rag.domain import ChildChunk, ParentChunk, ParsedDoc
+from domain import ChildChunk, ParentChunk, ParsedDoc
 
 
 class ParentChildChunker:

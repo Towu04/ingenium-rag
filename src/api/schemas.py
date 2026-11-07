@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 
-from ingenium_rag.domain import Citation
+from domain import Citation
 
 
 class QueryRequest(BaseModel):

@@ -1,5 +1,5 @@
-from ingenium_rag.domain import Answer, SearchResult
-from ingenium_rag.generation.citations import citations_for
+from domain import Answer, SearchResult
+from generation.citations import citations_for
 
 
 class GroundedGenerator:

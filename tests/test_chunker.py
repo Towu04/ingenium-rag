@@ -1,6 +1,6 @@
-from ingenium_rag.domain import RawFile
-from ingenium_rag.processing.chunker import ParentChildChunker
-from ingenium_rag.processing.parser import DocumentParser
+from domain import RawFile
+from processing.chunker import ParentChildChunker
+from processing.parser import DocumentParser
 
 
 def test_parent_child_chunks(sample_markdown, tmp_path):
