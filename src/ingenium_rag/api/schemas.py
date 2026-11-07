@@ -1,6 +1,10 @@
 from pydantic import BaseModel, Field
 
+<<<<<<< HEAD
 from ingenium_rag.domain import Citation
+=======
+from ingenium_rag.models import Citation
+>>>>>>> d8558de83a60ee17885c0c11a7d88e8a92704c68
 
 
 class QueryRequest(BaseModel):

@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 from ingenium_rag.processing.metadata import extract_metadata
+=======
+from ingenium_rag.etl.metadata import extract_metadata
+>>>>>>> d8558de83a60ee17885c0c11a7d88e8a92704c68
 
 
 def test_metadata_rules():

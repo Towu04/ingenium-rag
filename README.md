@@ -23,6 +23,7 @@ embedding, vector database, and LLM adapters at the boundaries in `src/ingenium_
 ## Repository layout
 
 - `configs/` contains external YAML settings and metadata extraction rules.
+<<<<<<< HEAD
 - `src/ingenium_rag/domain.py` defines the shared data contracts.
 - `src/ingenium_rag/connectors/` fetches SharePoint files and tracks incremental hashes.
 - `src/ingenium_rag/processing/` parses documents, extracts metadata, and creates chunks.
@@ -30,6 +31,12 @@ embedding, vector database, and LLM adapters at the boundaries in `src/ingenium_
 - `src/ingenium_rag/retrieval/` extracts filters, searches, deduplicates, and reranks context.
 - `src/ingenium_rag/generation/` generates grounded answers and LibreChat citations.
 - `src/ingenium_rag/pipelines/` wires offline indexing and online RAG execution.
+=======
+- `src/ingenium_rag/ingestion/` tracks SharePoint files and incremental hashes.
+- `src/ingenium_rag/etl/` parses documents and extracts project metadata.
+- `src/ingenium_rag/indexing/` creates parent-child chunks and persists vectors.
+- `src/ingenium_rag/retrieval/` filters, reranks, and generates cited answers.
+>>>>>>> d8558de83a60ee17885c0c11a7d88e8a92704c68
 - `data/` is local-only cache and evaluation data and is intentionally ignored by Git.
 - `tests/` contains unit tests for the core contracts and pipeline behavior.
 

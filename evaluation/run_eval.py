@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from evaluation.metrics import citation_precision
 
 # testing RAG 
@@ -51,3 +52,10 @@ output_df.to_csv("rag_test_output.csv", index = False)
 
 
 # step 4: evaluate this output. proposal for now: use ragas 
+=======
+"""Evaluation entrypoint reserved for benchmark questions in data/eval_sets."""
+
+from evaluation.metrics import citation_precision
+
+__all__ = ["citation_precision"]
+>>>>>>> d8558de83a60ee17885c0c11a7d88e8a92704c68
