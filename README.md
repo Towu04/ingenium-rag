@@ -1,15 +1,29 @@
 # Ingenium RAG
-
 SharePoint document ingestion, metadata-aware retrieval, and citation-grounded
 answering for Ingenium projects. The repository is structured as an installable
 Python package so each pipeline stage can be developed and deployed independently.
 
 ## Quick start
 
+### Create environment
 ```bash
 cp .env.example .env
 python -m venv .venv
+```
+
+### Activate environment
+linux :
+```bash
 source .venv/bin/activate
+```
+
+windows :
+```bash
+.venv\Scripts\activate
+```
+
+### Install dependencies
+```bash
 pip install -e ".[dev]"
 pytest
 uvicorn ingenium_rag.api.app:app --reload

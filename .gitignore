@@ -9,3 +9,7 @@ __pycache__/
 dist/
 build/
 *.egg-info/
+
+~$*.xlsx
+~$*
+Emergent_Test_Questions.xlsx
