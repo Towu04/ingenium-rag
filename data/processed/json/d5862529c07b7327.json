@@ -1,0 +1,257 @@
+{
+  "metadata": {
+    "doc_id": "d5862529c07b7327",
+    "file_name": "Schema EB IG3.25.pdf",
+    "file_extension": ".pdf",
+    "file_hash_sha256": "98479170a35f781a733ab5512f90b92b86d818b933b1f79d2a508a417970b469",
+    "sharepoint_url": "https://ingeniumnv.sharepoint.com/sites/06038004-INT/Shared%20Documents/General/00_Info/RE_%2006038.004%20renovatie%20OP8%20en%209%20-%20elektrisch%20bord%20tegen%20koker%2016%20aanvraag%20schemas%20en%20Panduitkast_%20aanvraag%20TF%20IG_EG3.25_%20schemas%20borden%20Honeywell/Schema%20EB%20IG3.25.pdf",
+    "relative_folder_path": "General/00_Info/RE_ 06038.004 renovatie OP8 en 9 - elektrisch bord tegen koker 16 aanvraag schemas en Panduitkast_ aanvraag TF IG_EG3.25_ schemas borden Honeywell",
+    "sharepoint_item_id": "01L557GETB5YAJ35UKHJCI3OUW2RTHUJHZ",
+    "sharepoint_etag": "\"{9D00EE61-8AF6-443A-8DBA-96D4667A24F9},1\"",
+    "project_id": "UNKNOWN_PROJECT",
+    "project_name": "AZ Sint-Jan Brugge",
+    "building": "Technische Ruimte",
+    "phase": "UNKNOWN_PHASE",
+    "doc_category": "drawing_diagram",
+    "extraction_method": "pymupdf_diagram",
+    "is_scanned": false,
+    "is_hvac_diagram": true,
+    "extraction_confidence": 0.78,
+    "quality_warnings": [
+      "Page 20: Oversized/vector HVAC diagram with no readable callout text.",
+      "Page 21: Oversized/vector HVAC diagram with no readable callout text."
+    ],
+    "processed_at": "2026-11-18T13:14:17.636133Z"
+  },
+  "blocks": [
+    {
+      "block_id": "pdf-blk-0001",
+      "page_number": 1,
+      "section_heading": "HVAC Diagram Legend / Schedule",
+      "sheet_name": null,
+      "block_type": "table",
+      "markdown_content": "| CEGELEC BUILDING SERVICES | KLANT-BOUWPLAATS | GETEKEND | 19/07/2016 | VHG | LOKATIE: 12.05.95.02 |\n| :--- | :--- | :--- | :--- | :--- | :--- |\n| ANZEGEMSEWEG 28 |  | WIJZIG.TGK | 19/07/2016 | VHG | ZONE: EB IG3.25 |\n| 8790 WAREGEM |  |  | /  / |  | BORD NR: |\n| TEL: 056/625.860 |  |  |  |  |  |\n| FAX: 056/625.865 |  |  | / / |  | 0123 |",
+      "table_headers": [
+        "CEGELEC BUILDING SERVICES",
+        "KLANT-BOUWPLAATS",
+        "GETEKEND",
+        "19/07/2016",
+        "VHG",
+        "LOKATIE: 12.05.95.02"
+      ]
+    },
+    {
+      "block_id": "pdf-blk-0002",
+      "page_number": 1,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- vl\"=l 0\n- FACILITIES\n- ELEKTRIS CH SCHEMA\n- PROJECT: M.0019077.A.04\n- AZ S T . JAN\n- BRUGGE\n- VOORBEREIDING\n- BORD\n- IG3.25\n- HVAC\n- 12.05.95.02",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0003",
+      "page_number": 2,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- 1 \t2\n- 3\n- 4\n- 1\n- 5\n- 6\n- 7\n- 8\n- 9\n- 1(l\n- 3,1(400V+N Icc:10KA\n- L1\n- 2/1\n- L2\n- S 1 --JS2(~\n- 2/1\n- e\n- L3\n- S1 S\n- 2/1\n- N\n- ~\n- 2/1\n- A\n- S\n- S2\n- 0\n- 0\n- 3 15 17\n- co\n- N\n- m\n- M\n- (71\n- N\n- ~1\n- -F1.4\n- 2\n- 4 6 8\n- SCHNEIDER\n- C60H C6/4P\n- 1\n- 1\n- 10/1 15KA\n- C1+ I2+ I3+\n- I1- I2- I3-\n- 27\n- N\n- V1\n- V2 MULTI-METER\n- V3 V-A-KW-KWH\n- VN COS-PHI-KVAR\n- L.m\n- N\n- 8\n- 2 4 6\n- B\n- -Q1.2\n- S 7 492/101007/200\n- 1 2 3\n- K Y\n- HOOFDSCHAKELAAR\n- In 25A\n- 1\n- -1.6\n- SCHNEIDER\n- PM710MG\n- m  -Fl.s\n- L—\n- 21\n- C\n- SCHNEIDER\n- ~~915KA /21?\n- 2\n- -S1.4\n- L1 L2 L3 N\n- RITAL\n- —\n- PS4103.350\n- -1.8\n- DEHN\n- OEHNGUARD TNS\n- MAX 125A\n- 7\n- -H1.4\n- VITAL\n- XPS4103.600\n- -F1.2\n- SCHNEIDER\n- C60H C20/4P+300\n- C20A\n- 8 10/15KA\n- 300mA\n- D\n- STEEDS KNDER SPANNING\n- E 1\n- PE\n- PE\n- E\n- VIIEDING TNS\n- _\n- 3)K400V+N+PE\n- 20A 2.5#\n- GETEKEND  19/07/2016\n- WIJZIG.TGK\n- 19/07/2016\n- F\n- VH\n- VHG\n- AZ ST.JAN\n- PROJECT: M.0019077.A.04\n- =12.05.95.02\n- VINCI\n- +EB IG3.25\n- VOORBEREIDING BORD HVAC\n- BRUGGE\n- 12.05.95.02 IG3.25\n- FACILITIES\n- 1/23",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0004",
+      "page_number": 3,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 2\n- 3\n- 1\n- 4\n- I\n- l\n- 1\n- 5\n- 6\n- t\n- 8\n- 9\n- 10\n- 3x400V+N Icc10KA\n- L1\n- 6/1\n- L2\n- 6/1\n- 6/1\n- L3\n- A\n- N\n- 6/1\n- -0.2.1\n- -Q2.5\n- SCHNEIDER\n- GV2-RT04\n- 0.4 - 0.63 A\n- SCHNEIDER\n- GV2-RT05\n- 0.63-1A\n- 6\n- 4\n- B\n- U\n- V\n- -T2.1\n- EREA\n- E230TC160\n- u\n- v 230-400/230V\n- 3\n- 160VA\n- m\n- -T2.5\n- EREA\n- _ E24TC250\n- u\n- v 230-400/24V\n- 250VA\n- co\n- m\n- C\n- -F2.6\n- -F2.7\n- 1\n- 2 SCHNEIDER\n- C60H CUT\n- 2 SCHNEIDER\n- C60H C6/1P\n- -F2.1\n- -F2.5\n- 10/15KA\n- 10/15KA\n- 2 SCHNEIDER\n- C60H C2/1P\n- C2A\n- 10/15KA\n- 2 SCHNEIDER\n- C60H C10/1P\n- C10A\n- 10/15KA\n- 40\n- 230V\n- Al\n- K2.2\n- ~RELPOL\n- D\n- 24V\n- Al\n- STURING\n- ALGEMEEN\n- 24V\n- STURING\n- ALGEMEEN\n- 230V\n- ~\n- ~\n- K2.5\n- RELPOL\n- A2RM84-5024+V\n- A2RM84-5230+V\n- 230VAC\n- 24VAC\n- 2\n- 0\n- 3/1\n- 4/1\n- w\n- a-\n- X3 p`'4\n- CC! co\n- PE\n- 1\n- 416/5\n- 1\n- 416/5\n- 3\n- 22\n- 2~4\n- 2~4\n- 0 0\n- m\n- N\n- PE\n- DEBIETNETERS\n- LUCHTGROEPEN\n- STUURTRANSF []/S\n- I\n- 'GETEKENDI 19/07/2016 1 VH",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0005",
+      "page_number": 4,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- 1\n- z\n- 1\n- 3\n- 1\n- 4\n- 1\n- 5\n- 1\n- 6\n- 1\n- 7\n- 8\n- 9\n- J\n- 10\n- LAMPENTEST\n- 2/10\n- 3\n- 4/1\n- 43\n- 4/3\n- 1\n- 45\n- ' 4/5\n- 2\n- 3\n- 4\n- 3\n- 47\n- 4/8\n- 79\n- 9/3\n- -53.2\n- 4 SCHNEIDER\n- -3.4\n- 5\n- 80\n- 9/4\n- 81\n- 9/4\n- XB5 AA31\n- 6\n- GROEN\n- 82\n- 9/4\n- HIQUEI\n- 7\n- TOP-22\n- 8\n- 83\n- 9/4\n- 9\n- 95\n- 11/5\n- 10\n- 97\n- 11/8\n- 11\n- 109\n- 13/4\n- 41\n- 12\n- 111\n- 13/7\n- 13\n- 113\n- 13/9\n- 14\n- 115\n- 14/4\n- 15\n- 117\n- 14/7\n- 16\n- 17\n- 18\n- 19\n- 20\n- 21\n- 22\n- 2/10\n- 2\n- 4/1\n- 7  PE\n- PE\n- GETEKEND\n- 19/07/2016\n- VH\n- WIJZIG.TGK\n- 19/07/2016\n- VHG\n- ,VINCII\n- PROJECT: M.0019077.A.04\n- =12.05.95.02\n- +EB IG3.25\n- AZ ST.JAN\n- VOORBEREIDING BORD HVAC\n- BRUGGE\n- 12.05.95.02 IG3.25\n- FALIIITIES e\n- 3/23\n- 1 \t1\n- 2\n- 4\n- 5\n- 6\n- 7\n- 8\n- I\n- 9\n- 10",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0006",
+      "page_number": 5,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 5\n- 1\n- 6\n- 1\n- 7\n- 8\n- 9\n- 10\n- STURING UIT\n- BREEKGLAS STOP VENTILATIE\n- BRANKENTRALE\n- 5/1\n- 2/10\n- 1\n- 3/10\n- 3\n- 5/1\n- 12113\n- BREEK\n- -K4.5\n- 12113\n- BREEK2\n- -K4.7\n- 12113\n- BRAND\n- -K4.2\n- 11\n- 11\n- 11\n- 12\n- 1\n- 34/8\n- 12\n- 1\n- 34/5\n- 12\n- 1\n- 34/3\n- 22\n- 2j_---23\n- 2\n- 34/10\n- 22\n- 21\n- 35/2\n- 22\n- 21\n- 35/2\n- 3/4~~\n- 3/4~~\n- 3/4~®\n- 32\n- 31\n- 45/2\n- 32\n- 31\n- 416/4\n- 32\n- 31\n- 4 12/2\n- 41_-'-\n- 4\n- 2\n- 2\n- 16/4\n- 42\n- 41-\n- 44\n- 42\n- 4f\n- 44\n- TECHNISCHE RUIMTE\n- + -H4.8\n- GANG\n- + -H4.6\n- 22123\n- BREEK2\n- + -H4.3\n- SCHNEIDER\n- XB5-AVB4\n- - -NOODSTOP\n- SCHNEIDER\n- XB5-AVB4\n- -NOODSTOP\n- ROOD\n- SCHNEIDER\n- XB5-AVB4\n- - -BRANDDETECTIE\n- -K4.7\n- 46\n- 44\n- 42\n- 21\n- ROOD\n- ROOD\n- BREEK\n- Al BREEK2\n- BRAND\n- Al\n- Al\n- -K4.7\n- RELPOL\n- A2R4-5024+V\n- -K4.5\n- RELPOL\n- A2R4-5024+V\n- K4.2\n- ~RELPOL\n- A2R4-5024+V\n- 24VAC\n- s\n- 24VAC\n- 5/1\n- 5/1\n- 24VAC\n- 2\n- 0\n- 3/10\n- 2/10\n- Lu\n- X4\n- O!§\n- W\n- r\n- ~O\n- X4 O OcLL\n- PE\n- T  PE\n- X4 o-0:§\n- X4 O O~\n- r\n- r\n- {\n- r\n- r\n- Q\n- a\n- r\n- r\n- r\n- N\n- Q\n- W\n- r\n- ~D\n- W\n- L\n- r\n- r\n- r\n- r\n- m\n- r\n- Q\n- r\n- N N\n- Q M\n- r 131\n- Q\n- r\n- Q\n- a\n- Gl\n- BREEKGLAS\n- STOP VENTILATIE\n- 1\n- t -64.4\n- BRANDCENTRALE\n- 1 STOP VENTILATIE\n- JJJ7 -54.2\n- -X4\n- 2 WIT\n- GANG\n- EB\n- I G/EG3, 19\n- GETEKEND 19/07/2016 VH\n- WIJZIG.TGK\n- 19/07/2016\n- VHG\n- =12.05.95.02\n- +EB 1133.25\n- PROJECT: M.0019077.A.04\n- AZ ST.JAN\n- VOORBEREIDING BORD HVAC\n- *VINCI\n- FACILITIES e\n- BRUGGE\n- 12.05.95.02 IG3.25\n- 4/23",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0007",
+      "page_number": 6,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- [\n- 2\n- 3\n- 4\n- (\n- S\n- 6\n- (\n- 7\n- {\n- 8\n- 9\n- 10\n- A\n- DOORMELDING BRANDBEVEILIGING NAAR EB EG3,25\n- 4/10\n- 1\n- 6/1\n- 4/10\n- 3\n- —6/1\n- B\n- 22123\n- BRAND\n- -K4.2\n- 21\n- 0\n- 22 23\n- -REEK\n- -K4.5\n- 21\n- 32 34\n- -K4.7\n- -K4.7\n- C\n- 31\n- 8/1\n- 12 13\n- STOP\n- -K5.2\n- 8/1\n- 11\n- STOP\n- Al\n- K5.2\n- IRELPOL\n- A2R4-5230+V\n- n\n- tn LM\n- Ln\n- LA\n- .0\n- LA c-\n- D\n- 230VAC\n- 6/1\n- 4/10\n- 4/10\n- 6/1\n- Ln 10\n- X4 —0-0\n- X4 p -,\n- X4 O 0\n- X4 O O\n- 10\n- T  PE\n- r\n- r r\n- m\n- m\n- Ln m\n- Ln\n- Ln\n- 3\n- J\n- r\n- L\n- w\n- r\n- sn\n- 12\n- 1\n- 35/4\n- LA\n- 3\n- S\n- PE\n- w\n- w\n- Cl\n- Gl\n- co\n- N\n- 22\n- 21\n- 38/1\n- E\n- 32\n- 31\n- 313/1\n- 42\n- 4_l\n- 43\n- -X +\n- -~ \t-X4 4 4\n- -X4ii \t -X4 -W\n- EB EG3, 25\n- GETEXEND  19/07/2016 VH\n- WIJZIG.TGK\n- 19/07/2016\n- VHG\n- 12.05.95.02\n- -EB IG3.2S\n- PROJECT: M.0019077.A.04\n- AZ ST.JAN\n- VOORBEREIDING BORD HVAC\n- BRUGGE\n- FACILITIES\n- 12.05.95.02 IG3.25\n- 5/23\n- 8\n- 6\n- 4\n- 1",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0008",
+      "page_number": 7,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- I\n- {\n- I\n- f\n- I\n- 1\n- g\n- s\n- 10\n- 6\n- 9\n- 2\n- 3\n- 4\n- 1\n- 3x400V+N Icc:10KA\n- 7/1\n- 2/10\n- 2/10\n- 2/10\n- L1\n- L2\n- L3\n- N\n- A\n- 7/1\n- 7/1\n- A\n- 2/10\n- 7/1\n- IG3,25 PULSIEVENTILATOR\n- LUCHTGROEP VOORBEREIDING\n- 1 3 5\n- -Fb.1\n- 2 4 6 SCHNEIDER\n- C60H C10/3P\n- C10A\n- 10/15KA\n- 7/1\n- 5/10\n- 5/10\n- 7/1\n- 12\n- 1\n- 412/6\n- 12\n- 1\n- 39/3\n- B\n- B\n- 22\n- 2f\n- 24\n- 22\n- 21\n- 312/5\n- 3f\n- 34\n- 4f\n- 44\n- 9/1\n- 9/1\n- WERKIG3.25\n- STORIG3.25\n- C\n- Al\n- Al\n- C\n- m\n- %0\n- 0\n- 10 10\n- K6.4\n- ~RELPOL\n- A2RM84-5024+V\n- K6.5\n- ~RELPOL\n- A2R4-5024+V\n- 24VAC\n- 24VAC\n- 5/10\n- 5/10\n- w\n- X3 p O O0¢\n- X1 O O Oa¢\n- X3 O O\n- 4.-\n- 71\n- w\n- r\n- `c\n- rn\n- 4-\n- 4-\n- 4-\n- Z-\n- 91\n- w\n- N\n- r\n- (71\n- 4-\n- c\n- 0\n- C,\n- w\n- w\n- c7%\n- w\n- C%\n- w\n- 17,\n- w\n- M\n- Gl\n- N\n- X-\n- PE p\n- EB HONEYW\n- V7\n- w$\n- -X3 `-p O~\n- i\n- t\n- N\n- N_\n- _N\n- r\n- N\n- r\n- rl\n- ~I\n- R2\n- 18\n- All- I ICOM\n- 1\n- L1 L2 L3\n- All+\n- AI2\n- 24 U1\n- LI2\n- Rl~ R1A\n- 2\n- 1\n- Ail\n- Al2\n- ~\\\n- -FR6.1\n- ER\n- U22N4 2.2KWDI1 DI2\n- E\n- RUN\n- E\n- FAULT\n- U V W\n- OV 1-16 SV21PTC\n- SCHNEID5\n- 4W6. 2\n- 4W6. 4\n- V\n- U\n- W PE\n- 1133.25 VOORBEREIDING\n- PULSIEVENT\n- I ABBMOTOR\n- 1\n- APAL-2-00220-1-0\n- 2.2KW/4.6A\n- -r2\n- 2870tpm\n- L~\n- -R6.3\n- F\n- 19/07/2016\n- VH\n- GETEKEND\n- F\n- 1\n- +EB IG3.25\n- =12.05.95.02\n- 19/07/2016\n- VHG\n- WIJZIG.TGK\n- PROJECT: M.0019077.A.04\n- AZ ST.JAN\n- VOORBEREIDING BORD HVAC\n- BRUGGE\n- FACWTI\n- 12.05.95.02 IG3.25\n- 6/23\n- {\n- {\n- 2\n- I\n- 3\n- 1\n- 4\n- f\n- 9\n- 10\n- 8\n- 5\n- f\n- 6\n- 7\n- 1",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0009",
+      "page_number": 8,
+      "section_heading": "HVAC Diagram Legend / Schedule",
+      "sheet_name": null,
+      "block_type": "table",
+      "markdown_content": "| 6/10 | 3)K400V+N Icc10KA  L1 | Col_3 | Col_4 |\n| :--- | :--- | :--- | :--- |\n| 6/10 |  | L2 |  |\n| 6/10 |  | L3 |  |\n| 6/10 |  | N |  |\n| 6/10 |  | `    1  3 5  U-)  co  un  1113143[3.1 MPCV3.25  \\\\ I ~   a7.2  2)1444(32  ~22  CHNEIDER  V2-M03a22  0.25-0.4A  1   I T  C I> 1~ 1~  2  4 6 | 8/1 |\n| 6/10 |  | 3  1 3--..- | 8/1 |\n| 6/10 |  | 2  2 | 8/1 |\n| 6/10 |  | 0 | 8/1 |\n|  | PE | X!- r  'c `c  v ~  N N  w  a-~  4-  X1 ? Lrlo | PE |\n|  |  | N Q7  r |  |\n|  |  | N IPE  1133.25 VOORBEREIDING  PCV3.25 POMP VERW |  |\n|  |  | -M7.2  GRUNDFOS  ALPHA 2-25-40  60W/0.28A |  |",
+      "table_headers": [
+        "6/10",
+        "3)K400V+N Icc10KA  L1",
+        "Col_3",
+        "Col_4"
+      ]
+    },
+    {
+      "block_id": "pdf-blk-0010",
+      "page_number": 8,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- I\n- 2\n- [\n- 3\n- [\n- 4\n- [\n- S\n- l\n- 6\n- I\n- 7\n- 1\n- 8\n- I\n- 9\n- I\n- 10\n- GETEKEND 19/07/2016 VH\n- WIJZIG.TGK\n- 19/07/2016\n- VHG\n- VINCI\n- PROJECT: M.0019077.A.04\n- =12.05.95.02\n- +EB 1133.25\n- AZ ST.JAN\n- VOORBEREIDING BORD HVAC\n- BRUGGE\n- 12.05.95.02 IG3.25\n- FACILMES\n- 7/23\n- 1\n- 2\n- [\n- 3\n- [\n- 4\n- [\n- 5\n- [\n- 6\n- [\n- 7\n- [\n- 8",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0011",
+      "page_number": 9,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 5\n- J\n- 6\n- 1\n- 7\n- 8\n- 9\n- 10\n- STURING IG3,25 VOORBEREIDING\n- 7/10\n- 1\n- 9/1\n- 7/10\n- 9/1\n- 12 13\n- AV3.25\n- -K11.7\n- 11\n- J\n- V'\n- 12\n- 1\n- 39/1\n- 22\n- 21\n- 312/6\n- 3f\n- 34\n- 4-4\n- 44\n- 22 23\n- BK3.25\n- -K1l5.1\n- 5.1 0\n- 1\n- 3\n- '~ `~ \\ 2\n- 12 1  G3.25A\n- ~2 1  G\n- \\ -K8.2\n- \\ -K8.3\n- 8.3\n- 21\n- -58.3\n- 11\n- 11\n- 1 AUTO 14\n- 24\n- 0 STOP\n- 2 HAND\n- 10\n- SCHNEIDER\n- X85 AD33+lNC\n- 73\n- 22 23\n- STOP\n- -K5.2\n- co 21\n- Ln\n- 5/7\n- 5/7\n- 11/3\n- 12/4\n- Al FBVLIG3.25\n- IG3.25A\n- Al\n- IG3.25H\n- Al\n- -K8.7\n- RELPOL\n- A2R4-5024+V\n- -K8.3\n- RELPOL\n- A2R4-5230+V\n- -K8.2\n- RELPOL\n- A2R4-5230+V\n- l\n- 1\n- i\n- i\n- 24VAC\n- 230VAC\n- 9/1\n- 9/1\n- 0\n- X3 0\n- X2.25P o0\n- X3 =0a'0\n- 230VAC\n- 2\n- 7/10\n- 7/10\n- 0\n- r\n- p\n- 01\n- N\n- r\n- r\n- r\n- m\n- <71\n- r\n- r\n- L : VdSMIAI\n- rrt\n- W\n- PD\n- 01\n- c~\n- PE\n- 12\n- 12\n- 1\n- 38/4 \t 1\n- 38/5\n- a,\n- PE\n- 22\n- 22\n- 21\n- 39/2 \t 21\n- 39/2\n- N\n- S1 ~j53\n- 32\n- 31 32\n- 3113\n- 13\n- 42\n- 42\n- 41\n- 41\n- 3\n- 3\n- 54 .\n- HONEYWELL\n- 2\n- 80' I  SF24A S\n- VERSELUCHTKLEP\n- IG3.25 VOORBEREIDING\n- D01\n- MOD 108\n- CO1100\n- 1 2\n- 0°\n- -X2.2SP 70'0\n- EB HONEYWELL\n- GETEKEND\n- 19/07/2016\n- VH\n- WIJZIG.TGK\n- 19/07/2016\n- VHG\n- PROJECT: M.0019077.A.04\n- 12.05.95.02\n- EB IG3.2S\n- VINCI\n- AZ ST.JAN\n- VOORBEREIDING BORD HVAC\n- BRUGGE\n- FACILITIES\n- 12.05.95.02 IG3.2S\n- 8/23\n- 4\n- 1\n- 6",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0012",
+      "page_number": 10,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- 5\n- 1\n- 6\n- 1\n- 7\n- 8\n- 9\n- 10\n- STURING IG325 VOORBEREIDING\n- 8/10\n- 8/10\n- 10/1\n- 13\n- STORIG3.25\n- -K6.5\n- 11\n- 3/4\n- 3/4\n- 3/4\n- 3/4\n- 6/3\n- 60\n- 6/3\n- 61\n- 3/4\n- 12 13\n- -K8.7  3 25\n- -K8.7\n- C14\n- 0\n- 0\n- co\n- 11\n- NVWB 3.25A\n- NVWB 3.256 \tNVWB 3.25C\n- 22 23\n- 25A\n- -K8\n- -K8.2\n- Xi -H9.5\n- j SCHNEIDER\n- X1-H9.6\n- X1-H9.7\n- X1-H9.8\n- j SCHNEIDER\n- zZ\n- ., SCHNEIDER\n- XB5-AVB4\n- XB5-AVB4\n- X2-ABSOL FILTER VUIL X2-ABSOL FILTER VUIL\n- X1-H9.3\n- SCHNEIDER\n- XBS-\n- X2-ABSOL FILTER VUII\n- SCHNEIDER\n- XBS-AVB4\n- X2-STORING\n- XB5-AVB4\n- X2-FILTER VUIL\n- 21\n- 22 23\n- ROOD\n- ROOD\n- ROOD\n- ROOD\n- ROOD\n- H\n- -K8.3\n- -K8.3\n- 21\n- a\n- 10/1\n- 10/1\n- 8/10\n- 8/10\n- 2\n- X2.25P 00000\n- X2.25P O C\n- T  PE\n- E '\n- L\"dSZ93ML\n- I :VdSZ63ML\n- PE\n- \" CN \" Ln \"\n- N N N N N\n- m m m m an\n- W W W W W\n- 3 3 3 3 3\n- X2.25P 0 4\n- -X2.25P p o o O~\n- D03\n- D06 D02\n- MOD108\n- D01\n- ­03\n- CO1100\n- MOD108\n- MOD109\n- CO1100\n- EB HONEYWELL\n- GETEKEND\n- 19/07/2016\n- VH\n- PROJECT: M.0019077.A.04\n- =12.05.95.02\n- [EB IG3.25\n- VHG\n- VINCI'r\n- WIJZIG.TGK\n- 19/07/2016\n- AZ ST.JAN\n- VOORBEREIDING BORD HVAC\n- BRUGGE\n- 12.05.95.02 IG3.25\n- FACILITIES\n- 9/23\n- 10\n- 1",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0013",
+      "page_number": 11,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- (\n- 2\n- 3\n- 1\n- 4\n- J\n- 5\n- (\n- 6\n- (\n- 7\n- (\n- 8\n- (\n- 9\n- (\n- 10\n- A\n- A\n- STURING LUCHTKLEPPEN IG3.25 VOORBEREIDING\n- 9/10\n- 9/10\n- 1\n- B\n- B\n- NVWB 3.25A\n- NVWB\n- BTKLEPC\n- 3 LUCHTKLEP\n- 3 LUCHBKLEPB\n- 3\n- -S10.6\n- -S10.4\n- -510.2\n- 4 SCHNEIDER\n- XB5 AD21\n- 4 XB5 AD21R\n- 4 XB5 AD21R\n- C\n- C\n- 12\n- 1f 412/9\n- 2f\n- 24\n- 12\n- 1f 412/9\n- 12\n- 1f 412/8\n- 22\n- 2f\n- 24\n- 22\n- 2f\n- 24\n- FBKLNVWB 3.25C\n- Al FBKLNVWB 3.25A\n- FBKLNVWB 3.256\n- co\n- AI\n- AI\n- 24VAC\n- 1\n- -K10.7\n- RELPOL\n- A2RM84-5024+V\n- -K10.5\n- RELPOL\n- A2RM84-5024+V\n- -K10.3\n- RELPOL\n- A2RM84-5024+V\n- l\n- l\n- D\n- D\n- 24VAC\n- 24VAC\n- 9/10\n- 2\n- 9/10\n- CU\n- 0-\n- r\n- W\n- d~\n- O\n- X3 C\n- r\n- E\n- ® Q,\n- X3-070\n- N m\n- X3^ O\n- X3'- a~\n- X3 p 0\n- X3\n- r\n- E\n- r\n- r r\n- E E\n- 0 0\n- O G1\n- r\n- E\n- r\n- E\n- r\n- r r\n- E\n- 0\n- N N\n- r\n- v\n- N N\n- b1\n- PE\n- c~\n- PE\n- 4- Z.\n- N\n- W\n- N\n- W\n- W G1\n- Gl\n- C~ 1\n- E\n- E\n- 5\n- S6-SM10.4\n- S6-SM10.6\n- 3\n- 6-SM10.2\n- HONEYWELL\n- SF24A-S2\n- LUCHTKLEP\n- NVWB 3.25A\n- 5\n- 3 4\n- HONEYWELL\n- SF24A-S2\n- LUCHTKLEP\n- NVWB 3.256\n- HONEYWELL\n- SF24A-S2\n- LUCHTKLEP\n- NVWB 3.25C\n- 80\n- 80\n- F\n- GETEKEND  19/07/2016\n- VH\n- PROJECT: M.0019077.A.04\n- =12.05.95.02\n- WIIZIG.TGK\n- 19/07/2016\n- VHG\n- +EB IG3.25\n- AZ ST.JAN\n- VINCI\n- VOORBEREIDING BORD HVAC\n- BRUGGE\n- 12.05.95.02 IG3.25\n- FACILITIES\n- 10/23\n- 1\n- 2\n- 3",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0014",
+      "page_number": 12,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- 5\n- 1\n- 6\n- 1\n- 7\n- 1\n- 8\n- 1\n- 9\n- 1\n- 10\n- STURING POMP VERWARMING PCV3,25 VKKRBEREIDING\n- A\n- 10/10\n- 10/10\n- 22123\n- AV3.25\n- -K11.7\n- 21\n- 32134\n- AV3.25\n- -K11.7\n- B\n- 21 FMPCV3.25\n- -Q7.2\n- 31\n- 22\n- 102\n- Ivy\n- -511.4\n- SCHNEIDER\n- XB5 AD33+lNC\n- 1 AUTO\n- 0 STOP\n- 2 HAND\n- 12\n- 3/4\n- 1f 38/1\n- 3/4\n- 22\n- 2f 311/2\n- 8/3\n- 12/2\n- 12/3\n- C\n- 32\n- 3f 411/$\n- X1-H11.5\n- j SCHNEIDER\n- Xl -H11.8\n- zZ SCHNEIDER\n- XB5-AVB4\n- X2-ANTIVRIES\n- XB5-AVB4\n- X2-STORING\n- 42\n- 4f 412/3\n- 13 FMPCV3.25\n- -Q7.2\n- ROOD\n- ROOD\n- 14\n- 96\n- AV3.25\n- Al PCV3.25\n- SCHNEIDER\n- A2LC1-D09P7\n- Al\n- -Kll.7\n- RELPOL\n- IA2R4-5024+V\n- 1 24VAC\n- D\n- 12/1\n- 12/1\n- 2\n- 10/10\n- 10/10\n- w\n- N m\n- X3N N N d\n- X2.25P 0^0 0\n- r r r r\n- ~ :r_ ::E: :E\n- E\n- M\n- Ln\n- 1 27/2\n- 3\n- 47/2\n- 13\n- 4 12/6\n- 5\n- 6\n- 2A2\n- PE\n- PE\n- CD\n- ela\n- Gl\n- E\n- ZIE SCHEMA EBHONEY. P18.5\n- ® m\n- 1133.25 VOORBEREIDING\n- 3 ti 1 Y Y1u\n- ANTIVRIES+\n- 0-10V\n- 4111 12111 ANTIVRIES\n- -TS11.6\n- X2.25P O O\n- HONEYWELL\n- B/OPP-FRO-S6\n- D05\n- MOD108\n- EB HONEYWELL\n- VH\n- WIJZIG.TGK\n- 19/07/2016\n- 19/07/2016\n- GETEKEND\n- VHG\n- =12.05.95.02\n- +EB IG3.25\n- PROJECT: M.0019077.A.04\n- VOORBEREIDING BORD HVAC\n- AZ ST.JAN\n- VINCI ~=\n- BRUGGE\n- 12.05.95.02 IG3.25\n- FACILITIES\n- 11/23\n- f\n- s\n- 9\n- 1\n- 4\n- 1Q\n- 1\n- 6\n- 1\n- I\n- I\n- 1",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0015",
+      "page_number": 13,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- 2\n- (\n- 3\n- (\n- 4\n- }\n- 5\n- 1\n- 6\n- 1\n- 7\n- 8\n- (\n- 9\n- (\n- 10\n- A\n- A\n- SIGNALISATIE LG3,25 VOORBEREIDING\n- 11/10_\n- 1\n- 13/1\n- 11/10\n- 3\n- 13/1\n- B\n- B\n- 11/4\n- 15/2\n- 143 FMPCV3.2\n- -Q7.2\n- 12 14\n- FBKLNVWB 3.25C\n- -K10.7\n- 1\n- 113 PCV3.25\n- -K11.3\n- 22 23\n- -K8.7  3.25\n- -K8.7\n- 3BRAND\n- -K4.2\n- ~\n- 11\n- 14\n- 21\n- 44\n- 31\n- C\n- C\n- 12 14\n- 22 23\n- 42 44\n- AV3.25\n- -K11.7\n- 1FBKLNVWB 9.25A\n- -K10.3\n- -K6.4  3.25\n- -K6.4\n- -K6.5  3.25\n- -K6.5\n- 11\n- 11\n- 21\n- 41\n- 12 14\n- FBKLNVWB 3.256\n- -K10.5\n- 11/4 \t8/3\n- 11\n- C\n- K\n- m\n- 0\n- 10\n- 0\n- r\n- O\n- N\n- m\n- Ln\n- 0\n- m\n- 0\n- 0\n- m\n- v~\n- O\n- r\n- D\n- D\n- 13/1\n- 2\n- 0\n- 11/10\n- 13/1\n- X3.25P N\n- 0\n- X3.25P 4\n- m\n- X3.25P co\n- X3.25P\n- X3.25P'\n- X3.25P o\n- X3.25P 'o\n- X3.25P\n- X3.25P\n- X3.25P\n- X3.25P p\n- X3.25P o\n- X3.25P\n- O\n- S :  Z'dSZ93M\n- ZL :  Z'dSZ93ML\n- LL '\n- Z'dSZ93ML\n- £L :  Z'dSZ93ML\n- 9Z'dSZ9IMl\n- 9'\n- Z'dSZ93ML\n- L ° Z'dSZ93Ml\n- `tl :  Z'dSZ03ML\n- E\n- m\n- w\n- N\n- V'1\n- N\n- N\n- m\n- w\n- N\n- m\n- co\n- N\n- Ln\n- N\n- m\n- p\n- N\n- m\n- N\n- U'1\n- N\n- r\n- PE\n- PE\n- N\n- N\n- O\n- N\n- J\n- N\n- W\n- ~O\n- F\n- E\n- X3.2SP\n- `\n- -X3.25P \"'~ -X3.25P s~ -X3.25P `^~ -X3.25P\n- -X3.2SP `` -X3.25P °'~ -X3.25P ~'~ -X3.25P\n- -X3.25P\n- -X3.25P\n- -X3.25P ^~ -X3.25P\n- DIi\n- DI2\n- DI3\n- DI4\n- DIG\n- DI7\n- DI9\n- DIIO\n- DI12\n- DI2\n- DI3\n- DI4\n- MOD105\n- MOD105\n- MOD105\n- MOD105\n- MOD105\n- MOD105\n- MOD105\n- MOD 105\n- MOD105\n- MOD106\n- MOD106\n- MOD106\n- C01100\n- CO1100\n- C01100\n- C01100\n- COI100\n- CO1100\n- CO1100\n- C01100\n- C01100\n- C01100\n- CO1100\n- C01100\n- EB HONEYWELL\n- F\n- F\n- GETEKEND 19/07/2016 VH\n- WIIZIG.TGK\n- 19/07/2016\n- VHG\n- PROJECT: M.0019077.A.04\n- =12.05.95.02\n- ..EB IG3.2S\n- VINCI\n- AZ ST.JAN\n- VOORBEREIDING BORD HVAC\n- BRUGGE\n- 12.05.95.02 IG3.25\n- FACILITIES\n- 12/23\n- 2\n- 3\n- 1\n- ~",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0016",
+      "page_number": 14,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- 2\n- (\n- 3\n- 1\n- 4\n- 5\n- 1\n- 6\n- j\n- 7\n- E\n- 8\n- 1\n- 9\n- 1\n- 10\n- A\n- SIGNALISATIE - STURING BRANDKLEPPEN IG3,25 VGGRBEREIDING\n- 14/1\n- 14/1\n- 12/10\n- 1\n- 12/10\n- 3\n- 10\n- 14/1\n- B\n- 2/10 \t4\n- 12113\n- BK\n- 12113\n- BK3.25/2\n- -K13.6\n- 12113\n- -\\ -\n- BK3.25/1\n- 32 33\n- STOP\n- -K5.2\n- 13.9\n- -K13.9\n- K13.3\n- 3.3\n- -\n- 11\n- 11\n- 11\n- 31\n- 12\n- 1-\n- 313/9\n- 12\n- 1-\n- 313/7\n- 12\n- 1-\n- 313/4\n- o.\n- 3/4~~\n- 22\n- 21315/4 3/4\n- 22\n- 2  2315/3 3/4\n- 22\n- 2\n- 3 I5/3\n- 3  32\n- 2\n- 3\n- 15/8\n- 32\n- 31\n- 415/8\n- 32\n- 31\n- 415/8\n- IG3.2S VOORBEREIDING\n- BK3.25/3\n- * -013.10\n- IG3.25 VOORBEREIDIP\n- BK3.25/2\n- -D13.7\n- SCHNEIDER\n- -BRANDKLEP TOE\n- IG3.25 VOORBEREIDI\n- BK3.25/1\n- * -013.4\n- G\n- IG\n- 42\n- 4f\n- 42\n- 4f\n- 44\n- 42\n- 4_-\n- 44\n- 44\n- SBRANDKLEP TOE\n- X85-AVB4\n- ROOD\n- ~SZ SBRANDKLEP TOE\n- XB5-AVB4\n- ROOD\n- XB5-AVB4\n- ROOD\n- co\n- O\n- Al\n- BK3.25/3\n- Al BK3.25/2\n- Al BK3.25/1\n- -K13.3\n- RELPOL\n- A2R4-5024+V\n- -K13.6\n- RELPOL\n- A2R4-5024+V\n- K13.9\n- IRELPOL\n- A2R4-5024+V\n- f\n- I\n- I\n- 24VAC\n- 24VAC\n- 24VAC\n- 14/1\n- 14/1\n- m\n- X4 O\n- r\n- 12/10\n- 12/10\n- 2\n- co\n- N\n- w\n- W\n- W\n- CL\n- Lm\n- X4 `~\n- N\n- N O\n- O\n- N\n- co\n- X4 O\n- X4`\n- X4 O\n- Ac\n- N\n- r\n- f\n- r\n- f\n- r\n- r\n- r\n- r\n- r\n- r\n- r\n- 4-\n- 4-\n- r\n- w\n- 6D\n- w\n- bo\n- N\n- w\n- w\n- w\n- Ln\n- W\n- w\n- N\n- W\n- w\n- N\n- m\n- W\n- r\n- PE\n- PE\n- p\n- bo\n- W\n- lli\n- N\n- N\n- f\n- W\n- r\n- 151\n- Gl\n- Gl\n- 1 2 Sl IS2 3 S4 5 S6-SM13.8\n- BELIMO\n- 80\n- BLF24-T+S2A-F\n- BK3.25/3\n- S4 5 S6-SM13.5\n- S4  5 S6-SM13.2\n- 51 IS2 !S3\n- 0+ \\l\n- l\n- BELIMO\n- 80\n- BLF24-T+S2A-F\n- BK3.25/1\n- IG3.25 VOORBEREIDING\n- L~\n- 8R\n- B\n- BLF24\n- F24-T+S2A-F\n- BK3.25/2\n- IG3.25 VOORBEREIDING\n- 0°\n- IG3.25 VOORBEREIDING\n- F\n- VH\n- 19/07/2016\n- GETEKENO\n- WIJZIG.TGK\n- *EB 1153.25\n- -12.05.9S.02\n- PROJECT: M.0019077.A.04\n- 19/07/2016\n- VHG\n- VINCIIr\n- AZ ST.JAN\n- VOORBEREIDING BORD HVAC\n- 12.05.95.02 IG3.25\n- BRUGGE\n- FACILITIES\n- 13/23\n- 4\n- 3\n- 1\n- 2",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0017",
+      "page_number": 15,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- 2\n- 3\n- (\n- 4\n- (\n- 5\n- 1\n- 6\n- 1\n- 7\n- 1\n- 8\n- 1\n- 9\n- (\n- 10\n- SIGNALISATIE - STURING BRANDKLEPPEN IG3,25 VOORBEREIDING\n- 13/10\n- 1\n- 15/1\n- 15/1\n- 13/10\n- 3\n- 13/10\n- 10\n- 12113\n- BK\n- 12113\n- BK3.25/4\n- -K14.3\n- 4.3\n- 14.6\n- -K14.6\n- 11\n- 11\n- 12\n- 1\n- 314/7\n- 12\n- 1\n- 314/4\n- 22\n- 2 2315/5 3/4\n- 32\n- 31\n- 415/9\n- 22\n- 21315/4 3/4\n- 3  32\n- 32\n- 15/8\n- IG3.25 VOORBEREIDING\n- BK3.25/5\n- + -Q14.7\n- IG3.25 VOORBEREIDING\n- BK3.25/4\n- ' -014.4\n- 42\n- 4f\n- 44\n- 42\n- 4f\n- 44\n- SC\n- ~g -BRANDKLEP TOE\n- XB5-AVB4\n- ROOD\n- SCHNEIDER\n- -BRANOKLEP TOE\n- - XB5-AVB4\n- ROOD\n- BK3.25/5\n- Al\n- K14.6\n- ~RELPOL\n- A2R4-5024+V\n- BK3.25/4\n- Al\n- K14.3\n- ~RELPOL\n- A2R4-5024+V\n- 24VAC\n- 13/10\n- 24VAC\n- 15/1\n- 15/1\n- 2\n- 13/10\n- .o w\n- rn n.l\n- m\n- X4\"'1\n- O\n- s\n- Ln\n- X4 O\n- X4 O\n- O\n- r\n- r\n- im\n- r\n- r\n- in\n- r\n- r\n- in\n- r\n- £ £\n- r r\n- i,n in\n- W G1\n- PE\n- N\n- Gl\n- N\n- £\n- r\n- S4 65 f\n- 2 ~0 IS3\n- 0\n- 3 S4 iS5 ~6-SM14.2\n- L~°~ BELIMO\n- 80\n- BLF24-T+S2A-F\n- BK3.25/4\n- IG3.25 VOORBEREIDING\n- 2 S1IS2\n- -SM14.5\n- BELIMO\n- BLF24-T+S2A-F\n- BK3.25/5\n- IG3.25 VOORBEREIDING\n- 80\n- c\n- s\n- 1\n- F\n- GETEKEND\n- 19/07/2016\n- VH\n- PROJECT: M.0019077.A.04\n- =12.05.95.02\n- +EB IG3.25\n- 19/07/2016\n- VHG\n- WIJZIG.TGK\n- VINCI\n- AZ ST.JAN\n- VOORBEREIDING BORD HVAC\n- BRUGGE\n- 12.05.95.02 IG3.2S\n- FACILITIES\n- 14/23\n- 1\n- J",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0018",
+      "page_number": 16,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- 2\n- 3\n- 1\n- 4\n- I\n- 5\n- 1\n- 6\n- 1\n- 7\n- 1\n- 8\n- 1\n- 9\n- 1\n- 10\n- SIGNALISATIE - STURING BRANDKLEPPEN L63,25 VOORBEREIDING\n- 14/10\n- 1\n- 14/10\n- 3\n- 16/1\n- 16/1\n- 32\n- 3BK3.25/1\n- -K13.3\n- 12/10\n- 129\n- 31\n- 22 23\n- -\n- 32 34\n- BK\n- 22 23\n- - K\n- K\n- 3.3\n- -K13.3\n- 4.3\n- -K14.3\n- 13.6\n- -K13.6\n- 21\n- 21\n- 31\n- 23\n- 32\n- BK\n- 3BK3.25/3\n- -K14.6\n- 4.6\n- -K13.9\n- 22 23\n- BK\n- -K13.6\n- 3.6\n- 22\n- 21\n- 21\n- .o 31\n- 22 23\n- BK\n- -Ki.9\n- 3.9\n- 32 34\n- 32 34\n- -\n- K\n- 4.3\n- -K14.3\n- BK3.25/5\n- -K14.6\n- 31\n- 21\n- 31\n- co f AZ BK3.25\n- K15.10\n- .\n- IRELPOL\n- A2R4-5230.V\n- 2\n- 230VAC\n- 16/1\n- 127\n- 0\n- N\n- N\n- m\n- N\n- 14/10\n- 14/10\n- 0\n- 16/1\n- X3.25P '-\n- X3.25P .00\n- X3.25P p\n- X3.25P p\n- X3.25P n\n- PE\n- f\n- m\n- m\n- N\n- L\"\n- -o\n- N\n- L :\n- CdSZOML\n- E\n- rn\n- W\n- N\n- v\n- W\n- rm\n- m\n- cc\n- N\n- m\n- co\n- N\n- tn\n- v\n- N\n- 12\n- 1\n- 35/5\n- PE\n- N\n- 22\n- 238/1\n- 3f\n- 33\n- 42\n- 4f43\n- N\n- rn\n- -X3.25P\n- -X3.25P\n- -X3.25P\n- -X3.25P\n- -X3.25P\n- DI5\n- DI6\n- DI7\n- DI8\n- DI9\n- MOD106\n- MOD106\n- MOD106\n- MOD106\n- MOD106\n- CO1100\n- CO1100\n- CO1100\n- CO1100\n- CO1100\n- EB HONEYWELL\n- GETEKEND\n- 19/07/2016\n- VH\n- WUZIG.TGK\n- 19/07/2016\n- AZ ST.JAN\n- VHG\n- PROJECT: M.0019077.A.04\n- 12.05.95.02\n- +EB IG3.25\n- VINCI\n- VOORBEREIDING BORD HVAC\n- BRUGGE\n- 12.05.95.02 IG3.25\n- FACILITIES\n- 15/23\n- 1\n- 2\n- 3\n- 4",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0019",
+      "page_number": 17,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- S\n- 1\n- 6\n- 1\n- 7\n- 1\n- 8\n- 1\n- 9\n- 1\n- 10\n- SIGNALISATIE LG3,25 VOORBEREIDING\n- 15/10\n- 1\n- -/-\n- 15/10\n- 3\n- -/-\n- 32134\n- BREEK\n- -K4.5\n- 31\n- 12114\n- 230.\n- -K2.2\n- 42144\n- -K4.7\n- -K4.7\n- 11\n- 41\n- 12 14\n- 24V\n- -K2.5\n- Ln\n- m .a\n- m\n- N\n- rn\n- 11\n- cn\n- m\n- 15/10\n- 15/10\n- -t Ul%\n- N N\n- 0\n- .o c-\n- N N\n- O O\n- O ~\n- X3.25P\n- N m\n- X3.25P 0`V\n- 0\n- CO\n- m\n- m\n- rn\n- W\n- N\n- Ln\n- 9 :  £'d5Z93ML\n- rn m\n- =\n- co\n- N N\n- VI lR\n- w w\n- w r\n- m\n- a\n- N\n- m\n- W\n- 3\n- m\n- PE\n- PE\n- Ln\n- a:\n- 0\n- N\n- co\n- uj\n- 3\n- Ln\n- N\n- m\n- W\n- 3\n- co\n- W\n- 3\n- to\n- -.t Ln\n- N N\n- O\n- .o c-\n- N N\n- O O\n- O r-\n- -X3.25P 0`\"\n- N m\n- -X3.25P ON\n- EB HONEYWELL\n- VHG\n- GETEKEND\n- 19/07/2016\n- VH\n- WIJZIG.TGK\n- 19/07/2016\n- +EB IG3.25\n- -12.05.95.02\n- PROJECT: M.0019077.A.04\n- VOORBEREIDING BORD HVAC\n- AZ ST.JAN\n- VINCI\n- MaunES L\n- BRUGGE\n- 12.05.95.02 IG3.25\n- 16/23\n- 1\n- 6\n- 1\n- 4",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0020",
+      "page_number": 18,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- Date 19/07/2016\n- Reports of Cables\n- Page\n- 1\n- AZ ST.JAN\n- BRUGGE\n- VOORBEREIDING BORD HVAC\n- ff~(i111If5\n- 12.05.95.02 IG3.25\n- Function\n- CONTROL CABLE\n- SHIELDED 24V\n- HALO CONTROL CABLE\n- HALO CONTROL CABLE\n- HALO CONTROL CABLE\n- F3 CONTROL CABLE 230V\n- POWER CABLE 400V+N\n- 20A\n- 4W10.2 LII-IH-JZ 4\"1\n- HALO CONTROL CABLE\n- 4W10.4\n- HALO CONTROL CABLE\n- 4W10.6\n- HALO CONTROL CABLE\n- 4W11.6\n- CONTROL CABLE 24V\n- 4W13.2\n- F3 CONTROL CABLE 230V\n- 4W13.5\n- F3 CONTROL CABLE 230V\n- 4W13.8\n- F3 CONTROL CABLE 230V\n- 4W14.2\n- F3 CONTROL CABLE 230V\n- 4W14.5\n- F3 CONTROL CABLE 230V\n- 4W\n- HALO CONTROL CABLE\n- 4W4.2\n- F3 CONTROL CABLE 230V\n- 4W4.4\n- F3 CONTROL CABLE 230V\n- 4W4.9\n- F3 CONTROL CABLE 230V\n- 4W5.3\n- F3 CONTROL CABLE 230V\n- 4W6.1\n- MOTOR CABLE 400V\n- 4W6.2\n- POWER CABLE 20A\n- SHIELDED\n- 4W6.3\n- CONTROL CABLE 24V\n- 4W6.4\n- CONTROL CABLE 24V\n- 4W7.2\n- CONTROL CABLE 230V\n- 4W8.6\n- CONTROL CABLE 24V\n- Length,\n- Remarks\n- Cable\n- Description\n- 1W21.4 LIHCH-JZ 3G1\n- 1 WEB25P LIHH-JZ 18*1\n- 1WEB25PLIHH-JZ 18*1\n- 1WEB25PLIHH-JZ 18*1\n- 3W4.9\n- PYRO 3G1.5\n- 4W1.2 XGB 5G2.5\n- KLANT\n- LIHH-JZ 4''1\n- LIHH-JZ 4'`1\n- LIHH-JZ 4G1\n- PYRO 5G1.5\n- PYRO 5G1.5\n- PYRO 5G1.5\n- PYRO 5G1.5\n- PYRO 5G1.5\n- LIHH-JZ 3*1\n- PYRO 3G1.5\n- PYRO 3G1.5\n- PYRO 3G1.5\n- PYRO 12G1.5\n- XGB 4G2.5\n- LIHCH-JZ 4G2.5\n- LIHH-JZ 7G1\n- LIHH-JZ 3G1\n- XGB 3G1.5\n- LIHH-JZ 5G1",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0021",
+      "page_number": 19,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- O\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- m\n- N\n- .EB IG3.25\n- =12.05.95.02\n- W\n- PROJECT:  M.0019077.A.04\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- U\n- Q\n- >\n- O\n- O\n- = Ln\n- O N\n- O: m\n- O t~\n- m —\n- t7 N\n- Z\n- O Ln\n- rn\n- W N\n- Ir o\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- W N\n- ED\n- O_\n- O\n- O\n- >\n- O\n- O\n- 3d\n- N\n- O\n- O\n- V\n- 8\n- zld-\n- 9\n- z'!3-\n- E1\n- O\n- O\n- 1\n- z'!d-\n- z\n- Z'ld-\n- Z1\n- ll\n- w\n- w\n- W\n- M\n- >\n- Pin  Number.\n- N\n- 0\n- N\n- a\n- Connection  no.\n- Connection no\n- 0\n- z\n- Y\n- W\n- H N_\n- N\n- V\n- m\n- X\n- 3\n- Terminal number\n- Cablemarking\n- 3\n- d!JJS l2UIWJ3j\n- ox",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0022",
+      "page_number": 20,
+      "section_heading": "HVAC Diagram Legend / Schedule",
+      "sheet_name": null,
+      "block_type": "table",
+      "markdown_content": "| ate  19/07/201E  Bill of Materials | Col_2 | Col_3 | 1 Page |\n| :--- | :--- | :--- | :--- |\n|  | VOORBEREIDING  AZ ST.JAN  BRUGGE  BORD HVAC |  | rpCn mes |\n| Quantity  1  5 | 12.05.95.02 IG3.25  Description  Catalogue  MOTOR 2.2KW/2P  ABBMOTOR  THERMISCH KONTACT BRANDKLEP  BELIMO | Reference  APAL-2-00220-1-0  BAE-72 | Symbol  -M6.1  -SM 13,2, -SM 13.5, |\n| 5 | BK SERVO 24V 0/1 VEER +2 EK  BELIMO | BF-24-S | -SM13.8, -SM14.2,  -SM14.5  -SM 13.2, -SM 13.5, |\n| 1  1  1  1  1  1  4 | OVERSPANNINGS BEVEILGING  DEHN  TRANSFO 230V/160VA  EREA  TRANSFO 24V/250VA  EREA  POMP 230V  GRUNDFOS  LAMPENTEST 22 INPUTS  HIQUEL  ANTIVRIES+ANALOGE STURING  HONEYWELL  VEERSERVO LUCHTKLEP +2EK  HONEYWELL | DEHNGUARD TNS  E230TC160  E24TC250  ALPHA 2-25-40  TDP-22  B/OPP-FRO-S6  SF24A-S2 | -SM 13.8, -SM 14.2,  -SM14.5  -1.8  -T2.1  -T2.5  -M7.2  -3.4  -TS 11.6  -SM10.2, -SM10.4, |\n| 1  1  6 | AUTOMAAT 4P 20A C-KURVE 10/15KA  MER-GER  DIFF.ELEMENT 4P 300mA  MER-GER  VOET STEEKRELAIS 2P  RELPOL | C60H C20/4P  VIGI C60/300/4P  GZM80 | -SM10.6, -SM8.6  -F1.2  -F1.2  -K10.3, -K10.5, -K10.7, |\n| 15 | VOET STEEKRELAIS 4P  RELPOL | GZT4 | -K2.5, -K6.4, -K2.2  -K11.7, -K13.3, -K13.6, |\n| 1/ | STEEKRELAIS 24VAC/4P  RELPOL | R4-2014-23-5024WTL | -K13.9, -K14.3, -K14.6,  -K4.2, -K4.5, -K4.7,  -K6.5, -K8.7, -K15.10,  -K5.2, -K8.2, -K8.3  -K11.7, -K13.3, -K13.6, |\n| 4 | STEEKRELAIS 230VAC/4P  RELPOL | R4-2014-23-5230-WTL | -K13.9, -K14.3, -K14.6,  -K4.2, -K4.5, -K4.7,  -K6.5, -K8.7  -K15.10, -K5.2, -K8.2, |\n| 5 | STEEKRELAIS 24VAC/2P  RELPOL | RM84-2012-25-5024 | -K8.3  -K10.3, -K10.5, -K10.7, |\n| 1  1  1  1  1  1  1  1  2  1  1  1  1  1  1  3  2  2  1  1  1  15 | STEEKRELAIS 230VAC/2P  RELPOL  BORDVERLICHTING  RITAL  BORDVERLICHTING  RITAL  FREQUENTIE REGELAAR 2.2KW/400V  SCHNEIDER  AUTOMAAT 1 P 10A C-KURVE 10/15KA  SCHNEIDER  AUTOMAAT 3P 10A C-KURVE 10/15KA  SCHNEIDER  AUTOMAAT 2P 16A C-KURVE 10/15KA  SCHNEIDER  AUTOMAAT 1 P 2A C-KURVE 10/15KA  SCHNEIDER  AUTOMAAT 1 P 6A C-KURVE 10/15KA  SCHNEIDER  AUTOMAAT 4P 6A C-KURVE 10/15KA  SCHNEIDER  3 PHASE CIRCUIT BREAKER  SCHNEIDER  MOTORBEVEILIGING 0.63-1A  SCHNEIDER  3 POLE CONTACTOR+1NO+1NC 230VAC SCHNEIDER  PANEL POWERMETER+ IMPULS  SCHNEIDER  DRUKKNOPGROEN  SCHNEIDER  2-STANDEN SCHAKELAAR  SCHNEIDER  3-STANDEN SCHAKELAAR  SCHNEIDER  KONTACT NC  SCHNEIDER  MOTORBEVEILIGING 0.24-0.4A  TEE  HULPKONTACT GV2 FRONT NO+NC  TEE  HULPKONTACT GV2 ZIJKANT NO+NC  TEE  LED 24V  TEE | RM84-2012-25-5230  PS4103.350  PS4103.600  ATV61E5U22N4  C60H C10/1P  C60H C10/31P  C60H C16/2P  C60H C2/1 P  C60H C6/1 P  C60H C6/4P  GV2-RT04  GV2-RT05  LC1-D09P7  PM710MG  XB5 AA31  XB5 AD21  XB5 AD33  ZBE102  GV1-M03  GV2-AE11  GV2-AN11  XB5-AVB4 | -K2.5, -K6.4  -K2.2  -S1.4  -H1.4  -FR6.1  -F2.5  -F6.1  -F1.3  -F2.1  -F2.6, -F2.7  -F1.4  -Q2.1  -Q2.5  -K11.3  -1.6  -S3.2  -S10.2, -S10.4, -S10.6  -S11.4, -S8.3  -S11.4, -S8.3  -Q7.2  -Q7.2  -Q7.2  -119.6, -H9.7, -119.8, |\n| 1 | HOOFDSCHAKELAAR 25A  VC | 492/101007/200 | -1111.8, -H4.3, -D13.10,  -D13.4, -D13.7, -D14.4,  -D14.7, -H9.5, -H4.6,  -H4.8, -H11.5, -H9.3  -Q1.2 |",
+      "table_headers": [
+        "ate  19/07/201E  Bill of Materials",
+        "Col_2",
+        "Col_3",
+        "1 Page"
+      ]
+    },
+    {
+      "block_id": "pdf-blk-0023",
+      "page_number": 21,
+      "section_heading": "HVAC Diagram Legend / Schedule",
+      "sheet_name": null,
+      "block_type": "table",
+      "markdown_content": "| Date 19/07/201E | Col_2 | Bill of Materials  AZ STAN  BRUGGE | Page  2  ;n |\n| :--- | :--- | :--- | :--- |\n| Quantity  41 | Description  VEERKLEM 2.5# | VOORBEREIDING BORD HVAC  12.05.95.02 IG3.25  Catalogue  Reference  WAGO_  2002-1201 | Symbol  X3.25P 22, X3.25P 23, |\n| 4 | PE VEERKLEM 2.5# | WAGO_  2002-1207 | X3.25P 24, X3.25P 25,  X3.25P 26, X3.25P 27,  X3.25P 3, X3.25P 4,  X3.25P 5, X3.25P 6,  X3.25P 7, X3.25P 8,  X3.25P 9  X3 PE, X3 PE, X3 PE, |\n| 65 | VEERKLEM 4# | WAGO_  2004-1201 | X3 PE  X4 11, X4 12, X4 13, X4 |\n| 16 | PE VEERKLEM 4# | WAGO_  2004-1207 | 14, X4 15, X4 16, X4  17, X4 18, X4 19, X4 2,  X4 20, X4 21, X4 22, X4  23, X4 24, X4 25, X4  26, X4 27, X4 28, X4  29, X4 3, X4 30, X4 31,  X4 32, X4 33, X4 34, X4  35, X4 36, X4 4, X4 5,  X4 6, X4 7, X4 8, X4 9  X0 PE, X1 PE, X1 PE,  X3 PE, X3 PE, X3 PE,  X4 PE, X4 PE, X4 PE,  X4 PE, X4 PE, X4 PE,  X4 PE, X4 PE, X4 PE,  X4 PE |",
+      "table_headers": [
+        "Date 19/07/201E",
+        "Col_2",
+        "Bill of Materials  AZ STAN  BRUGGE",
+        "Page  2  ;n"
+      ]
+    }
+  ]
+}

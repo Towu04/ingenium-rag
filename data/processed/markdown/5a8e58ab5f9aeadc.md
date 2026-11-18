@@ -1,0 +1,2036 @@
+<!-- DOC: Bord_HVAC_IG3.37.pdf | PROJECT: UNKNOWN_PROJECT | BUILDING: UNKNOWN_BUILDING | PHASE: UNKNOWN_PHASE -->
+
+<!-- PAGE: 1 | SECTION: General -->
+
+ELEKTRISCH SCHEMA
+
+PROJECT: M.0019077.B.46
+
+AZ STJAN
+
+BRUGGE
+
+RECOVERY
+
+BLOK-L
+
+BORD
+
+HVAC L/5
+
+IG3.37
+
+| CEGELEC BUILDING SERVICES | KLANT-BOUWPLAATS | GETEKEND | 19/07/2016 | VHG | LOKATIE: 12.05.95 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| ANZEGEMSEWEG 28 |  | WIJZIG.TGK | 27/03/2018 | VHG | ZONE: EB L/5 IG3.37 |
+| 8790 WAREGEM |  |  | /  / |  | BORD NR: |
+| TEL: 056 / 625.860 |  |  |  |  |  |
+| FAX: 056/625.865 |  |  | /  / |  | 0/20 |
+
+<!-- PAGE: 2 | SECTION: General -->
+
+1 2 3 4 5 6 7 8 C3 10
+
+/ 3.400V+N Icc10KA L1 2/1 • -/- 	 * • L2 s 2 • 2/1
+
+-/- • L3 S1 v S?~ a~//~~}} • 2/1 -/- • N S21 • 2/1
+
+351 1 • +1 1 1
+
+7 N T
+
+2 4 6 -F1.4 N
+
+m
+
+8 SCHNEIDER
+
+C6/4P • I -
+
+C60
+
+I1+ I2+ I3+ II- I2- I3-
+
+10/15KA
+
+27•
+
+V1 N V2 MULTI-METER 2 8 N V3 V-A-H 4
+
+N
+
+6
+
+_012 • VN COS-PHI-K PHI-KVAR
+
+1
+
+1 3 5 7 VC 492/101007/200 HOOFOSCHAKELAAR
+
+1 2 3 K Y
+
+In 25A I SCHNEIDER PM710MG
+
+-F1.3 L m a 21 • N 22
+
+SCHNEIDER
+
+C16/2P 2 S1.4 RITAL L1 L2 L3 N
+
+~Al K
+
+PS4103.350
+
+• DEHN DEHNGUARD TNS 41.2 ;%TAL
+
+1 3 5 7
+
+MAX 125A
+
+SCHNEIDER C60H C20/4P+300 C20A
+
+x.PS4103.600
+
+2 6
+
+8 10/15KA 300mA
+
+_
+
+- 'N XOJJ
+
+w STEEDS KNDER
+
+SPANNING
+
+za
+
+F N N N PE
+
+PE N N
+
+VOEDING 3)K400V+N+PE TNS
+
+_
+
+2,5#
+
+20A
+
+GETEKEND 19/07/2016 VH
+
+WIJZIG.TGF 27/03/2018 VHG AZ ST.JAN
+
+PROJECT: M.0019077.B.46 =12.05.95 +EB L/5 IG3.37 / /
+
+YIN I
+
+RECOVERY BLOK-L BORD
+
+1/20 / /
+
+FACILITIES
+
+BRUGGE
+
+HVAC L/5 IG3.37
+
+I I I I 6 1 4 5 2 3
+
+10
+
+<!-- PAGE: 3 | SECTION: General -->
+
+9 8 10 7 6 5 4
+
+I
+
+1/10 3.400V+N ICc10KA 	L1 6/1
+
+1/10 • L2 6/1
+
+1/10 L3 6/1
+
+1/10 N 6/1
+
+1 3 5 1 3 5
+
+-Q2.1 M  -Q 2.5 C 15> I m®® SCHNEIDER I> L> SCHNEIDER 4 6 GV2-RT04 0.4-0.63A 2 4 6 GV2-RTOS 0.63-iA
+
+4/1 I 3/1 • 12/1
+
+V u V d -T2.1
+
+-T2.5
+
+E24TC250 U
+
+E230TC160
+
+v 230-400/24V 250VA
+
+v 230-400/230V 160VA
+
+u
+
+m m
+
+m
+
+1
+
+1
+
+2 F 2
+
+F
+
+-F2.6
+
+-F2.7
+
+<!-- PAGE: 3 | SECTION: 2. SCHNEIDER -->
+
+# 2. SCHNEIDER
+
+C60H C6/1P
+
+SCHNEIDER C60H C6/1P
+
+-F2.5
+
+-F2.1
+
+10/15KA
+
+10/15KA
+
+SCHNEIDER
+
+SCHNEIDER C60 C2/1P
+
+2
+
+H C10/1 C60
+
+0 A P
+
+10/15KA
+
+10/15KA
+
+40
+
+•
+
+STURING
+
+STURING
+
+ALGEMEEN 24V 2 • 3/1 0 4/1 -
+
+ALGEMEEN 230V
+
+w Oa¢ — ~ N _PE N N
+
+J X3
+
+~
+
+q PE N N
+
+3 N
+
+DEHIETMETERS
+
+LUCHTGROEPEN STUURTRANSFK'S
+
+GETEKEND 19/07/2016 VH wIJZIG.TGK 27/03/2010 VHG AZ ST.JAN
+
+PROJECT: M.0019077.B.46 =12.05.95 .EB L/5 IG3.3 / /
+
+RECOVERY BLOK-L BORC)
+
+V I N C I
+
+2/20 / /
+
+FACILITIES
+
+BRUGGE
+
+HVAC L/5 1133.37
+
+6 4 5 1 2 3
+
+I
+
+<!-- PAGE: 4 | SECTION: 2. SCHNEIDER -->
+
+1 2 I 3 1 4 1 5 I 6 1 7 1 8
+
+1
+
+1 9 1 10
+
+LAMPENTEST
+
+2/10 4/1
+
+3
+
+B
+
+43 4/3 Z3 1
+
+45 4/5
+
+2 3 4
+
+3
+
+47 4/8
+
+79 9/3
+
+-S3.2
+
+I
+
+80 9/4
+
+<!-- PAGE: 4 | SECTION: 4. SCHNEIDER -->
+
+# 4. SCHNEIDER
+
+-3.4 5 95 10/5 XBS AA31 GROEN 6 97 10/8 HIQUEL 7
+
+TOP-22 8 109 12/4
+
+9 111 12/7
+
+10
+
+C.
+
+11 41 12
+
+13
+
+14
+
+15
+
+16
+
+17
+
+18
+
+19
+
+D
+
+20
+
+21 22
+
+4/1
+
+2/10
+
+2
+
+E
+
+T  PE PE
+
+19/07/2016
+
+=12.05.95 .EB L/5 IG3.3 27/03/2018
+
+PROJECT: M.0019077.B.46 VINCI  r~ FAClllilES
+
+AZ ST.JAN
+
+RECOVERY BLOK-L BORD
+
+BRUGGE
+
+HVAC L/5 IG3.37
+
+<!-- PAGE: 5 | SECTION: 4. SCHNEIDER -->
+
+10
+
+STURING UIT BREEKGLAS STOP VENTILATIE BRANDCENTRALE
+
+2/10
+
+1 5/1
+
+3/10 _ 3 _ _ _ _ _ 5/1
+
+12113 BRAND -K4.2
+
+12113 BREEK -K4.5
+
+12113 BREEK2 -K4.7
+
+11
+
+12 11 1 34/5
+
+11
+
+12 1 34/3
+
+l2 1 34/8
+
+22 2135/2 3/4~~
+
+22 2135/2 3/4~~ 3f 34 42 4f44
+
+22 2 234/10
+
+3/4~~
+
+32 3 3411/2 	 a 42 'L'-- 44 TECHNISCHE RUIMTE
+
+32 31 45/2
+
+42 'L'-- 44
+
+GANG r -H4.6
+
+• -H4.3 >~ SCHNEIDER
+
+22123 BREEK2
+
+SCHNEIDER XB5-AVB4
+
+SCHNEIDER XB5-AVB4 - NOODSTOP
+
+K4.7
+
+XB5-AVB4 - -BRANODETECTIE
+
+NOODSTOP ROOD 44 42
+
+46
+
+21
+
+ROOD
+
+ROOD
+
+BRAND F-1 RELPOL AM-50244
+
+AT BREEK
+
+BREEK2 F-7 RELPOL A2R4-5024.V
+
+AI
+
+AI
+
+n RELPOL
+
+m m s
+
+A2R4-5024+V
+
+24VAC 5/1
+
+24VAC
+
+24VAC
+
+3/10
+
+2/10
+
+0
+
+5/1
+
+W W W W X4'O Oah X470 O X40°0!§ X4"O 4aL W W iE gE ..ro a a a PE
+
+N
+
+N
+
+W
+
+r r m r
+
+r r
+
+r r W A
+
+N w r
+
+N
+
+r m c~ 3 3 3 — Ll N N
+
+m A
+
+G1
+
+BREEKGLAS
+
+<!-- PAGE: 5 | SECTION: 1. STOP VENTILATIE -->
+
+# 1. STOP VENTILATIE
+
+BRANDCENTRALE
+
+# 1. STOP VENTILATIE
+
+t—t -S4.2 ~2
+
+-84.b
+
+-X4-0
+
+<!-- PAGE: 5 | SECTION: 2. WIT -->
+
+# 2. WIT
+
+O
+
+RECOVERY
+
+EB IG/EG ??
+
+GETEKEND  19/07/2016
+
+VH VINCII Ir FACILITIES
+
+WIJZIG.TGK 27/03/2018 VHG
+
+=12.05.95
+
+-EB L/5 IG3.37
+
+PROJECT: M.0019077.B.46
+
+AZ ST.JAN
+
+RECOVERY BLOK-LBORD
+
+HVAC L/5 IG3.37
+
+BRUGGE
+
+4/20
+
+1 2 3
+
+4
+
+10
+
+6
+
+8
+
+9
+
+<!-- PAGE: 6 | SECTION: 2. WIT -->
+
+9 8 10 7 6 5 4
+
+I
+
+DKKRMELDING BRANDBEVEILIGING NAAR EB EG3,37
+
+4/10 1 6/1
+
+4/10 t 3 6/1
+
+122123 ~i \
+
+BRAND -K4.2
+
+21
+
+0
+
+22
+
+23 BREEK -K4.5
+
+-K4.5
+
+21
+
+32
+
+34
+
+-K4.7 -K4.7
+
+31 N N
+
+2W5.3: 5 13 2W5.3: 6 1 14
+
+8/1
+
+1 \ 2 1S TOP 1Z1-
+
+I~
+
+K 8/1 K13.9
+
+-K5.2
+
+11
+
+11
+
+m
+
+STOP Al
+
+~RELPOL AM-52304 230VAC 2 s K5.2 u u
+
+v+ u
+
+6/1 4/10_ 0 6/1
+
+4/10
+
+w
+
+[ __9C  2W5.3  : 8
+
+ix
+
+X4
+
+0 X4
+
+OTC
+
+— — — X4" N
+
+m N
+
+N w PE
+
+1
+
+N
+
+N w
+
+i
+
+i
+
+PE 12 w
+
+`"
+
+T
+
+— 1135/4
+
+22 2 238/1 32 31312/1 42
+
+4f43 _ -X4-0" -X4 p''
+
+-X4 0"0 -X4-.-()
+
+EB E63.37
+
+GETEKEND 19/07/2016 VH WIJZIG.TGK 27/03/2018 VHG AZ ST.JAN
+
+PROJECT: M.0019077.B.46 =12.05.95 .EB L/5 IG3.3 , / /
+
+RECOVERY BLOK-L BORD
+
+V~NCI
+
+FACILITIES
+
+5/20 / /
+
+BRUGGE
+
+HVAC L/5 IG3.37
+
+I
+
+6 5 3 4 1 2
+
+<!-- PAGE: 7 | SECTION: 2. WIT -->
+
+9 8 10
+
+7 6 5 4
+
+I 2 I
+
+2/10 3e400V+N Icc,IOKA 	L1 7/1
+
+2/10 a L2 7/1
+
+2/10 L3 7/1
+
+2/10T N 7/1 /
+
+' 1315
+
+1~  IG3,37 PULSIEVENTILATKR
+
+2 4 -F6.1
+
+<!-- PAGE: 7 | SECTION: 6. SCHNEIDER 	LUCHTGRKEP RECOVERY -->
+
+# 6. SCHNEIDER 	LUCHTGRKEP RECOVERY
+
+BLKK-L -
+
+C60H C10/31) C10A 10/15KA 1 7/1
+
+5/10
+
+5/10 3 7/1 e
+
+12 12 1 411/5 1 39/3
+
+22 22 21 4 	21 311/4
+
+32
+
+9/1
+
+31_4 _►9/1 41 42 4
+
+Al STORIG337
+
+Al WERKIG3.37
+
+~RELPOL A2R4-5024+V 24VAC 7/1 a 5/10 0 7/1
+
+IRELPOL IA2RM84-5024+V 1 24VAC
+
+°
+
+5/10 2
+
+W
+
+X1 p-OmO°~ W X3- ~0 X3 0 O~O~¢
+
+—
+
+— — — — — a W PE Ell HONEYW N r cc) _ PE A z E c)
+
+— —
+
+a m a in rn W a W
+
+m W a W mm W
+
+-
+
+-X3-0 O O Ww
+
+i 'r rl
+
+A11- I ICOM I iq R2A Lt L2 L3 AI1+ AI2
+
+to
+
+24
+
+R1
+
+U1 LI2
+
+I All Al2 \~ -FR6.1
+
+FAULT
+
+RUN
+
+SCHNEID 22 y 2.2KWDI1DI2 ATV6lE U v W
+
+OV
+
+L16 SW2-PTC
+
+2W6, 2 2W6.4
+
+_ U V W PE
+
+IG3.37 RECOVERY BLOK-L PULSIEVENT
+
+ABBMOTOR APAL-2-00220-1-0 2.2KW/4.6A 2870tpm
+
+J1 / L
+
+-R6.3
+
+GETEKEND 19/07/2016 VH
+
+WIJZIG.TGK 27/03/2018 VHG AZ ST.JAN
+
+PROJECT: M.0019077.B.46 =12.05.95 +EB L/5 IG3.3 i
+
+RECOVERY BLOK-L BORD
+
+VINCI I
+
+FACILITIES
+
+6/20 / /
+
+BRUGGE
+
+HVAC L/5 IG3.37
+
+3 4 I 5 I 6
+
+<!-- PAGE: 8 | SECTION: 6. SCHNEIDER 	LUCHTGRKEP RECOVERY -->
+
+1 2 3 4 5 6 7 8 9 10
+
+6/10 3)K400V+N Ico10KA L1 / 6/10 L2 6/10 L3 6/10 N
+
+1135 00~
+
+131437.41
+
+Q7.2 37 2!\1l732 SCHNEIDER U I> I> GV2-MO3  - GV2-M03Z2 6/10 2 4 6 0.25 - 0.4 A 1 8/1
+
+07.2 4\\1144 F
+
+6/10 3 8/1
+
+I
+
+1
+
+3
+
+37
+
+-K10.3 -K10.
+
+4
+
+2
+
+6/10
+
+2 8/1
+
+6/10 0 8/1
+
+W a
+
+Xl' -
+
+L L7PE N
+
+E
+
+E
+
+V ~ r
+
+V
+
+PE
+
+Gl C1
+
+N £
+
+N IPE
+
+Am
+
+RECOVERY BLOK-L
+
+IG3.37
+
+M7.2 GRUNDFOS ALPHA 2-25-# 60W/0.28A
+
+I PCV3.37 POMP VERW WIF
+
+| Col_1 | Col_2 | GETEKEND | 19/07/2016 | VH | Col_6 | Col_7 | Col_8 | Col_9 | Col_10 | Col_11 | Col_12 | Col_13 | Col_14 |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| v   '  N C   ' |  | WIJZIG.TGk | 27/03/2018  / / | YHG | AZ ST.JAN |  |  | RECOVERY BLOK-L BORD |  | PROJECT: M.0019077.B.46 |  | =12.05.95 | DEB L/5 1153.37 |
+| FACILITIES |  |  | / / |  | BRUGGE |  |  | HVAC L/5  1153.37 |  |  |  |  | 7/20 |
+|  | I |  | I |  | 4 | I | 5 | I  I  6 | 7 | I  8 | I |  |  |
+
+<!-- PAGE: 9 | SECTION: 6. SCHNEIDER 	LUCHTGRKEP RECOVERY -->
+
+10
+
+STURING IG3.37 RECOVERY BLKK-L
+
+A
+
+7/10 1 9/1
+
+9/1 7/10
+
+12 13 7 410. -K10.7
+
+11
+
+12 13 39/1
+
+B
+
+22 2 2311/6 3f 34 42 4f 44
+
+22 23 ~y K3.37 - \ -K13.9
+
+~Z \
+
+1 	 21 A K H -K8.2 -K8.3
+
+14L41
+
+<!-- PAGE: 9 | SECTION: 1. AUTO 14 -->
+
+# 1. AUTO 14
+
+24
+
+<!-- PAGE: 9 | SECTION: 0. STOP -->
+
+# 0. STOP
+
+<!-- PAGE: 9 | SECTION: 2. HAND -->
+
+# 2. HAND
+
+2 -58.3
+
+21
+
+11 11
+
+SCHNEIDER X135 AD33+1NC
+
+0
+
+73
+
+22 23 STOP -K5.2
+
+21
+
+5/7 5/7
+
+10/3 11/4
+
+C
+
+FBVLIG3.37
+
+IG3.37A
+
+IG3.37H
+
+Al
+
+Al
+
+Al
+
+D
+
+n RELPOL
+
+n RELPOL n RELPOL A2R4-5230+V A2R4-5230+V 7/10 230VAC 2 	230VAC
+
+A2R4-5024+V
+
+24VAC
+
+9/1
+
+7/10 0
+
+9/1
+
+w C~
+
+2 PE 12 12 13 38/4 	 1338/5
+
+X2.25P —0- X3-0O
+
+X3. i
+
+N
+
+N N f X
+
+N
+
+3E m O~ T
+
+T PE
+
+Q~ r
+
+N
+
+cl
+
+22 22 23 39/2 23 39/2
+
+E
+
+31 32 31 32 33 33
+
+1 2
+
+<!-- PAGE: 9 | SECTION: 1. IS2 3 -->
+
+# 1. IS2 3
+
+S4 ISS S6  SM8.6
+
+HONEYWELL 80 SF24A-S2 VERSELUCHTKLEP IG3.37 RECOVERY BLOK-L
+
+0+
+
+41 42 41 42 43 3
+
+X2.25P p r,
+
+DO MOD105 CO. 1018
+
+EB HONEYWELL
+
+F GETEKEND  19/07/2016 VH
+
+VHG =12.05.95 WIJZIG•TGK 27/03/2018 +EB L/5 1153.37 PROJECT: M.0019077.B.46
+
+8/20 VINCI  rir FACILITIES
+
+AZ ST.JAN
+
+RECOVERY BLOK-L BORD
+
+BRUGGE
+
+HVAC L/5 IG3.37
+
+I 4 f 6 f I
+
+<!-- PAGE: 10 | SECTION: 1. IS2 3 -->
+
+9 10
+
+7 5 6 2 3 4
+
+I 8 I
+
+STURING I03.37 RECOVERY BLKK-L
+
+8/10 1 10/1 8/10 3 10/1 0 0
+
+12113 STORIG3.37 -K6.5 	3/4
+
+11
+
+6/3 60
+
+6/3 61 3/4 0
+
+112 ~k \
+
+13 FBVLIG3 -K8.7
+
+37
+
+o m
+
+m r
+
+11 22
+
+23 IG3.37A -K8.2
+
+X1-H9.5
+
+X1-H9.3
+
+kZ
+
+SCHNEIDER XB5-AVB4 X2-FILTER VUIL
+
+SCHNEIDER XB5-AVB4 X2-STORING
+
+21 1 22 ~k \
+
+P3
+
+ROOD
+
+ROOD
+
+IG3.37H -K8.3
+
+21
+
+8/10 2 10/1 0
+
+8/10 0 10/1
+
+X2.25P O O _ LT
+
+X2.25P -(
+
+y 1WEB37P.1:4
+
+PE N C PE ~
+
+m W 3
+
+m co 3
+
+w
+
+X2.25P 9-6 -X2.25P O O
+
+D03 D06 MOD105 MOD105 CO. 1018 00. 1018 EB HONEYWELL
+
+GETEKEND 19/07/2016 VH
+
+WIJZIG.TGK 27/03/2018 VHG AZ ST.JAN
+
+VINCII
+
+PROJECT: M.0019077.B.46 =12.05.95 -EB L/5 1133.37
+
+RECOVERY BLOK-L BORD
+
+9/20 / /
+
+FACILITIE5
+
+BRUGGE
+
+HVAC L/5 1133.37
+
+1 2 3 4 5 I 6
+
+<!-- PAGE: 11 | SECTION: 1. IS2 3 -->
+
+9 10
+
+I 7 I 8 I
+
+6 S 4
+
+STURING POMP VERWARMING PCV3,37 RECOVERY BLGK-L
+
+9/10 1 11/1 • • • 9/10 3 • 11/1 • •
+
+22123 AV3.37 -K10.7
+
+{ \
+
+21
+
+32134
+
+21 } FQ7 2V337
+
+• _
+
+f
+
+AK10.77
+
+102 113 2 1 23 2 22 31
+
+-510.4
+
+4 r 4 r
+
+<!-- PAGE: 11 | SECTION: 1. AUTO -->
+
+# 1. AUTO
+
+<!-- PAGE: 11 | SECTION: 0. STOP -->
+
+# 0. STOP
+
+<!-- PAGE: 11 | SECTION: 2. HAND -->
+
+# 2. HAND
+
+SCHNEIDER XB5 AD33+lNC
+
+-
+
+3/4 12 3/4
+
+a • 1 38/1 •
+
+11/2 m 22 2 2310/2
+
+u,
+
+8/3
+
+11/3 3210/8 X1 13 ~ FMPCV3.37 -Q7.2
+
+3 34
+
+-H10.8 SCHNEIDER XB5-AVB4 X2RAOOIVRIES
+
+X1-H10.5
+
+SCHNEIDER XB5-AVB4 X2-STORING
+
+_~ 11/3 41 44
+
+14
+
+96
+
+N O~
+
+Al AV3.37
+
+Al PCV3.37
+
+~RELPOL A2R4-5024+V • 24VAC • 11/1
+
+(SCHNEIDER A2LC1-D09P7
+
+2 •
+
+9/10
+
+9/10 0 • 11/1
+
+X2.25P o ~ N X3 ^ p p z!WA
+
+QTY PE 1 ~~~~ PE °0
+
+Nw~ ~ 7/2 -
+
+~, iv W
+
+37/2 13l 4 Il/6 5~ 	ZIE SCHEMA EBHONEY. 21 22 1
+
+co
+
+P4.8 • 1 1 •
+
+<!-- PAGE: 11 | SECTION: 1133.37 RECOVERY BLOK-L -->
+
+## 1133.37 RECOVERY BLOK-L
+
+NL NU ANTIVRIES
+
+~U 1 Y1 T2 C HONEYWELL
+
+24
+
+X2.25P m O O
+
+-TS10.6
+
+0-10V ANTIVRIES+
+
+AOS MOD105 CO. 1018
+
+FTSE60
+
+EB HONEYWELL
+
+GETEKEND 19/07/2016 VH WUZIG.TGK 27/03/2018 VHG AZ ST.JAN
+
+PROJECT: M.0019077.B.46 =12.05.95 DEB L/5 1133.3 '7 / /
+
+RECOVERY BLOK-L BORD
+
+VINCI i
+
+FAauritS
+
+10/20 / /
+
+HVAC L/5 IG3.37
+
+BRUGGE
+
+1 2 4
+
+I
+
+<!-- PAGE: 12 | SECTION: 1133.37 RECOVERY BLOK-L -->
+
+1 2 3 4 5 6 7 8 9 10
+
+SIGNALISATIE LG3,37 RECOVERY BLOK-L
+
+10/10 1 12/1
+
+10/10 3 12/1
+
+10/4 • • • • • • •
+
+34 BRAND - 2
+
+22
+
+22
+
+32
+
+651G3.37 ~iZ1
+
+KERIG3.37
+
+6 4
+
+<!-- PAGE: 12 | SECTION: 2. FK87 -->
+
+# 2. FK87
+
+1G3.37
+
+2
+
+-K
+
+31
+
+21
+
+21
+
+11
+
+X142 \
+
+4A V3.37 -K10.7
+
+1 `1
+
+<!-- PAGE: 12 | SECTION: 43. FMPCV3.39 -->
+
+# 43. FMPCV3.39
+
+-07.2 44
+
+1PCV3.37
+
+13 -K10.3
+
+14
+
+41
+
+8/3_
+
+10/4_
+
+m
+
+o o
+
+s o
+
+o O
+
+r o
+
+vi o
+
+m m
+
+a~
+
+o
+
+r
+
+10/10
+
+2 12/1
+
+10/10 0 12/1
+
+X3.37P p p X3.37P p X337P p X3.37P~ X3.37P p X3.37P p X3.37P m0 X3.37P p X3.37P p
+
+PE m m w co m m w m w m — — ~ PE W J N
+
+W W J N
+
+W W J N
+
+W
+
+W
+
+W J N
+
+W J N
+
+W J N
+
+IV
+
+N
+
+X3.37P p -0
+
+-X3.37P 0-X3.37P p-X3.37P 4,0 -X3.37P p-X3.37P p-X3.37P Q-X3.37P p-X3.37P p
+
+D 2 DI3 D 5 D 6 D 8 D 9 DIIO D 12 MOD103 MOD103 MOD103 MOD103 MOD103 MOD103 MOD103 MOD103 1018 CO, 1018 CO, 1018 CO. 1018 CO. 1018 CO. 1018 CO, 1018 C0,1018 CO. 1018
+
+DII MOD103
+
+CO.
+
+EB HONEYWELL
+
+GETEKENO 19/07/2016 VH
+
+WIIZIG.TGk 27/03/2018 VHG
+
+PROJECT: M,0019077.B.46 =12.05.95 DEB L/5 IG3.37
+
+AZ ST.JAN
+
+RECOVERY BLOK-L BORD
+
+FACILITIES
+
+BRUGGE
+
+11/20 / /
+
+HVAC L/5 IG3.37
+
+I 9
+
+I 7
+
+I 8
+
+1 I 2
+
+I 5 I
+
+I
+
+I
+
+I
+
+10
+
+<!-- PAGE: 13 | SECTION: 43. FMPCV3.39 -->
+
+10
+
+A
+
+SIGNALISATIE - STURING BRANDKLEPPEN IG3,37 RECOVERY BLKK-L
+
+11/10 1 13/1
+
+11/10 13/1
+
+2/10 10
+
+B
+
+12113 BK3.37/2 -K12.6
+
+12113 { BK
+
+32 33 ~t STOP \ -K5.2
+
+12.3 \ -K12.3
+
+11
+
+11
+
+31
+
+12 1 312/7
+
+12 111-312/4
+
+22 21313/3 3/4 32 31 413/8
+
+22 21313/3 3/4 32 3  3413/8
+
+C
+
+IG3.37 RECOVERY BLOK-L + BK3.37/2
+
+IG3.37 RECOVERY BLOK-L BK3.37/1 * -012.4 \SZ SBRANDKLEP TOE XB5-AVB4 ROOD
+
+42 41 44
+
+42 11-- 44
+
+012.7
+
+z SBRANOKLEP TOE - X55-AVB4
+
+ROOD
+
+BK3.37/2
+
+Al BK3.37/1 ~RELPOL A2R4-5024+V
+
+A1
+
+D
+
+IRELPOL A2R4-5024+V
+
+24VAC 2 13/1
+
+24VAC
+
+13/1 11/10
+
+W CL X4° ti X4',
+
+d W X4 O
+
+O
+
+X4
+
+N N
+
+N
+
+N
+
+N
+
+N
+
+N N
+
+N N PE
+
+-T PE
+
+N
+
+N
+
+N IV
+
+N IJ
+
+N N IV N
+
+N
+
+C% m
+
+N E
+
+W A
+
+m A
+
+W Gl
+
+m
+
+S4 5 b
+
+S1 2 ~3
+
+1 2 S11S21S3
+
+1 2
+
+SM12.5 BELIMO BLF24-T+S2A-F BK3.37/2 IG3.37 RECOVERY BLOK-L
+
+4 3156_SM12.2 II BELIMO 80 BLF24-T+S2A-F BK3.37/1 IG3.37 RECOVERY BLOK-L
+
+SM
+
+80
+
+0+
+
+0~
+
+27/03/2016
+
+PROJECT: M.0019077.6.46 =12.05.95 +EB L/5 IG3.3 i
+
+VINCI ~~
+
+AZ ST.JAN
+
+RECOVERY BLOK-L BORD
+
+BRUGGE
+
+FACK TIES
+
+HVAC L/5 IG3.37
+
+<!-- PAGE: 14 | SECTION: 43. FMPCV3.39 -->
+
+1 2 3 4 5 6 7 8 9 10
+
+SIGNALISATIE - STURING BRANDKLEPPEN LG3,37 RECOVERY BLKK-L
+
+12/10 1 -/- 12/10 3 -/-
+
+32 34 BK
+
+12,3 -K12.3
+
+31
+
+32
+
+22 2BK3.37/1 -K12.3
+
+3BK3.37/2 -K12.6
+
+31
+
+21
+
+22
+
+23 -K
+
+2,6 -K12.6
+
+21
+
+m
+
+BK3.37 Al
+
+c
+
+m
+
+~RELPOL A2R4-5230-V
+
+230VAC 2
+
+12/10
+
+12/10 0 -/-
+
+~v p X3_37Pm p
+
+X3.37P p
+
+PE w W w W w 12 PE v V v N .. ^'
+
+1f 13 5/5
+
+W v N ..
+
+22 2 238/1
+
+32 ' !-- 33
+
+42 423
+
+-X3.37P p v
+
+-X3.37P p
+
+DI2 MOD104
+
+D 3 MOD104 1018 CO, 1018
+
+CO,
+
+EB HONEYWELL
+
+GETEKEND 19/07/2016 VH
+
+WIJZIG.TGK 27/03/2018 VHG
+
+RECOVERY BLOK-L BORD PROJECT: M.0019077.B.46 =12.05.95 DEB L/5 IG3.37 / /
+
+AZ ST.JAN
+
+V~NC~
+
+HVAC L/5 IG3.37 13/20 / /
+
+FACILITIES
+
+BRUGGE
+
+_
+
+9 10 i I I I I I a 6 7 2 3 4 5
+
+I
+
+<!-- PAGE: 15 | SECTION: 43. FMPCV3.39 -->
+
+| Date 03/03/2018 | Reports of Cables | Col_3 | Page |
+| :--- | :--- | :--- | :--- |
+| Cable  Description | AZ ST.JAN  BRUGGE  RECOVERY BLOK-L BORD  HVAC L/5 IG3.37  Function | Length | Remarks |
+| 2W10.6  2W12.2  2W12.5  2W2.8  2W4.2  2W4.4  2W4.9  2W5.3  2W6.1  2W6.2  2W6.3  2W6.4  2W7.2  2W8.6  3W4.9  1 W5.4  LIHCH-JZ 3G1  1 WEB37P LIHH-JZ 18*1  1WEB37PLIHH-JZ 18*1  2W1.2  XGB 5G2.5  LIHH-JZ 3*1  LIHH-JZ 4G1  PYRO 5G1.5  PYRO 5G1.5  PYRO 3G1.5  PYRO 3G1.5  PYRO 3G1.5  PYRO 12G1.5  XGB 4G2.5  LIHCH-JZ 4G2.5  LIHH-JZ 7G1  LIHH-JZ 3G1  XGB 3G1.5  LIHH-JZ 5G1  PYRO 3G1.5 | CONTROL CABLE  SHIELDED 24V  HALO CONTROL CABLE  HALO CONTROL CABLE  POWER CABLE 400V+N  20A  CONTROL CABLE 24V  F3 CONTROL CABLE 230V  F3 CONTROL CABLE 230V  HALO CONTROL CABLE  F3 CONTROL CABLE 230V  F3 CONTROL CABLE 230V  F3 CONTROL CABLE 230V  F3 CONTROL CABLE 230V  MOTOR CABLE 400V  POWER CABLE 20A  SHIELDED  CONTROL CABLE 24V  CONTROL CABLE 24V  CONTROL CABLE 230V  CONTROL CABLE 24V  F3 CONTROL CABLE 230V |  | KLANT |
+
+<!-- PAGE: 16 | SECTION: 43. FMPCV3.39 -->
+
+| I | 2 | 3 | 4 | 5  6 | 7  8 | 9 | 10 |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 2W1.2 | XGB 5G2.5 | SHEET | m N N |  | r |  |  |
+| Cablemarking | Cabletype  Pin Number. |  |  |  |  |  |  |
+|  | Connection no. |  |  |  |  |  |  |
+| Destination  symbol | Designation |  |  |  |  |  |  |
+| Terminal  strip  XO  Terminal number  Link  Destination  Connection no.  symbol  Designation |  |  | r  J N  J T  J Z d  0000000000000000000000000000000000000000000000000000000000  u_ E: 7-  m  17 |  |  |  |  |
+|  | Pin Number. |  |  |  |  |  |  |
+|  | GETEKEND  18/02/2018 | VH |  | 1/1 |  |  |  |
+| VINCI | WIIZIG.TGK  27/03/2018  /  / | VHG | AZ ST.JAN | RECOVERY BLOK-L BORD | PROJECT: M.0019077.B.46 | =12.05.95 | .EB L/5 IG3.37 |
+| FACILITIES | /  / |  | BRUGGE | HVAC L/5  IG3.37 |  |  | $1/20 |
+| 1 | 2 |  |  |  |  | 9 | 10 |
+
+<!-- PAGE: 17 | SECTION: 43. FMPCV3.39 -->
+
+| 1  2 | 3 | 4 | S  6 | 7  8 | 9 | 10 |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+|  | SHEET | r- |  |  |  |  |
+| 2W7.2  XGB 3(31.5 |  | m |  |  |  |  |
+| 2W6.1  XGB 662.5 |  | or LO N Lo |  |  |  |  |
+| Cablemarking  Cabletype  Pin Number. |  |  |  |  |  |  |
+| Connection no. |  | ~ z |  |  |  |  |
+| Destination  symbol |  | N |  |  |  |  |
+| Terminal strip  xi    Designation  Terminal number  Link  Destination  Connection no.  symbol  Designation |  | 0000000000000000000000000000000000000000000000000000000000  —  u  —*  u  —  -K10.3  2    m  Y |  |  |  |  |
+| Pin Number. |  |  |  |  |  |  |
+| GETEKENO  18/02/2018 | VH |  | 1/1 |  |  |  |
+| VINCI ~  WIJZIG.TGK  27/03/2.018  / / | VHG | AZ ST.JAN | RECOVERY BLOK—L BORD | PROJECT: M.0019077.B.46 | =12.05.95.02 | .EB IG3.25 |
+| FAdIJnES  /  /  1  2 | 3 | BRUGGE  4 | HVAC L/5  IG3.37  6 | 7  8 | 9 | $2/20  10 |
+
+<!-- PAGE: 18 | SECTION: 43. FMPCV3.39 -->
+
+I 2 3 4 5
+
+SHEET m M M — s
+
+— -- — — — e
+
+2W10.6 LIHH-JZ 4G1 IL3, 2W8.6 LIHH-JZ 5131 v S 2W6.3 LIHH-JZ 7G1 r 2W2.8 LIHH-1Z 3x1
+
+Cablemarking Cabletype Pin Number.
+
+Connection no.
+
+Destination
+
+o o symbol Designation
+
+o
+
+¢
+
+v~
+
+Terminal strip X 3
+
+Terminal number
+
+Link 0000000000000000000000000000000000000000000000000000000000
+
+a N
+
+Connection no. d
+
+a
+
+X2.25P 2 1
+
+Destination
+
+_ Y symbol ~_ Designation
+
+Y
+
+Y Y Y
+
+Y
+
+Pin Number. o
+
+GETEK END 18/02/2018 VH 1/1 WUZIG.TGK 27iO3i2018 vHG 'vINCI  4 PROJECT: AZ ST.JAN
+
+M.0019077.B.46 =12.05.95.02 .EB IG3.25 i i i $3/20
+
+RECOVERY BLOK-L BORD
+
+FACILITIES ~
+
+BRUGGE
+
+HVAC L/S IG3.37
+
+2 3 4 5 6 I
+
+7 8 9 10
+
+<!-- PAGE: 19 | SECTION: 43. FMPCV3.39 -->
+
+| Col_1 | 4 | Col_3 | 5  6  7  8 | Col_5 | 10 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+|  | SHEET |  | o 0 0 |  | t |
+| 2W12.5  PYRO 5G1.5 |  |  | m  N m |  | I |
+| 2W12.2  PYRO 561.5 |  |  | °C Cr  l7 3  N  L--3 07  -  O7 l7 |  |  |
+| 2W5.3  PYRO 12G1.5 |  |  | N M -.t  o r |  |  |
+| 2W4.9  PYRO 361.5 |  |  | m m 1-13 |  |  |
+| 3W4.9  PYRO 3G1.5 |  | m m |  |  |  |
+| 2W4.4  PYRO 3G1.5 | M cn |  |  |  |  |
+| 2W4.2  PYRO 3G1:5 | m m |  |  |  |  |
+| Cablemarking  Cabletype  Pin Number.  Destination  Connection no.  symbol  Designation | -S4.2  2  n  m  s  m | x x | X x X X   x x x  -X4  77  1  x  v  -SM12.2  2  s  N  ~2  n  SM12.2  S6  Ur,  vi  Ln  ~::2  n  12 5  S4    u,  ti  v |  |  |
+| Terminal strip  A  Terminal number  Link  Destination  Connection no.  symbol  Designation | 0000000000000000000000000000000000000000000000000000000000  —  s  X  a  Y   —  X  a  Y Y  -K4.7  Al    -K4.7  23  -K4.7  21  ¢  Y Y Y  C  Y Y  ^  ;:z H  X  —   r  X  ^  s  X  -K12.3  At  —  X  —  m  s  X  —  a  a  X  -K12.6  Al |  |  |  |  |
+| Pin Number. |  |  |  |  |  |
+| GETEKEND  18/02/2018 | VH |  | 1/1 |  |  |
+| VIN  CI IA  WIJZIG.TGK  27/03/2018 | VHG  AZ STJAN |  | RECOVERY BLOK—L BORD  PROJECT: M.0019077.B.46 | =12.05.95.02 | .EB IG/EG3.9 |
+| FACILITIES  !  / /  /  2 | BRUGGE  4 |  | HVAC L/5  IG3.37  5  6  7  8 | 9 | $4/20  10 |
+
+<!-- PAGE: 20 | SECTION: 43. FMPCV3.39 -->
+
+1 2 3 4 5 6 7 8 9 10
+
+SHEET
+
+1WEB37P.1 LIHH-JZ 18x1 — N m — — — — m
+
+Cablemarking Cabletype Pin Number.
+
+-X2.25P 3 1
+
+r N
+
+-X2.25P 5 1
+
+-x2.z5P 1 1
+
+-X2.25P 6 1
+
+-X2.25P 4 1
+
+Connection no.
+
+ao a- N X
+
+r N X
+
+2
+
+Destination symbol
+
+Q,-
+
+X
+
+Designation
+
+Terminal s trip X2.25P
+
+Terminal number
+
+Link 0000000000000000000000000000000000000000000000000000000000
+
+-K10.7 22
+
+Connection no. - N
+
+c~:! x
+
+N
+
+Destination
+
+o symbol
+
+— —
+
+m
+
+Designation
+
+Pin Number. N m rr-ter=mm~m o 0
+
+GETEKEND 18/02/2018 VH 1/1
+
+WIJZIG.TGK 27/03/2018 VHG
+
+PROJECT: M.0019077.B.46 =12.05.95.02 .EB IG/EG3.9
+
+AZ ST.JAPV
+
+RECOVERY BLOK-L BORD
+
+FACILITIES
+
+$5/20 / /
+
+BRUGGE
+
+HVAC L/5 IG3.37
+
+I I I 9 7 8 1 3 6 4
+
+10 I
+
+<!-- PAGE: 21 | SECTION: 43. FMPCV3.39 -->
+
+3 4 S 6 7 8 9 10
+
+SHEET
+
+\ \ \ \ \ \ \ .- M M M
+
+r
+
+1WEB37P.2 LIHH-JZ 180 N M I - - - - o
+
+Cablemarking Cabletype Pin Number.
+
+r
+
+-X3.37P 12 1
+
+-X3.37P 4 1
+
+-X3.37P 13 1
+
+Destination Connection no. r
+
+<!-- PAGE: 21 | SECTION: 1. Ol dL£'£X- -->
+
+# 1. Ol dL£'£X-
+
+l 11 dL£' £X-
+
+N
+
+M
+
+OD
+
+T
+
+I.II
+
+~O
+
+f~
+
+symbol Designation
+
+x
+
+x
+
+x
+
+x
+
+x
+
+x
+
+x
+
+x
+
+Terminal str ip X3.37P
+
+Terminal number .N -!
+
+Link 0000000000000000000000000000000000000000000000000000000000
+
+Connection no.
+
+Destination
+
+- ~ Y Y Y Y d Y Y lN ~o~~tM"R Y Y Y Y symbol
+
+Designation
+
+Pin Number. ~ Poo Ppp Q 9 9
+
+GETEKEND 18/02/2018 VH 1/1 WIJZIG.TGK 27/03/2018 VHG AZ ST.JAN
+
+s VINCI I
+
+PROJECT: M.0019077.B.46 =12.05.95.02 .EB IG/EG3.9 / /
+
+RECOVERY BLOK—L BORD
+
+$6/20 / /
+
+BRUGGE
+
+HVAC L/5 IG3.37
+
+FACILITIES
+
+I 3 I 4 5 6
+
+I
+
+2
+
+7 8 9 10
+
+<!-- PAGE: 22 | SECTION: 1. Ol dL£'£X- -->
+
+Date 03/03/201E Bill of Materials Page 1 AZ ST.JAN
+
+| AZ ST.JAN  BRUGGE  RECOVERY BLOK-L BORD | Col_2 | vI"=I   e  rkcI —T  ,  No |
+| :--- | :--- | :--- |
+| HVAC L/5 IG3.37  Cataloque  ABBMOTOR  BELIMO  BELIMO  DEHN  EREA  EREA  GRUNDFOS  HIQUEL  HONEYWELL  HONEYWELL  MER-GER  MER-GER  RELPOL  RELPOL  Quantity  1  2  2  1  1  1  1  1  1  1  1  1  1  12  Description   MOTOR 2.2KW/2P  THERMISCH KONTACT BRANDKLEP  BK SERVO 24V 0/1 VEER +2 EK  OVERSPANNINGS BEVEILGING  TRANSFO 230V/160VA  TRANSFO 24V/250VA  POMP 230V  LAMPENTEST 22 INPUTS  ANTIVRIES+ANALOGE STURING  VEERSERVO LUCHTKLEP +2EK  AUTOMAAT 4P 20A C-KURVE 10/15KA  DIFF.ELEMENT 4P 300mA  VOET STEEKRELAIS 2P  VOET STEEKRELAIS 4P | Reference  APAL-2-00220-1-0  BAE-72  BF-24-S  DEHNGUARD TNS  E230TC160  E24TC250  ALPHA 2-25-40  TDP-22  FTSE60  SF24A-S2  C60H C20/4P  VIGI C60/300/4P  GZM80  GZT4 | Symbol  -M6.1  -SM12.2, -SM12.5  -SM12.2, -SM12.5  -1.8  -T2.1  -T2.5  -M7.2  -3.4  -TS 10.6  -SM8.6  -F1.2  -F1.2  -K6.4  -K10.7, -K12.3, -K12.6, |
+| 8 STEEKRELAIS 24VAC/4P  RELPOL | R4-2014-23-5024WTL | -K4.2, -K4.5, -K4.7,  -K6.5, -K8.7, -K13.9,  -K5.2, -K8.2, -K8.3  -K10.7, -K12.3, -K12.6, |
+| 4 STEEKRELAIS 230VAC/4P  RELPOL | R4-2014-23-5230-WTL | -K4.2, -K4.5, -K4.7,  -K6.5, -K8.7  -K13.9, -K5.2, -K8.2, |
+| 1 STEEKRELAIS 24VAC/2P  1 BORDVERLICHTING  1 BORDVERLICHTING  1  FREQUENTIE REGELAAR 2.2KW/400V  1  AUTOMAAT 1 P 10A C-KURVE 10/15KA  1  AUTOMAAT 3P 10A C-KURVE 10/15KA  1  AUTOMAAT 2P 16A C-KURVE 10/15KA  1 AUTOMAAT 1P 2A C-KURVE 10/15KA  2  AUTOMAAT 1 P 6A C-KURVE 10/15KA  1  AUTOMAAT 4P 6A C-KURVE 10/15KA  1  3 PHASE CIRCUIT BREAKER  1 3 PHASE CIRCUIT BREAKER  1  MOTORBEVEILIGING 0.63-1A  1  3 POLE CONTACTOR+1 NO+1 NC 230VAC  1 PANEL POWERMETER+ IMPULS  1 DRUKKNOP GROEN  2 3-STANDEN SCHAKELAAR  2 KONTACT NC  1  HULPKONTACT GV2 FRONT NO+NC  1  HULPKONTACT GV2 ZIJKANT NO+NC  9 LED 24V  RELPOL  RITAL  RITAL  SCHNEIDER  SCHNEIDER  SCHNEIDER  SCHNEIDER  SCHNEIDER  SCHNEIDER  SCHNEIDER  SCHNEIDER  SCHNEIDER  SCHNEIDER  SCHNEIDER  SCHNEIDER  SCHNEIDER  SCHNEIDER  SCHNEIDER  TEE  TEE  TEE | R M 84-2012-25-5024  PS4103.350  PS4103.600  ATV61E5U22N4  C60H C10/1 P  C60H C10/3P  C60H C16/2P  C60H C2/1 P  C60H C6/1 P  C60H C6/4P  GV2-M03  GV2-RT04  GV2-RT05  LC1-D09P7  PM710MG  XB5 AA31  XB5 AD33  ZBE102  GV2-AE11  GV2-AN11  XB5-AVB4 | -K8.3  -K6.4  -S1.4  -H1.4  -FR6.1  -172.5  -F6.1  -171.3  -F2.1  -F2.6, -F2.7  -F1.4  -07.2  -Q2.1  -Q2.5  -K10.3  -1.6  -S3.2  -S 10.4, -S8.3  -S10.4, -S8.3  -Q7.2  -Q7.2  -H10.8, -1-14.3, -D12.4, |
+| 1  HOOFDSCHAKELAAR 25A  27 VEERKLEM 2.5#   VC  WAGO | 492/101007/200  2002-1201 | -D12.7, -1-19.5, -1-14.6,  -1-14.8, -1-110.5, -1-19.3  -Q1.2  X3 1, X3 10, X3 11, X3 |
+| 4 PE VEERKLEM 2.5#  WAGO_ | 2002-1207 | 12, X3 13, X3 14, X3 2,  X3 3, X3 4, X3 5, X3 6,  X3 7, X3 8, X3 9,  X3.37P 1, X3.37P 10,  X3.37P 11, X3.37P 12,  X3.37P 13, X3.37P 2,  X3.37P 3, X3.37P 4,  X3.37P 5, X3.37P 6,  X3.37P 7, X3.37P 8,  X3.37P 9  X3 PE, X3 PE, X3 PE,  X3 PE |
+
+<!-- PAGE: 23 | SECTION: 1. Ol dL£'£X- -->
+
+Date 03/03/201F Bill of Materials -Page 2 AZ STAN
+
+BRUGGE RECOVERY BLOK-L BORD
+
+F,1Cil Irl FS
+
+HVAC L/5 IG3.37
+
+Quantity Description Cataloque Reference Symbol
+
+<!-- PAGE: 23 | SECTION: 41. VEERKLEM 4# -->
+
+# 41. VEERKLEM 4#
+
+WAGO_ 2004-1201 X4 24, X4 3, X4 4, X4 5, X4 6, X4 7, X4 8, X4 9 10 PE VEERKLEM 4# WAGO_ 2004-1207 XO PE, X1 PE, X1 PE, X4 PE, X4 PE, X4 PE, X4 PE, X4 PE, X4 PE, X4 PE 154

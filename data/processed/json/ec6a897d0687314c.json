@@ -1,0 +1,43 @@
+{
+  "metadata": {
+    "doc_id": "ec6a897d0687314c",
+    "file_name": "Schema EB Bord Machines Layout.pdf",
+    "file_extension": ".pdf",
+    "file_hash_sha256": "0909e0e12ba2ba6c5a68ca0e6cb6e63bcff09012747bdd3f3ea677ed7e64b329",
+    "sharepoint_url": "https://ingeniumnv.sharepoint.com/sites/06038004-INT/Shared%20Documents/General/00_Info/RE_%2006038.004%20renovatie%20OP8%20en%209%20-%20elektrisch%20bord%20tegen%20koker%2016%20aanvraag%20schemas%20en%20Panduitkast_%20aanvraag%20TF%20IG_EG3.25_%20schemas%20borden%20Honeywell/Schema%20EB%20Bord%20Machines%20Layout.pdf",
+    "relative_folder_path": "General/00_Info/RE_ 06038.004 renovatie OP8 en 9 - elektrisch bord tegen koker 16 aanvraag schemas en Panduitkast_ aanvraag TF IG_EG3.25_ schemas borden Honeywell",
+    "sharepoint_item_id": "01L557GESDBRQFJWIXWNFLVHREIJUQ7JEO",
+    "sharepoint_etag": "\"{54600C43-17D9-4AB3-BA9E-2442690FA48E},1\"",
+    "project_id": "UNKNOWN_PROJECT",
+    "project_name": "AZ Sint-Jan Brugge",
+    "building": "UNKNOWN_BUILDING",
+    "phase": "UNKNOWN_PHASE",
+    "doc_category": "drawing_diagram",
+    "extraction_method": "pymupdf_ocr",
+    "is_scanned": true,
+    "is_hvac_diagram": true,
+    "extraction_confidence": 0.8,
+    "quality_warnings": [],
+    "processed_at": "2026-11-18T12:40:22.132028Z"
+  },
+  "blocks": [
+    {
+      "block_id": "pdf-blk-0001",
+      "page_number": 1,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- A.Z. SINT-JAN AV\n- ELEKTRISCHE BORDEN\n- .L,\n- 5-C- /r  K\n- Bord : 115 cl-j HCL C-4-v-\n- Locatie\n- -e F y\n- Dienst\n- Voeding\n- - 0.w~\n- Verliesstroomschakelaar\n- Automaten\n- 2-polig_.___._..._.-\n- 4-polig\n- andere\n- R\n- i\n- N\n- S\n- T\n- Meting\n- Noodkringen\n- ,\n- Verliesstroomschakelaar\n- q\n- Automaten\n- 2-polig \t 4-  ,mil\n- 3-polig\n- 4-polig\n- andere\n- S\n- N\n- R\n- Meting\n- TH\n- I",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0002",
+      "page_number": 2,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- 2\n- B\n- A\n- 1\n- 3\n- 2\n- 4 5\n- f\n- 15A\n- 10A\n- 10A\n- s\n- S3N I H3dW\n- 2\n- 3\n- 1\n- 15A\n- 15A\n- 15A",
+      "table_headers": null
+    }
+  ]
+}
