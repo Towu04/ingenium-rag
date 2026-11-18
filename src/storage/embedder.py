@@ -1,8 +1,96 @@
-from collections.abc import Sequence
+"""Simple BGE-M3 Hybrid Embedder (Dense + Sparse) for demo."""
+
+from dataclasses import dataclass
+from typing import Any, Sequence
+
+import numpy as np
+import torch
+from FlagEmbedding import BGEM3FlagModel
+
+from domain import ChildChunk
 
 
-class BGEEmbedder:
-    model_name = "BAAI/bge-m3"
+def _detect_best_device() -> str:
+    if torch.cuda.is_available():
+        return "cuda"
+    if torch.backends.mps.is_available():
+        return "mps"
+    return "cpu"
 
-    def embed(self, texts: Sequence[str]) -> list[list[float]]:
-        raise NotImplementedError("Configure a BGE-M3 embedding provider before indexing")
+
+def _to_sparse_dict(raw_weights: Any) -> dict[int, float]:
+    """Converts FlagEmbedding's {'token_id': np.float32} into {int: float} for pgvector."""
+    return {int(k): float(v) for k, v in raw_weights.items() if float(v) > 0}
+
+
+@dataclass
+class EmbeddedChildBatch:
+    dense_vecs: np.ndarray
+    sparse_weights: list[dict[int, float]]
+
+    def __len__(self) -> int:
+        return len(self.dense_vecs)
+
+
+@dataclass
+class EncodedQuery:
+    dense_vec: np.ndarray
+    sparse_weights: dict[int, float]
+
+
+class BGEM3Embedder:
+    def __init__(
+        self,
+        model_name: str = "BAAI/bge-m3",
+        device: str | None = None,
+        batch_size: int = 32,
+        max_length: int = 1024,
+    ) -> None:
+        self.device = device or _detect_best_device()
+        self.batch_size = batch_size
+        self.max_length = max_length
+
+        self._model: Any = BGEM3FlagModel(
+            model_name,
+            use_fp16=(self.device == "cuda"),
+            devices=self.device,
+        )
+
+    @property
+    def tokenizer(self) -> Any:
+        return self._model.tokenizer
+
+    def embed_children(self, children: Sequence[ChildChunk]) -> EmbeddedChildBatch:
+        if not children:
+            return EmbeddedChildBatch(
+                dense_vecs=np.empty((0, 1024), dtype=np.float32),
+                sparse_weights=[],
+            )
+
+        texts: list[str] = [c.embedding_text or c.text for c in children]
+        output: dict[str, Any] = self._model.encode(
+            texts,
+            batch_size=self.batch_size,
+            max_length=self.max_length,
+            return_dense=True,
+            return_sparse=True,
+        )
+
+        return EmbeddedChildBatch(
+            dense_vecs=np.asarray(output["dense_vecs"], dtype=np.float32),
+            sparse_weights=[_to_sparse_dict(w) for w in output["lexical_weights"]],
+        )
+
+    def embed_query(self, query: str) -> EncodedQuery:
+        output: dict[str, Any] = self._model.encode(
+            [query],
+            batch_size=1,
+            max_length=self.max_length,
+            return_dense=True,
+            return_sparse=True,
+        )
+        return EncodedQuery(
+            dense_vec=np.asarray(output["dense_vecs"][0], dtype=np.float32),
+            sparse_weights=_to_sparse_dict(output["lexical_weights"][0]),
+        )
+    

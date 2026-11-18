@@ -1,24 +1,22 @@
+"""Token-accurate Parent-Child chunker aligned with BAAI/bge-m3."""
+
 from functools import lru_cache
-from transformers import AutoTokenizer, PreTrainedTokenizerBase
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from transformers import AutoTokenizer, PreTrainedTokenizerBase
 
 from domain import ChildChunk, ParentChunk, ParsedDoc, ParsedSection
 
 
 @lru_cache(maxsize=2)
-def _load_tokenizer(model_name: str) -> PreTrainedTokenizerBase:
-    """Lazy-loads and caches the HuggingFace tokenizer so importing the module stays fast."""
+def load_tokenizer(model_name: str = "BAAI/bge-m3") -> PreTrainedTokenizerBase:
+    """Lazy-loads and caches the HuggingFace tokenizer."""
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    # Prevent false-positive warnings when counting tokens on long engineering documents
     tokenizer.model_max_length = 1_000_000
     return tokenizer
 
 
 class ParentChildChunker:
-    """
-    Splits a ParsedDoc into context-rich ParentChunks and overlapping ChildChunks
-    measured in exact embedding model tokens while preserving section/page provenance.
-    """
+    """Splits a ParsedDoc into context-rich ParentChunks and overlapping ChildChunks."""
 
     def __init__(
         self,
@@ -27,30 +25,29 @@ class ParentChildChunker:
         parent_overlap: int = 0,
         child_size: int = 250,
         child_overlap: int = 40,
+        tokenizer: PreTrainedTokenizerBase | None = None,
     ) -> None:
         if parent_size <= 0 or child_size <= 0 or child_size > parent_size:
             raise ValueError("Chunk sizes must be positive and child_size <= parent_size.")
         if parent_overlap >= parent_size or child_overlap >= child_size:
             raise ValueError("Overlap must be strictly smaller than the respective chunk size.")
 
-        self.model_name = model_name
+        self.tokenizer = tokenizer or load_tokenizer(model_name)
         self.parent_size = parent_size
         self.parent_overlap = parent_overlap
         self.child_size = child_size
         self.child_overlap = child_overlap
 
-        tokenizer = _load_tokenizer(model_name)
-
         self._parent_splitter = RecursiveCharacterTextSplitter.from_huggingface_tokenizer(
-            tokenizer,
+            self.tokenizer,
             chunk_size=parent_size,
             chunk_overlap=parent_overlap,
-            keep_separator=True,  # Retains Markdown headers ('## ') at the start of parent chunks
+            keep_separator=True,
             separators=["\n# ", "\n## ", "\n### ", "\n\n", "\n", ". ", " ", ""],
         )
 
         self._child_splitter = RecursiveCharacterTextSplitter.from_huggingface_tokenizer(
-            tokenizer,
+            self.tokenizer,
             chunk_size=child_size,
             chunk_overlap=child_overlap,
             keep_separator=False,
@@ -61,16 +58,17 @@ class ParentChildChunker:
         parents: list[ParentChunk] = []
         children: list[ChildChunk] = []
 
-        # Use layout-aware sections if provided by the parser; otherwise fall back to full markdown
         sections = document.sections or [ParsedSection(text=document.markdown)]
-
+        doc_metadata = document.metadata.model_copy(deep=True)
         parent_idx = 0
 
         for section in sections:
-            clean_section_text = section.text.replace("\r\n", "\n").strip()
-            if not clean_section_text:
+            raw_text = section.text.replace("\r\n", "\n").strip()
+            if not raw_text:
                 continue
 
+            # Prepend newline if starting with '#' so '\n# ' separators match line 1
+            clean_section_text = f"\n{raw_text}" if raw_text.startswith("#") else raw_text
             parent_texts = self._parent_splitter.split_text(clean_section_text)
 
             for p_text in parent_texts:
@@ -78,10 +76,8 @@ class ParentChildChunker:
                 if not p_text:
                     continue
 
-                # Deterministic ID allows idempotent database upserts without duplicate chunks
                 parent_id = f"{document.document_id}:p{parent_idx}"
                 child_texts = self._child_splitter.split_text(p_text)
-
                 current_child_ids: list[str] = []
 
                 for child_idx, c_text in enumerate(child_texts):
@@ -104,7 +100,7 @@ class ParentChildChunker:
                             ),
                             page_numbers=list(section.page_numbers),
                             section_header=section.section_header,
-                            metadata=document.metadata.model_copy(deep=True),
+                            metadata=doc_metadata,
                         )
                     )
 
@@ -120,7 +116,7 @@ class ParentChildChunker:
                         page_numbers=list(section.page_numbers),
                         section_header=section.section_header,
                         child_ids=current_child_ids,
-                        metadata=document.metadata.model_copy(deep=True),
+                        metadata=doc_metadata,
                     )
                 )
                 parent_idx += 1
@@ -131,7 +127,7 @@ class ParentChildChunker:
     def _build_embedding_text(
         text: str, document: ParsedDoc, section_header: str | None
     ) -> str:
-        """Prepends metadata context for BGE-M3 embedding without altering the raw display text."""
+        """Prepends metadata context for BGE-M3 dense + sparse encoding."""
         meta = document.metadata
         tags = [
             f"Project: {meta.project}" if meta.project else None,
