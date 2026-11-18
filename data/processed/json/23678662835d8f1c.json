@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "doc_id": "23678662835d8f1c",
+    "file_name": "06038.004 Facturatie - Sjabloon VS1-schijf voorontwerp (_).pdf",
+    "file_extension": ".pdf",
+    "file_hash_sha256": "146c397cec92d904969c4c01c227de29bff6995c3f7a24eb68fbba9e960f1f8d",
+    "sharepoint_url": "https://ingeniumnv.sharepoint.com/sites/06038004-INT/Shared%20Documents/General/00_Algemeen/Contract/Prestatiestaten/06038.004%20Facturatie%20-%20Sjabloon%20VS1-schijf%20voorontwerp%20(_).pdf",
+    "relative_folder_path": "General/00_Algemeen/Contract/Prestatiestaten",
+    "sharepoint_item_id": "01L557GEQOF5A2OLSB3BHJMTXCKUQNAJ4F",
+    "sharepoint_etag": "\"{A7412F0E-412E-4ED8-964E-E25520D02785},1\"",
+    "project_id": "UNKNOWN_PROJECT",
+    "project_name": "AZ Sint-Jan Brugge",
+    "building": "UNKNOWN_BUILDING",
+    "phase": "Voorontwerp (Preliminary Design)",
+    "doc_category": "unknown",
+    "extraction_method": "pymupdf_digital",
+    "is_scanned": false,
+    "is_hvac_diagram": false,
+    "extraction_confidence": 1.0,
+    "quality_warnings": [],
+    "processed_at": "2026-11-18T12:39:22.727990Z"
+  },
+  "blocks": [
+    {
+      "block_id": "pdf-blk-0001",
+      "page_number": 1,
+      "section_heading": null,
+      "sheet_name": null,
+      "block_type": "table",
+      "markdown_content": "| 06038.004 | AZ st. Jan Brugge renovatie OP 8-9 | Col_3 | Col_4 | Col_5 | 25/09/2023 | Col_7 |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| Perceel | Raming | Offertes | Toewijzing | Meerwerken | Ereloon (%) | Ereloon (EUR) |\n| HVAC | € 586.500,00 |  |  |  | 7,00% | € 41.055,00 |\n| elektriciteit | € 195.500,00 |  |  |  | 7,00% | € 13.685,00 |\n| sanitair | € 45.000,00 |  |  |  | 7,00% | € 3.150,00 |\n| medische gassen | € 55.000,00 |  |  |  | 7,00% | € 3.850,00 |\n| totaal | € 882.000,00 | € 0,00 |  | € 0,00 |  | € 61.740,00 |\n| Facturatieschema | Schijf (%) | Schijf (EUR) | Te factureren (%) | Te factureren (EUR) | Gefactureerd (EUR) | Factuur (EUR) |\n| Voorontwerp | 20% | 12.348,00 | 100% | 12.348,00 | 0,00 | 12.348,00 |\n| Ontwerp | 50% | 30.870,00 |  | 0,00 | 0,00 | 0,00 |\n| Aanbesteding | 5% | 3.087,00 |  | 0,00 | 0,00 | 0,00 |\n| Werfopvolging | 20% | 12.348,00 |  | 0,00 | 0,00 | 0,00 |\n| Voorlopige oplevering | 5% | 3.087,00 |  | 0,00 | 0,00 | 0,00 |\n|  |  | 0 |  | 0,00 | 0,00 | 0,00 |\n| Totaal | 100% | € 61.740,00 | 20% | € 12.348,00 | € 0,00 | € 12.348,00 |",
+      "table_headers": [
+        "06038.004",
+        "AZ st. Jan Brugge renovatie OP 8-9",
+        "Col_3",
+        "Col_4",
+        "Col_5",
+        "25/09/2023",
+        "Col_7"
+      ]
+    }
+  ]
+}

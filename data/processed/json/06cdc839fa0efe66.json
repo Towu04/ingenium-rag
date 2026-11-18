@@ -1,0 +1,112 @@
+{
+  "metadata": {
+    "doc_id": "06cdc839fa0efe66",
+    "file_name": "6038.004 Facturatie - Sjabloon (_).xlsx",
+    "file_extension": ".xlsx",
+    "file_hash_sha256": "d2cb7a3dc05918ba2bda06a3bd296cb7ba29156bb0306d46efed6d3ad094b297",
+    "sharepoint_url": "https://ingeniumnv.sharepoint.com/sites/06038004-INT/_layouts/15/Doc.aspx?sourcedoc=%7BC9C3990A-7EAE-4118-9B44-F82A3C619EC9%7D&file=6038.004%20Facturatie%20-%20Sjabloon%20(_).xlsx&action=default&mobileredirect=true",
+    "relative_folder_path": "General/00_Algemeen/Contract/Prestatiestaten",
+    "sharepoint_item_id": "01L557GEQKTHB4TLT6DBAZWRHYFI6GDHWJ",
+    "sharepoint_etag": "\"{C9C3990A-7EAE-4118-9B44-F82A3C619EC9},44\"",
+    "project_id": "6038.004",
+    "project_name": "AZ Sint-Jan Brugge",
+    "building": "UNKNOWN_BUILDING",
+    "phase": "UNKNOWN_PHASE",
+    "doc_category": "unknown",
+    "extraction_method": "openpyxl_table",
+    "is_scanned": false,
+    "is_hvac_diagram": false,
+    "extraction_confidence": 1.0,
+    "quality_warnings": [],
+    "processed_at": "2026-11-18T12:39:24.911788Z"
+  },
+  "blocks": [
+    {
+      "block_id": "xlsx-blk-0001",
+      "page_number": null,
+      "section_heading": "VS1-VO  (Rows 1-17)",
+      "sheet_name": "VS1-VO ",
+      "block_type": "table",
+      "markdown_content": "| 06038.004 | AZ st. Jan Brugge renovatie OP 8-9 | Col_3 | Col_4 | Col_5 | 2023-09-25 00:00:00 | Col_7 |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| Perceel | Raming | Offertes | Toewijzing | Meerwerken | Ereloon (%) | Ereloon (EUR) |\n| HVAC | 586500 |  |  |  | 0.07 | 41055.00000000001 |\n| elektriciteit | 195500 |  |  |  | 0.07 | 13685.000000000002 |\n| sanitair | 45000 |  |  |  | 0.07 | 3150.0000000000005 |\n| medische gassen | 55000 |  |  |  | 0.07 | 3850.0000000000005 |\n| totaal | 882000 | 0 |  | 0 |  | 61740.00000000001 |\n| Facturatieschema | Schijf (%) | Schijf (EUR) | Te factureren (%) | Te factureren (EUR) | Gefactureerd (EUR) | Factuur (EUR) |\n| Voorontwerp | 0.2 | 12348.000000000002 | 1 | 12348.000000000002 | 0 | 12348.000000000002 |\n| Ontwerp | 0.5 | 30870.000000000004 |  | 0 | 0 | 0 |\n| Aanbesteding | 0.05 | 3087.0000000000005 |  | 0 | 0 | 0 |\n| Werfopvolging | 0.2 | 12348.000000000002 |  | 0 | 0 | 0 |\n| Voorlopige oplevering | 0.05 | 3087.0000000000005 |  | 0 | 0 | 0 |\n|  |  | 0 |  | 0 | 0 | 0 |\n| Totaal | 1 | 61740.00000000001 | 0.2 | 12348.000000000002 | 0 | 12348.000000000002 |",
+      "table_headers": [
+        "06038.004",
+        "AZ st. Jan Brugge renovatie OP 8-9",
+        "Col_3",
+        "Col_4",
+        "Col_5",
+        "2023-09-25 00:00:00",
+        "Col_7"
+      ]
+    },
+    {
+      "block_id": "xlsx-blk-0002",
+      "page_number": null,
+      "section_heading": "VS2-O  (Rows 1-17)",
+      "sheet_name": "VS2-O ",
+      "block_type": "table",
+      "markdown_content": "| 06038.004 | AZ st. Jan Brugge renovatie OP 8-9 | Col_3 | Col_4 | Col_5 | 2024-02-23 00:00:00 | Col_7 |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| Perceel | Raming | Offertes | Toewijzing | Meerwerken | Ereloon (%) | Ereloon (EUR) |\n| HVAC | 651621.34 |  |  |  | 0.07 | 45613.493800000004 |\n| elektriciteit | 290108 |  |  |  | 0.07 | 20307.56 |\n| sanitair | 45189.5 |  |  |  | 0.07 | 3163.2650000000003 |\n| medische gassen | 130290.84 |  |  |  | 0.07 | 9120.3588 |\n| totaal | 1117209.68 | 0 |  | 0 |  | 78204.67760000001 |\n| Facturatieschema | Schijf (%) | Schijf (EUR) | Te factureren (%) | Te factureren (EUR) | Gefactureerd (EUR) | Factuur (EUR) |\n| Voorontwerp | 0.2 | 15640.935520000003 | 1 | 15640.935520000003 | 12348 | 3292.9355200000027 |\n| Ontwerp | 0.5 | 39102.338800000005 | 1 | 39102.338800000005 | 0 | 39102.338800000005 |\n| Aanbesteding | 0.05 | 3910.2338800000007 |  | 0 | 0 | 0 |\n| Werfopvolging | 0.2 | 15640.935520000003 |  | 0 | 0 | 0 |\n| Voorlopige oplevering | 0.05 | 3910.2338800000007 |  | 0 | 0 | 0 |\n|  |  | 0 |  | 0 | 0 | 0 |\n| Totaal | 1 | 78204.67760000001 | 0.7 | 54743.27432000001 | 12348 | 42395.27432000001 |",
+      "table_headers": [
+        "06038.004",
+        "AZ st. Jan Brugge renovatie OP 8-9",
+        "Col_3",
+        "Col_4",
+        "Col_5",
+        "2024-02-23 00:00:00",
+        "Col_7"
+      ]
+    },
+    {
+      "block_id": "xlsx-blk-0003",
+      "page_number": null,
+      "section_heading": "VS3-A (Rows 1-17)",
+      "sheet_name": "VS3-A",
+      "block_type": "table",
+      "markdown_content": "| 06038.004 | AZ st. Jan Brugge renovatie OP 8-9 | Col_3 | Col_4 | Col_5 | 2024-07-12 00:00:00 | Col_7 |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| Perceel | Raming | Offertes | Toewijzing | Meerwerken | Ereloon (%) | Ereloon (EUR) |\n| HVAC | 651621.34 | 938103.7 |  |  | 0.07 | 65667.259 |\n| elektriciteit | 290108 | 340833.34 |  |  | 0.07 | 23858.333800000004 |\n| sanitair | 45189.5 | 68306.33 |  |  | 0.07 | 4781.4431 |\n| medische gassen | 130290.84 | 120458.69 |  |  | 0.07 | 8432.108300000002 |\n| totaal | 1117209.68 | 1467702.06 |  | 0 |  | 102739.14420000002 |\n| Facturatieschema | Schijf (%) | Schijf (EUR) | Te factureren (%) | Te factureren (EUR) | Gefactureerd (EUR) | Factuur (EUR) |\n| Voorontwerp | 0.2 | 20547.828840000006 | 1 | 20547.828840000006 | 12348 | 8199.828840000006 |\n| Ontwerp | 0.5 | 51369.57210000001 | 1 | 51369.57210000001 | 42395.27 | 8974.302100000015 |\n| Aanbesteding | 0.05 | 5136.957210000001 | 1 | 5136.957210000001 | 0 | 5136.957210000001 |\n| Werfopvolging | 0.2 | 20547.828840000006 |  | 0 | 0 | 0 |\n| Voorlopige oplevering | 0.05 | 5136.957210000001 |  | 0 | 0 | 0 |\n|  |  | 0 |  | 0 | 0 | 0 |\n| Totaal | 1 | 102739.14420000004 | 0.75 | 77054.35815000003 | 54743.27 | 22311.08815000002 |",
+      "table_headers": [
+        "06038.004",
+        "AZ st. Jan Brugge renovatie OP 8-9",
+        "Col_3",
+        "Col_4",
+        "Col_5",
+        "2024-07-12 00:00:00",
+        "Col_7"
+      ]
+    },
+    {
+      "block_id": "xlsx-blk-0004",
+      "page_number": null,
+      "section_heading": "VS4-UITV (Rows 1-17)",
+      "sheet_name": "VS4-UITV",
+      "block_type": "table",
+      "markdown_content": "| 06038.004 | AZ st. Jan Brugge renovatie OP 8-9 | Col_3 | Col_4 | Col_5 | 2026-01-05 00:00:00 | Col_7 |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| Perceel | Raming | Offertes | Toewijzing | Meerwerken | Ereloon (%) | Ereloon (EUR) |\n| HVAC | 651621.34 | 938103.7 | 775292.3140495868 |  | 0.07 | 54270.461983471076 |\n| elektriciteit | 290108 | 340833.34 | 340833.33884297527 |  | 0.07 | 23858.33371900827 |\n| sanitair | 45189.5 | 68306.33 | 68306.3305785124 |  | 0.07 | 4781.443140495868 |\n| medische gassen | 130290.84 | 120458.69 | 120458.68595041323 |  | 0.07 | 8432.108016528928 |\n| totaal | 1117209.68 | 1467702.06 | 1304890.669421488 | 0 |  | 91342.34685950415 |\n| Facturatieschema | Schijf (%) | Schijf (EUR) | Te factureren (%) | Te factureren (EUR) | Gefactureerd (EUR) | Factuur (EUR) |\n| Voorontwerp | 0.2 | 18268.469371900832 | 1 | 18268.469371900832 | 12348 | 5920.469371900832 |\n| Ontwerp | 0.5 | 45671.173429752074 | 1 | 45671.173429752074 | 42395.27 | 3275.9034297520775 |\n| Aanbesteding | 0.05 | 4567.117342975208 | 1 | 4567.117342975208 | 22311.09 | -17743.97265702479 |\n| Werfopvolging | 0.2 | 18268.469371900832 | 1 | 18268.469371900832 | 0 | 18268.469371900832 |\n| Voorlopige oplevering | 0.05 | 4567.117342975208 |  | 0 | 0 | 0 |\n|  |  | 0 |  | 0 | 0 | 0 |\n| Totaal | 1 | 91342.34685950416 | 0.95 | 86775.22951652895 | 77054.36 | 9720.86951652895 |",
+      "table_headers": [
+        "06038.004",
+        "AZ st. Jan Brugge renovatie OP 8-9",
+        "Col_3",
+        "Col_4",
+        "Col_5",
+        "2026-01-05 00:00:00",
+        "Col_7"
+      ]
+    },
+    {
+      "block_id": "xlsx-blk-0005",
+      "page_number": null,
+      "section_heading": "VS4-VOPL (Rows 1-47)",
+      "sheet_name": "VS4-VOPL",
+      "block_type": "table",
+      "markdown_content": "| 06038.004 | AZ st. Jan Brugge renovatie OP 8-9 | Col_3 | Col_4 | Col_5 | Col_6 | Col_7 | 2026-10-16 00:00:00 | Col_9 |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| Perceel | Raming | Offertes | Toewijzing | Meerwerken | Herziening | Totaal uitgevoerd | Ereloon (%) | Ereloon (EUR) |\n| HVAC | 651621.34 | 938103.7 | 775292.3140495868 | 89276.54 | 22458.91 | 887027.7640495868 | 0.07 | 62091.943483471085 |\n| elektriciteit | 290108 | 340833.34 | 340833.33884297527 | 4675.94 | 7183.42 | 352692.69884297525 | 0.07 | 24688.48891900827 |\n| sanitair | 45189.5 | 68306.33 | 68306.3305785124 | 3091.3 | 731.64 | 72129.2705785124 | 0.07 | 5049.048940495868 |\n| medische gassen | 130290.84 | 120458.69 | 120458.68595041323 | -565.88 | 2541.01 | 122433.81595041322 | 0.07 | 8570.367116528927 |\n| totaal | 1117209.68 | 1467702.06 | 1304890.669421488 | 96477.9 |  | 1434283.5494214878 |  | 100399.84845950414 |\n| Facturatieschema | Schijf (%) | Schijf (EUR) | Te factureren (%) | Te factureren (EUR) |  |  | Gefactureerd (EUR) | Factuur (EUR) |\n| Voorontwerp | 0.2 | 20079.969691900827 | 1 | 20079.969691900827 |  |  | 12348 | 7731.9696919008275 |\n| Ontwerp | 0.5 | 50199.92422975207 | 1 | 50199.92422975207 |  |  | 42395.27 | 7804.654229752072 |\n| Aanbesteding | 0.05 | 5019.992422975207 | 1 | 5019.992422975207 |  |  | 22311.09 | -17291.097577024793 |\n| Werfopvolging | 0.2 | 20079.969691900827 | 1 | 20079.969691900827 |  |  | 9720.87 | 10359.099691900827 |\n| Voorlopige oplevering | 0.05 | 5019.992422975207 | 1 | 5019.992422975207 |  |  | 0 | 5019.992422975207 |\n| niet uitgevoerde werken |  | 1193.0960999999998 | 1 | 1193.0960999999998 |  |  | 0 | 1193.0960999999998 |\n| Totaal | 1 | 101592.94455950413 | 1 | 101592.94455950413 |  |  | 86775.23 | 14817.71455950414 |\n| niet uitgevoerde werken die aanbesteed zijn: |  |  |  |  |  |  |  |  |\n| HVAC: |  |  |  |  |  |  |  |  |\n| verrekening 5 kleinere stoombevochtigers |  |  |  | -2546.16 |  |  |  |  |\n| verrekening 20 niet uitgevoerde werken |  |  |  | -20180.75 |  |  |  |  |\n| correctie post 39.07.01 vaste som (10.000,00 EUR) |  |  |  | 10000 |  |  |  |  |\n| correctie post 39.07.02 Te verrekenen manuren |  |  |  | 7200 |  |  |  |  |\n| Elektriciteit: |  |  |  |  |  |  |  |  |\n| verrekening 3: klokken en chrono voorzien door derden |  |  |  | -6297.65 |  |  |  |  |\n| verrekening 4: bijkomende schermen isolatiebewaking nvt |  |  |  | -4728.06 |  |  |  |  |\n| verrekening 12: niet uitgevoerde zaken |  |  |  | -3417.18 |  |  |  |  |\n| correctie post 11.05.01 Regie-uren normale uren |  |  |  | 2320 |  |  |  |  |\n| correctie post 11.05.02 Regie-uren nacht-of weekendwerk (nachtwerk is vanaf 20h tot 6h) |  |  |  | 4640 |  |  |  |  |\n| correctie post 11.06.01 Vaste Som (2500,00 EUR) |  |  |  | 2500 |  |  |  |  |\n| Sanitair: |  |  |  |  |  |  |  |  |\n| Verrekening 3: Wijziging sniatire toestellen |  |  |  | -5416.8 |  |  |  |  |\n| Verrekening 8: Afrekening stelposten en VH |  |  |  | -10391.19 |  |  |  |  |\n| correctie post 20.06 Vaste Som |  |  |  | 5000 |  |  |  |  |\n| correctie post 20.06 Manuren |  |  |  | 3400 |  |  |  |  |\n| Medische gassen: |  |  |  |  |  |  |  |  |\n| Verrekening 4b: minwerken - niet uitgevoerde werken |  |  |  | -9732.25 |  |  |  |  |\n| correctie post 09.09 Te verrekenen manuren |  |  |  | 2424.4 |  |  |  |  |\n| correctie post 09.10 Vaste Som (2,500,00 EUR) |  |  |  | 2500 |  |  |  |  |\n| Totaal niet uitgevoerde werken en ereloon op voorontwerp, ontwerp en aanbesteding |  |  |  | -22725.64 | x 7 % x  75 % x (-1) = | 1193.0960999999998 |  |  |",
+      "table_headers": [
+        "06038.004",
+        "AZ st. Jan Brugge renovatie OP 8-9",
+        "Col_3",
+        "Col_4",
+        "Col_5",
+        "Col_6",
+        "Col_7",
+        "2026-10-16 00:00:00",
+        "Col_9"
+      ]
+    }
+  ]
+}

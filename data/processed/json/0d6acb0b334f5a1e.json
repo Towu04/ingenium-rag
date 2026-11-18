@@ -1,0 +1,757 @@
+{
+  "metadata": {
+    "doc_id": "0d6acb0b334f5a1e",
+    "file_name": "Schema EB Honeywell 11.05.95.01 (1).pdf",
+    "file_extension": ".pdf",
+    "file_hash_sha256": "970254893d5a629c08218166d65bde9b328691d9a616b8265a912a405fc4fc94",
+    "sharepoint_url": "https://ingeniumnv.sharepoint.com/sites/06038004-INT/Shared%20Documents/General/00_Info/secureshare%20Philippe%20Vynckier%20d.d.%2007-07-2023/Schema%20EB%20Honeywell%2011.05.95.01%20(1).pdf",
+    "relative_folder_path": "General/00_Info/secureshare Philippe Vynckier d.d. 07-07-2023",
+    "sharepoint_item_id": "01L557GEWY2ER3XUJJ4BFZDNPBINQ4AIJW",
+    "sharepoint_etag": "\"{BB23D1D8-29D1-4BE0-91B5-E14361C02136},1\"",
+    "project_id": "UNKNOWN_PROJECT",
+    "project_name": "AZ Sint-Jan Brugge",
+    "building": "UNKNOWN_BUILDING",
+    "phase": "Definitief Ontwerp (Final Design)",
+    "doc_category": "drawing_diagram",
+    "extraction_method": "pymupdf_diagram",
+    "is_scanned": false,
+    "is_hvac_diagram": true,
+    "extraction_confidence": 0.78,
+    "quality_warnings": [
+      "Page 45: Oversized/vector HVAC diagram with no readable callout text.",
+      "Page 46: Oversized/vector HVAC diagram with no readable callout text.",
+      "Page 53: Oversized/vector HVAC diagram with no readable callout text.",
+      "Page 65: Oversized/vector HVAC diagram with no readable callout text.",
+      "Page 66: Oversized/vector HVAC diagram with no readable callout text."
+    ],
+    "processed_at": "2026-11-18T13:15:57.326603Z"
+  },
+  "blocks": [
+    {
+      "block_id": "pdf-blk-0001",
+      "page_number": 1,
+      "section_heading": "HVAC Diagram Legend / Schedule",
+      "sheet_name": null,
+      "block_type": "table",
+      "markdown_content": "| CEGELEC BUILDING SERVICES | KLANT-BOUWPLAATS | GETEKEND | 24/02/2015 | VHG | LOKATIE: 11.05.95.01 |\n| :--- | :--- | :--- | :--- | :--- | :--- |\n| ANZEGEMSEWEG 28 |  | WIJZIG.TGK | 26/02/2015 | VHG | ZONE: EB HONEYWELL |\n| 8790 WAREGEM |  |  | /  / |  | BORD NR: |\n| TEL: 056/625.860 |  |  |  |  |  |\n| FAX: 056/625.865 |  |  | 1 / |  | 0/60 |",
+      "table_headers": [
+        "CEGELEC BUILDING SERVICES",
+        "KLANT-BOUWPLAATS",
+        "GETEKEND",
+        "24/02/2015",
+        "VHG",
+        "LOKATIE: 11.05.95.01"
+      ]
+    },
+    {
+      "block_id": "pdf-blk-0002",
+      "page_number": 1,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 10,\n- '*\n- 01\n- FACILITIES\n- F,LEKTRIS CH SCHEMA\n- PROJECT: M.0019077.9.01\n- AZ ST.JAN\n- BRUGGE\n- OS OP BORD HONEYWELL\n- 11.05.95.01",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0003",
+      "page_number": 2,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- f\n- 2\n- 1\n- 3\n- 1\n- 5\n- f\n- 6\n- 7\n- 230V IcclOKA\n- 2/\n- 2/1\n- A\n- 3 5\n- -01.5\n- GV2-RT10\n- 4-63A\n- N\n- 3\n- 4\n- 22/1\n- 2 4\n- -1.4\n- DEHN\n- DEHNGUARO TNS\n- -51.2\n- B\n- MAX 125A\n- 3 692/105001/200\n- HOOFOSCHAKELAAR\n- M 20A\n- u\n- v\n- (\n- L\n- -T1.5\n- EREA\n- u\n- 400/24W00\n- 1000VA\n- 1\n- 41.6\n- -F1.4 E\n- 21\n- 1\n- /1P\n- 2 C6O\n- R\n- 2 C 0 C6\n- E\n- N C6%IP\n- C\n- F1.6\n- 6/10KA\n- 6/10KA\n- 2 MER-GER\n- C60N C40/iP\n- 140A\n- 6/10KA\n- i\n- -51.3\n- TAL\n- Ps4\n- P54315.500\n- 10\n- 3/\n- -F1.2\n- MER-GER\n- C60H C20RP.300\n- C20A\n- 10/15KA\n- 300mA\n- ~11TiTAL\n- >R54103.600\n- 2/1\n- STEEDS ONDER SPANNING\n- XO\n- I\n- PE\n- PE\n- \u0013i\n- VOEDING TINS\n- 230V+PE\n- 20A 2.5#\n- 24/02/2015\n- VH\n- F\n- .EB HONEYWE _L\n- 6ETEKENO\n- W10G.TGK\n- PROJECT: M.0019077.9.01\n- =11.05.95.01\n- VHG\n- 26/02/2015\n- //\n- AZ ST.JAN\n- OS OP BORD HONEYWELL\n- CF 4 N C 6 ;iF t1i\n- BRUGGE\n- 11.05.95.01\n- lA000lS\n- 1/60",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0004",
+      "page_number": 3,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- i\n- 2\n- 4\n- 5\n- 3\n- 6\n- 7\n- 10\n- 1110\n- 230V\n- IcCQOKA\n- L\n- /\n- 1/10\n- N\n- i 3 5\n- 1 \"-02'2\n- TOUCH-PANEEL\n- 'miim TEE\n- 6\n- V2-RT03\n- IN\n- DEUR\n- BKRD\n- 0.25 - 0A A\n- -NZ3\n- E\n- X182A\n- HONEYWELL\n- V\n- '\n- PE GN­\n- 1\n- 24v\n- 3\n- REA\n- EDR24TC63\n- TRANSFO\n- NIET\n- u\n- 230-400/24V\n- 63VA\n- -\n- AARDEN\n- —\n- 1\n- 3\n- 472\n- 4\n- C660\n- 0N Cv2P\n- 6/10KA\n- 2\n- 33\n- 34\n- I\n- 1\n- 1/10\n- 0\n- T PE\n- 1\n- PE\n- E\n- IP-AANSLUITING\n- BMS-SYSTEEM\n- GETEMM\n- 24/02/2015\n- VN\n- WUZG.TGK\n- 26/02/2015\n- VNG\n- AZ ST.JAN\n- '2\n- 11.05.95.01\n- PROJECT: M.0019077.9.01\n- -11.05.95.01\n- .EB HONEYWE\n- / /\n- _L\n- OS OP BORD HONEYWELL\n- FACWT',\n- ?x\n- BRUGGE\n- 2/60\n- //\n- I\n- 6\n- 9",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0005",
+      "page_number": 4,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- 5\n- 1\n- 6\n- 1\n- VCDEDING CPU 05100\n- A\n- A\n- 10\n- 21,1\n- r-1\n- -F3.1\n- rwm~\n- MODt06\n- 71\n- 75\n- 710\n- 75 71\n- 75\n- <\n- 71\n- 75\n- N N\n- 0\n- 72 -+N 76\n- 71 No\n- 75\n- ..\n- 72 .+N 76\n- O+\n- 72 2 N 76\n- O~+\n- 72 2 N 76\n- ON\n- 72 E\n- 76\n- m'\n- 71 r\n- 75\n- om\n- 71 m\n- 75\n- om\n- 71 P\n- 75\n- OM\n- =M\n- 73 O W 77\n- Qm\n- 73 0~ 77\n- am\n- 73 0 ~ 77\n- mm\n- 73 0 t,. 77\n- =W\n- 73 O>\n- 77\n- 72 -+N 76\n- mm\n- 73\n- 77\n- o i\n- XF'R822\n- 2 C6~GEWIP\n- R\n- WOO\n- 72 -, 76\n- Gm\n- 73 0 it 77\n- 72-N 76\n- ! m\n- 74 x x  76 74 £ x 78 74 x x 76 74 £ x 78 74 S x  78\n- 74 z x 78 74 m x 78\n- 73m<\n- 77\n- £ x\n- 74\n- 78\n- B\n- B\n- HONEYW£L\n- 24V\n- -N3.1\n- XL200080A\n- RS485-1\n- RS485-2\n- 25 30 31\n- TGP-IP\n- I \tLl. it\n- 11\n- GND\n- 1\n- 2l (5 26\n- 1\n- 71 0\n- 75 71\n- 75 71 N\n- 75 71\n- 75 71\n- 75\n- v v\n- 71 N v 7 71 a v ]5\n- 72 .+ N 76 72 . N 76 72\n- N 76\n- M1\n- 72\n- m 76\n- -\n- 72 --. m 76\n- m\n- 72 ~\n- 76\n- m\n- E\n- 71 n v 75\n- 72 -^+m 76\n- Rm\n- 73 0 a\n- 77\n- q m\n- 73 0 m 77\n- 0]\n- 73 , w 77 73\n- 77\n- 0 ~\n- 73\n- 77\n- o h\n- DO!\n- ]2 --\n- ]6\n- m m\n- C\n- 73 01._ 77\n- 74 x x 78\n- 73 0 4 77\n- 74 x x\n- 73 M0 77\n- x x\n- 78 74\n- 78\n- 74\n- x 78 74 E x 78 74 x x 78 74 x x  78 74 x x  78\n- 36\n- 37\n- D\n- D\n- 2/10\n- 411\n- T  PE\n- E\n- PE E\n- IP-AANSLUITING\n- BMS-SYSTEEM\n- GETEKENO 24/02/2015\n- F\n- VHG\n- F\n- -L\n- V INC I ,.\n- 11.05.95.01\n- PROJECT: M.0019077.9.01\n- =11.05.95.01\n- .EB HONEYWE\n- Wl Z aTGK\n- 26/02/2015\n- AZ ST.JAN\n- OS OP BORD HONEYWELL\n- 1/\n- i:•OF!nFi\n- BRUGGE\n- 3/60\n- 11\n- 1\n- }\n- 2\n- I\n- 3\n- !\n- I\n- 5\n- I\n- 6\n- I\n- 1\n- 7",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0006",
+      "page_number": 5,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- I\n- A\n- ANALOGE INGANGSMODULE CPU05100 — MODULE 101\n- 1/10\n- 5/\n- a\n- B\n- -7t\n- -72\n- -N4.2\n- HONEYWEL\n- -73\n- GND\n- All\n- Al2 XP821A+\n- 75-\n- 76—\n- A18 VAUX 77-\n- 16 8\n- 21 22 78-\n- AI3\n- 4\n- 9 10\n- 11 1\n- t2 2\n- 13 3\n- AI5\n- 15 5\n- AI4\n- 14 4\n- A17\n- 77\n- AI6\n- 16 6\n- C\n- 512\n- 8/2\n- 8/2\n- 3110\n- 2\n- 1\n- X3- on0\n- X3 -0-6\n- D\n- X3~de0~0 OPI\n- D\n- X5-0 O-on¢\n- X''\n- -O-O-Oai\n- T  PE\n- r ~r>E\n- ~\n- E\n- iE i\n- e\n- 3\n- PE\n- c\n- Nc\n- o\n- 1 2\n- z\n- 3  .4R48\n- HONEYWELL\n- DPTEJQOD\n- 1QbDRUK P. VENT\n- ^~ -TR42\n- 1 2 3 .PR45\n- HONEYWELL\n- DP\n- O\n- OPRTDKESVE RLTE\n- IG3.18\n- 553\n- DISPLAY\n- ~~ -PR4.9\n- C\n- B TR43\n- L\n- F3F\n- 0 ~EYWELL\n- HHppOpNEYWELL\n- L0 YWELL\n- HONEYWELL\n- — OPTE1000D\n- DP —\n- ORDKlA08SL FILT\n- 13.18\n- DRDK EVENT\n- -~ IG3.10\n- PULSI TEMP\n- E\n- EG3,18\n- EXTR TEMP\n- G3.16\n- 1000Pa\n- DISPLAY\n- 1\n- DISPLA\n- 000Pa\n- Y\n- DISPLAY\n- ZIE SCHEMA E3.IG/EG3.18 P11.6\n- t\n- C\n- 1 163.18\n- ANTI VINES\n- Ji\n- i 9 Y T\n- ANTIVRIES•\n- 0-10V\n- 1\n- ED\n- l\n- TS4.4\n- HONEYWELL\n- l\n- B/OPP411046\n- F\n- VH\n- GETEKENO 24/02/2015\n- F\n- L\n- WIJMTGK 26/02/2015\n- VHG\n- Az ST.JAN\n- PROJECT: M.0019077.9,01  =11.05.95.01\n- ,EB HONEYWE\n- OS OP BORD HONEYWELL\n- Incunrs i5.\n- /r\n- BRUGGE\n- 11,05.95.01\n- 4/60\n- 5\n- 6\n- I\n- I\n- 3\n- I\n- 2\n- I\n- 4\n- I\n- H\n- 9\n- I\n- 10",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0007",
+      "page_number": 6,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 2\n- {\n- 3\n- 4\n- j\n- 5\n- 6\n- 7{\n- 8\n- 9\n- IO\n- A\n- ANALKGE INGANGSMQDULE CPU05100 - MODULE 102\n- b/\n- B\n- B\n- 71\n- -72\n- HONEYWEL\n- -73\n- GND\n- All\n- Al2 XF821A,\n- 76 -\n- AI3\n- AI4\n- AI5\n- AI6\n- AI7\n- A8\n- -O4\n- 9 ID\n- 11 1\n- 12 2\n- 133\n- 14 4\n- 155\n- 16 6\n- 17 7\n- 18 8\n- VAUX 77-\n- 21 22 78 -\n- 1\n- E\n- I\n- 4/10\n- c\n- 8/7\n- 8/7\n- /10\n- /1\n- r 6\n- %3 O'O1\n- D\n- X3\n- 0a\n- X\n- .r=1---\n- X3\n- X3, 00\n- 6\n- X3 00\n- O ~\n- T  PE\n- N~\n- - e ~\n- PE\n- -\n- ~n\n- WI\n- C\n- <\n- 3\n- 1\n- DP—\n- 24 6\n- HONEYWELL\n- HONEYWELL\n- 7746081009\n- LFZO\n- RUMTEVOELER\n- M B\n- 3\n- 1 2\n- -PR5.10\n- 2\n- TR5.4\n- HONEYWELL\n- LF20\n- 3 PR5.9\n- HONEYWELL\n- DPTE10000\n- wo  DRUK P.VENT\n- HHOpNEYWELL\n- HONEYWELL\n- DPTE1000D\n- ORUK ABSL FIL\n- HONEYWELL\n- -I-IT  URUK\n- EG3. f9\n- DP\n- PTESOOD\n- DRUK VL FILTER\n- 43.t9\n- OR\n- P — DPTE10000\n- EVENT\n- E\n- E\n- OP-ZAAL 12 \t116m9\n- EG3.19\n- EXTR TEMP\n- IG3.19\n- PULSIE TEMP\n- 1000Pa\n- DISPLAY\n- 000P\n- ISPLAY\n- 1a\n- IOOOPa\n- DISPLAY\n- ISPLAY\n- D\n- ZI£ SCHEMA E8 IG/EG3. 19 P11.6\n- IG3.t9\n- ANTIVRIES\n- ANTIVRIES.\n- O-10V\n- -TS5.5\n- HONEYWELL\n- VOPP-ERO-S6\n- F\n- F\n- GETEKEND\n- 24/02/2015\n- VH\n- vINCI '`,\n- Wi1ZIG.TUP\n- 26/02/2015\n- VHG\n- AZ ST.JAN\n- OS OP BORD HONEYWELL\n- PROJECT: M.0019077.9.01\n- rnauvn M\n- t/\n- BRUGGE\n- 11.05.95.01\n- =11.05.95.01\n- .EB HONEYWE\n- L\n- 5/60\n- 1\n- 2\n- 3\n- 5\n- 6\n- 7\n- 8\n- 9\n- 10",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0008",
+      "page_number": 7,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 2\n- {\n- 3\n- I\n- 4\n- I\n- 5\n- 1\n- 6\n- (\n- 7\n- {\n- 8\n- I\n- 9\n- {\n- 10\n- A\n- ANALOGE INGANGSMODULE CPU05100 — MODULE 103\n- 5/10\n- 3\n- 7/1\n- B\n- B\n- 75-\n- 76 -\n- 1\n- -72\n- -73\n- -74\n- HONEYWEL\n- AI2 XF821A.\n- AI8 VAUX 77-\n- GND\n- 9 10\n- AI3\n- AI4\n- AI5\n- 13 3\n- 14 4\n- 15 5\n- AI6\n- A17\n- 166\n- 17 7\n- 188\n- 12 2\n- 21 22 78\n- S\n- l\n- 1\n- e\n- 5710\n- 7/1\n- J W\n- X3n a\n- 01\n- W\n- a\n- X3' 0-0-\n- X3- c\n- J N d\n- X3,\n- 0 o'b\n- X\n- D\n- N N 6\n- X3 p p p\n- _ D\n- PE\n- -T PE\n- E\n- m a A a E\n- ~ a\n- P \"I\n- ZT\n- L\n- 3 4 6  -TR6.3\n- 2  3  -PR6.9 \t1\n- HONEYWELL\n- -PR6.10\n- HONEYWELL\n- OPTEt000O\n- ORUK ARK FILTER\n- IG3.20\n- TR6.4\n- HONEYWELL\n- LFZO\n- HONYWELL\n- LF20\n- HONEYWELL\n- LF20\n- 7740081009\n- D_.H~DRUK YIOFILTER\n- E)LER\n- OOTT\n- EA Oi\n- A\n- ALGEMEEN\n- VERSE L TEMP\n- E.\n- E\n- IG3.20\n- E63.20\n- EXTR TEMP\n- G3.20\n- TEMP\n- PUL\n- 10 apa\n- DISPLAY\n- DIISSPPLAY\n- ZIE SCHEMA EB IG/EG3.2O P11.6\n- •\n- e p\n- ANTWRIES\n- mt 1\n- 0\n- TS6.7\n- HONEYWELL\n- 1\n- M Y T YIG\n- ANTIVRIES.\n- 0-70V\n- B/OPP-FRO-S6\n- F\n- 24/02/2015\n- GETEKEND\n- F\n- EB HONEYWELL\n- 26/02/2015\n- VHG\n- Al\n- WIJZIG.TGH\n- =11.05.95.01\n- PROIEM M.0019077.9.01\n- OS OP BORD HONEYWELL\n- AZ ST.JAN\n- BRUGGE\n- snennvs ;`~\n- 11.05.95.01\n- 6/60\n- 2\n- I\n- 3\n- I\n- 4\n- {\n- 5\n- I\n- 6\n- {\n- 7\n- {\n- 8\n- {\n- 9\n- I\n- 10\n- 1\n- I",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0009",
+      "page_number": 8,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- i\n- 2\n- i\n- 3\n- I\n- 4\n- I\n- 5\n- I\n- 6\n- I\n- 7\n- I\n- 8\n- I\n- 9\n- I\n- 10\n- A\n- ANALOGE INGANGSMODULE CPU05100 - MODULE 104\n- 6/10\n- 3\n- 8/i\n- B\n- 6\n- —71\n- —72\n- —73 CND\n- —74 9 10\n- 75 —\n- 76 —\n- HONEYWEL\n- Al2 XF821A.\n- -N72\n- A13\n- AI4\n- T3 3\n- 14 4\n- AI5\n- A16\n- AI7\n- A19 VAUX 77-\n- 155\n- 166\n- 777\n- 188\n- 212278-\n- 1\n- All\n- 411 1\n- t2 2\n- 3\n- 1\n- t\n- E\n- 6/10\n- 2\n- 8/1\n- 6\n- X3— e0 Od\n- X3 00i\n- X3,\n- 00'\n- II\n- D\n- T  PE\n- PE\n- 11\n- 2 3 X72\n- 1\n- 3 4 6 TRI5\n- (r\n- HONEYWELL\n- f\n- V\n- QP.VENT\n- -PR7.3\n- DP— HONEYWELL\n- 1+'p{— OPTE10 OOL\n- Djy\n- i\n- r7160810Gs\n- RUMITEVOEIER\n- OP-ZAAL 10\n- E\n- ER\n- UK .VENT\n- E\n- DR\n- DISPLAY\n- DISPLAY\n- F\n- GETEKEND\n- W1121GT9\n- VINE=[ at\n- 24/02/2015 i VH\n- 26/02/2015 jVHG\n- /\n- /\n- 11.05.95.01\n- -EB HONEYWE\n- PROJECT: M.0019077.9.01\n- =11.05.95.01\n- AZ ST.JAN\n- _L\n- OS OP BORD HONEYWELL\n- BRUGG£\n- mumrs\n- 7/60\n- 1\n- 2\n- i\n- 3\n- I\n- 4\n- 5\n- f\n- 6\n- I\n- 7\n- I\n- 8",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0010",
+      "page_number": 9,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- I\n- 2\n- 1\n- 3\n- 5\n- I\n- 7\n- ANALOGE UITGANGSMODULE CPU05100 - MODULE 105\n- A\n- 7/10\n- 9/1\n- B\n- B\n- —71\n- —72\n- -N8.2\n- HOMEYWEL\n- 419®\n- A0510\n- GND A01 ®®\n- A0290 112A. A03 IN\n- —73\n- A07\n- A08 1\n- 77—\n- 17 7\n- 18 8\n- A0610 ®\n- —74\n- 9 10\n- t1 1\n- 12 2\n- 13 3\n- 15 5\n- 16 6\n- C\n- 4/5\n- 4/5\n- 5/6\n- 5/6\n- D\n- 0\n- 71m\n- 9/1\n- X3 j'~O i r1~\n- X3.\n- X3-0-0-1\n- X3m 'a\n- X3 p 07~\n- A-L\n- —\n- PE\n- £E\n- E\n- m\n- m\n- mmm\n- m\n- mma m\n- PE\n- -~» w c\n- s\n- c\n- E\n- c- y\n- E\n- 24 M Y  SM8\n- TA-FUSION\n- 3\n- SION\n- SN\n- ZW OELIK\n- G© WAS\n- 2l M Y  SM8.2\n- TA FUSION\n- SM 2-WEG\n- 2W VERW\n- 103.18\n- 4M Y\n- M. 19\n- SM8.8\n- FRED\n- 2-W\n- EG  N\n- ZIE\n- KOEUNG\n- EH.\n- 2W\n- SCHEMA P6, 2\n- 16/EG& I9\n- 163,19\n- 7\n- -N8.6\n- HONEYWELL\n- L085 AVOA\n- Y SM8.7\n- FRED IG3. 18\n- FRED EG3. 18\n- ZIE SCHEMA P6.7\n- E& IG/EG3 LB\n- TA-FUSIGN\n- 2-WEG\n- 2W VERW\n- IG3.19\n- ZIE SCHEMA P6.2\n- E9. IG/EG3. 18\n- RST\n- A\n- L 70P12\n- GETEKEND\n- 24/02/2015\n- VH\n- F\n- (sa\n- WIJZr.TU\n- 26/02/2015\n- VHG\n- VINCI >?`\n- /\n- AZ ST.JAN\n- OS OP BORO HONEYWELL\n- PROJECT: M.0019077.9.01\n- =11.05.95.01\n- -EB HONEYWE\n- LL\n- ~nPi rttFS\n- a.:\n- BRUGGE\n- 1 ,05.95.01\n- 8/60\n- 5\n- I\n- 6\n- I",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0011",
+      "page_number": 10,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 7\n- A\n- ANALKGE UITGANGSMKDULE CPU05100 - MODULE 106\n- A\n- 8/10\n- w/J\n- B\n- B\n- HONEYWEL\n- 71\n- 72\n- 73\n- 74\n- 75\n- 76\n- A08MO\n- n\n- 18 8\n- 78\n- 1\n- l\n- XFR622A.  A03®®\n- 9 10\n- 11 1\n- 12 2\n- 13 3\n- AU4\n- 14 4\n- 15 5\n- A0600 \t A07®0\n- GND\n- AOI ®®\n- A02Io\n- 66\n- 177\n- C\n- 6/8\n- 6/8\n- D\n- D\n- 8/10\n- 2\n- 10/1\n- 0\n- O o i\n- X3\n- Y,3`z0\n- X3,\n- 1\n- 0!~\n- X30\n- w\n- X3'\n- X3=\n- 0 0 0~\n- a\n- E\n- 3 ; r\n- ne\n- \"1\n- 3 3\n- w r\n- PE\n- E\n- E\n- A Y -SM9.4\n- 24\n- 24\n- Y\n- +G- -N9.3\n- 18 8 0  HONEYWELL\n- -N9.8\n- FRED EG3. 20\n- 84 V0P J. !-\n- 1800\n- FRED EG3.19\n- FRED IG3 20\n- ZIE SCHEMA F6,2\n- E8, IG/EG3. 20\n- TA-FUSION\n- 2-WEG\n- ,\n- I„ 1\n- 263.20 RW\n- TA-FUSION\n- 2-WE0\n- 2W XOELM\n- IG3.20\n- I~\n- SM\n- ZIE SCHEMA P6.7\n- E8, IG/EG3. 19\n- ZIE SCHEMA P6.7\n- E8. IG/EG3. 20\n- HONEYWELL\n- p\n- LD135 AVOA\n- LDI35 AVOA\n- 5SEE\n- NN11\n- 01~SPLAY OP71\n- OfSPIAY OP70\n- F\n- VH\n- 24/02/2015\n- GETEHEND\n- F\n- WIJZIG.TGX\n- 11.05.95.01\n- VINCI\n- !/\n- AZ ST.JAN\n- !norm\n- BRUGGE\n- 26/02/2015\n- VHG\n- _L\n- PROJECT: M.0019077.9.01\n- 11.05.95.01\n- EB HONEYWE\n- OS OP BORD HONEYWELL\n- 9/60\n- 1",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0012",
+      "page_number": 11,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- (\n- 2\n- 1\n- 3\n- 1\n- 4\n- 5\n- 6\n- 1\n- 7\n- 8\n- 9\n- J\n- IO\n- DIGITALE INGANGSMODULE CPU05100 - MODULE 107\n- A\n- 9/10\n- 6\n- —71\n- —72\n- —73\n- —74\n- 75\n- 76\n- DI12 n\n- 2412\n- 78\n- HONEYWEI\n- XF823A.\n- 3\n- DI4\n- D15\n- D16\n- ­I\n- 3 \t16 4 \t17 5 \t18 6 \t19\n- 4\n- 1\n- I\n- I\n- -N10.1\n- 7\n- DI\n- 7\n- 20\n- f\n- B\n- DI9\n- DI\n- 9\n- 22\n- DI1\n- DIE\n- DI\n- 13 1 \t14 2 \t15\n- (\n- I\n- 10\n- DI11\n- 10 \t23 11\n- 1\n- 8\n- 21\n- C\n- a\n- ct\n- cn\n- 9/10\n- 2\n- X3.18 0\n- X3.18'(\n- X3.180\n- X3.18 t\n- X3.180\n- X3.180\n- X3.18-0\n- X3.180\n- — _ X3.18 0~0  _X3.18 p\n- X3.18 0\n- 1\n- PE\n- £ £\n- iE\n- PE\n- m m\n- E\n- F\n- m\n- m\n- E\n- E\n- T\n- T\n- E\n- m\n- E\n- T\n- T\n- L\n- T\n- T\n- E\n- 14\n- -%3.184\n- -X3.78 u a\n- -)3.18`'0\n- -X3.180\n- -X3.18\"0\n- -X3.18-0\n- -X3.18-0\n- -X3.18-6\n- -Xmo1 o\n- FB\n- FB\n- PCV3. 18\n- IG3. IB\n- BRAND\n- ANFIVR\n- LG1 18\n- I131 i8\n- BERM\n- DEROG\n- THERM.\n- ALARM\n- ALARM\n- 18\n- 163. 18\n- EG3. 18\n- PDV118\n- 1G1 t0\n- £G118\n- FB\n- FB VL\n- EG3. 18\n- IG3. 18\n- EB. IG/EG3. 18\n- F\n- GETENEND  24/02/2015  VM\n- WI ZIG.T6M\n- 26/02/2015\n- VNG\n- PROJECT: M.0019077.9.01\n- =11.05.95.01\n- EB HONEYWE L\n- AZ ST.JAN\n- OS OP BORD HONEYWELL\n- BRUGGE\n- ~AQflilKl \"+..\n- 11.05.95.01\n- 10/60\n- t\n- 2\n- (\n- 3\n- J\n- 1\n- 5\n- !\n- 7\n- I\n- 8\n- I\n- 9\n- t\n- 10\n- 6\n- I\n- 1/",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0013",
+      "page_number": 12,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- 1\n- 2\n- 3\n- 1\n- 4\n- 1\n- 5\n- 1\n- 6\n- 1\n- 7\n- 1\n- 8\n- 1\n- 9\n- I\n- 10\n- DIGITALE INGANGSMGDULE CPU05100 - MODULE 108\n- A\n- WTI\n- 3\n- -\n- ]5-\n- -]2\n- N11.1\n- 76-\n- XF823A.\n- Due\n- ]] -\n- ]1\n- B\n- B\n- HONEYWEE\n- DI1\n- DI2\n- DI3\n- DI4\n- ~\n- 74\n- 13 1 \t11 2 \t75 3\n- 16 L\n- DTS\n- DL6\n- DID\n- DI8\n- DI9\n- DI 0\n- tit 5 \t78 6\n- 19 7 \t20 8 \tH 9 \t22 10\n- I\n- 1\n- 23 71\n- 24 12\n- 78 -\n- Dill\n- C\n- D\n- D\n- 2\n- 10/10\n- 12/1\n- x3.te~ =0\n- X3-18e\n- X3`o 0\n- e0 n\n- X3.19\n- f\n- £\n- e\n- m\n- m\n- X3.18\"o\n- `0 `0 0 ~0\n- 4!~\n- u\n- ~1\n- 3p\n- m\n- m\n- m\n- T  PEA\n- PE\n- w\n- E\n- E\n- St 0 PO 0\n- -X3.18 0\n- -X3.19 -0O\n- O\n- BE0IENING OP12\n- DESINPECTIE\n- 3 DAGREGIMEM2\n- FR K-\n- FB KL\n- IG3. 18\n- £G3. I8\n- EB. IG/EG3. 18\n- BK3. IS/ SKI 18/3 \tBK3. 18/9\n- I63.18\n- £G3. 16 \t EG318\n- BK3. 18/2 BK3.18/4\n- ANTIVR\n- DEMG\n- IG319\n- PCV3, 19\n- 1 ND\n- LM. 19\n- EB. IG/EG3. 19\n- 511.3\n- Q\n- -511.4\n- 4 TEE\n- XS2 85542\n- RED\n- iG3. IS\n- EG3.18\n- EB. I G/EG3, 18\n- 4 X82-BA31\n- GROEN\n- F\n- OETEKEND\n- 24/02/2015\n- VH\n- F\n- -L\n- AZ ST.JAN\n- N172IG.TGH\n- 26/02/2015\n- VHG\n- PROJECT: M.0019077.9.01\n- =11.05.95.01\n- .EB HONEYWE\n- OS OR BORD HONEYWELL\n- Eh(:rtnK ~4@\n- BRUGGE\n- 11.05.95.01\n- 11/60\n- 2\n- 1\n- 3\n- 1\n- 4\n- 1\n- 5\n- 1\n- 6\n- 7\n- 1\n- 8\n- 1\n- 9\n- 1\n- 10",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0014",
+      "page_number": 13,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 5\n- j\n- 6\n- s\n- 1\n- 9\n- E\n- 1n\n- DIGITALE INGANGSMODULE CPU05100 — MODULE 109\n- A\n- 7\n- -72\n- -73\n- - 74\n- B\n- 75 -\n- 76 -\n- HONEYWEL\n- XF823A.\n- DI4\n- 16 4\n- DIS\n- DIG\n- 1317\n- ­IS\n- DI9\n- DI10\n- DIU\n- 17 5 \t1B 6 \t19 7 \t20 8 \t21 9 \t22 10 \t23 11\n- -N12.1\n- DI12 77 -\n- 2412 78 -\n- DI2\n- DI3\n- 14 2 \t15 3\n- t\n- n\n- C\n- D\n- 11110\n- D\n- 13/1\n- 1\n- O\n- X3.19 O\n- X \t %3.19'0\n- a~\n- X3.19'\n- X3 9~l\n- X3.19 Ono\n- X3.19-0 _ X3.19 0\n- PE\n- X3.19'\n- X3 o'\n- nFim w \t m \t m \t m\n- m\n- m\n- «~\n- PE\n- ~ 3 3\n- N m\n- E\n- v\n- -X3.19-0\n- -%3.19m6\n- -X3.19-0\n- -X379 0\n- -X3.19 -0\n- -X3,19'-~\n- -%3.19'-0\n- -X3.19 p\n- -%3.19`0\n- -X3.19 Q\n- -X3 O-O\n- PII\n- 3 BEBIF.NING OP11\n- 1\n- D\n- ~3 DA\n- GREECIMGE\n- CTIE\n- -512.10\n- L TE\n- EEROG\n- IG3. 19\n- BERGG\n- THERM\n- ALARN\n- AIARM\n- FB\n- FB\n- FB\n- FB VL\n- FB ICL\n- FB IU.\n- EGG 19\n- PCV3. 19\n- IG3. 19\n- EG3. 19\n- PCV3. 19\n- IG3 19\n- EG3 19\n- IG3. 19\n- IG2 19\n- EG3\n- 19\n- EB. IG/EG3. 19\n- -512.9\n- TEE\n- L GRUE\n- S12-10\n- N  1\n- -SS542\n- ED\n- GETSK\n- 24/02/2015\n- v\n- F\n- WD21G.T\n- 26M2/2015\n- t/\n- rr\n- VHG\n- PROJECT: M.0019077.9.01\n- 11.05.95.01\n- .EB HONEYWELL\n- AZ ST.JAN\n- OS OP BORD HONEYWELL\n- tA(Inbl} ;^t\n- BRUGGE\n- 11.05.95.01\n- 12/60\n- /r\n- 4\n- ~\n- 1\n- 1\n- 6\n- 1",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0015",
+      "page_number": 14,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- I\n- 7\n- 8\n- 1\n- 9\n- 1\n- I\n- 2\n- s\n- 3\n- 1\n- 5\n- I\n- 6\n- 1\n- 10\n- DIGITALE INGANGSMODULE CPU05100 - MODULE 110\n- A\n- 12110\n- 3\n- 4/1\n- -71\n- _n\n- 75\n- -N13.1\n- HONEYWEL\n- 76-\n- -73\n- DII\n- Dig\n- DI3\n- B\n- B\n- XF823 DI4\n- DI5\n- DIG\n- D 7\n- DI8\n- DI9\n- DilO\n- Dill\n- DI12 77-\n- -74\n- 13 1\n- 16 2\n- 5 3\n- 16 L\n- 17 5\n- 18 6\n- 19 7\n- 28 0\n- 21 9\n- 22 10\n- 23 11\n- 24 12\n- 78-\n- I\n- I\n- I\n- I\n- I\n- C\n- C\n- ~ m m\n- 92\n- D\n- D\n- 12/10\n- 2\n- 1411\n- X3.19-\n- X3.19. m.\n- X3.19.\n- X3.19\"'\n- X3.20r\n- X3.200\n- X3.20 o\n- X3.20 O\n- X3.20-0O o\n- m\n- m\n- m\n- PE\n- PE\n- E\n- E\n- -X3.19\"'.\n- -X3.19^'\n- -X320--0 0 O\n- -X3.20-0\n- -X3.24 0\n- -X3.20 u\n- -X3,20\n- -X3.1\n- -x\n- DK3. 19/1\n- HX3. 19/2\n- DK3 19/3\n- DO. 19/4\n- BK3, L9/\n- Ica 19\n- IG3. 19\n- EG3. 19\n- EG3 19\n- EG3. 19\n- BRMD IINTIVR\n- DEROG\n- DEROG\n- DEROG\n- THERM\n- LG3. 20 IG3, 20\n- PCV3. 20\n- TO. 20\n- EG3 20\n- PCV3.20\n- EB. IG/EG3, 19\n- EB. IG/EG3, 20\n- F\n- GETEKEND 24/02/2015\n- VH\n- F\n- WIJZIG.TGB\n- 26/02/2015\n- VH(i\n- VINCI\n- rr\n- PROJECT: M.0019077.9.01\n- .11.05.95.01\n- .EB HONEYWE\n- OS OP BORD HONEYWELL\n- _L\n- AZ ST.JAN\n- 11.05.95.01\n- BRUGGE\n- 13/60\n- i\n- 3\n- I\n- 5\n- t\n- rr\n- 1\n- t\n- 2\n- 6\n- 7\n- 1\n- 8",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0016",
+      "page_number": 15,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 5\n- {\n- 6\n- I\n- 7\n- 1\n- 8\n- 1\n- 9\n- 1\n- 10\n- DIGITALE INGANGSMODULE CPU05100 - MODULE 111\n- A\n- 13!70\n- 3\n- 15/1\n- 75 -\n- 76-\n- 77-\n- 7e -\n- B\n- B\n- -71\n- -72\n- -73\n- NONEYWEL\n- )(F823 DI4\n- -N14.1\n- DI7\n- 19 7\n- DI9\n- 21 9\n- Dill\n- 23 ti\n- DII2\n- 24 12\n- Die\n- 20 0\n- DI6\n- IB 6\n- DI10\n- 22 10\n- DI3\n- 15 3\n- DI5\n- 17 5\n- I\n- DI1\n- 31\n- DI2\n- 14 2\n- -74\n- 16 4\n- I\n- 1\n- C\n- C\n- D\n- 13/10\n- 2\n- ` X320^.\n- X3.20.\n- X3.20^.\n- X310-.\n- X3.20e.\n- X320.\n- X3~.~.\n- X3.20\n- X3.\n- PE\n- 1\n- a \tE\n- a \t£\n- 7\n- -\n- :\n- 3\n- n\n- PE\n- E\n- E.\n- -X3.20'-.\n- -X3.20\n- X3.20\n- -X3.20\n- -X310.\n- 3 6AGOIF GNMGEOP10\n- 3 DESWECTEPw\n- -SI4.8\n- ALARM\n- ALARM\n- FS\n- FS\n- FS\n- FS VL\n- FS KL\n- FB KL\n- IG3. 20\n- EG3. 20\n- PCV3. 20\n- I01 2O\n- EG3. 20\n- IG3. 20\n- IU3. 20\n- EGa 20\n- EB, IG/EG3. 20\n- BKa 20/\n- -574.7\n- IG3. 20\n- SK3. 20/2\n- iGa 20\n- EB. IG/EG3, 20\n- 4 XB -SA31\n- UROEN\n- 4\n- ~9-aSS42\n- TEK\n- 24/02/2015\n- V\n- UZIG.T611\n- 26/02/2015\n- VNG\n- AZ ST.JAN\n- OS OP BORD HONEYWELL\n- PROJECT: M.0019077.9.01\n- /\n- 11.05.95.01\n- EB HONEYWE_L\n- W(flRIES\n- Pt\n- BRUGGE\n- 11.05.95.01\n- 14/60\n- 1\n- 4\n- I\n- {\n- 6\n- {",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0017",
+      "page_number": 16,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- i\n- I\n- 2\n- I\n- 3\n- 1\n- 4\n- 1\n- 5\n- 6\n- 1\n- 7\n- 1\n- 8\n- 1\n- 9\n- 1\n- 10\n- A\n- DIGITALE INGANGSMODULE CPU05100 - MODULE 112\n- 14/10\n- 3\n- 16/1\n- -71\n- _72\n- _n DI\n- -74 13 1\n- B\n- 75\n- 76\n- n\n- 78\n- HONEYWEL\n- XF8231 614\n- -N15.1\n- DI5\n- DI6\n- D17\n- DIB\n- D19\n- ­110\n- ­I11\n- D112\n- 17 5\n- 18 6\n- 19 7\n- ZO 8\n- 21 9\n- 22 10\n- 23 11\n- 2412\n- I\n- I\n- l\n- i\n- 1\n- 1\n- 3\n- 1\n- I!\n- 1\n- 1\n- 11\n- I\n- I\n- DI2\n- D13\n- 14 2 \t 15 3\n- 1\n- 1\n- 16 4\n- C\n- D\n- Q\n- 14/10\n- 2\n- 16/1\n- zz0\n- E\n- m\n- m\n- X3.20 -C\n- X3.20 0\n- o\n- s\n- m\n- i  PE\n- PE\n- E\n- E\n- -X3.20'0 Q \tC\n- -X3.200\n- HK3. 20/3\n- EG3 20\n- wa 20/4 BK3. 20/5\n- EG3. 20\n- EG3, 20\n- EB, IG/EG3. 20\n- F\n- VH\n- GETEKENO\n- 24/02/2015\n- F\n- EB HONEYWE _L\n- R\n- Wa214TEk\n- AZ ST.JAN\n- 26/02/2015\n- PROJECT: M.0019077.9.01\n- 11.05.95.01\n- OS OP BORD HONEYWELL\n- ~PC11IilIS\n- BRUGGE\n- 11.05.95.01\n- 15/60\n- /r\n- 1\n- J\n- 2\n- 1\n- 3\n- I\n- 4\n- [\n- 5\n- 1\n- 6\n- 7",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0018",
+      "page_number": 17,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- 1\n- 2\n- 1\n- 3\n- 1\n- 4\n- 1\n- 5\n- 1\n- 6\n- 7\n- 8\n- 1 \t9\n- 1\n- 10\n- DIGITALE UITGANGSM©DULE CPU05100 - MODULE 113\n- A\n- A\n- 15110 \t3\n- 17/1\n- DUG 76\n- 77\n- 61 2 \"3 64\n- 78\n- 21 22 23 24\n- 75\n- ~®\n- 71\n- 72\n- 73\n- 74 11 2 13 14\n- 31 F13\n- 34\n- B\n- ~ ® P03\n- -N16.2 1® DaZ\n- HONEYWELL\n- XFR824A.\n- 1® D04\n- ~® D05\n- B\n- 41 444\n- 51.2.3 -4\n- C\n- C\n- 1712\n- 17/2\n- 1712\n- 7,1 D\n- D 15/10\n- 2\n- X2.18'0\n- %2.18 C a X2.10m\n- X2.18 i\n- X2.18 p p\n- X2.18—,\n- x2.ffi',\n- ~0\n- m\n- T  PE\n- >r\n- m\n- E\n- > ^\n- m\n- mm\n- m\n- PE\n- P V\n- R\n- E\n- E\n- -X2.18-0\n- -X2.18 oc0\n- O -X2.18 O  p -X2.18 O\n- -X2.18-0\n- -X2.18—\n- IG3 18\n- FILTER ABSOLUTE\n- NLEP\n- EG3. IS\n- IG3. 18 FILTER\n- EG3.18\n- KLEP\n- G 18L\n- G3. 19\n- EB. IG/EG3. 18\n- F\n- F\n- -L\n- 26/02/2615\n- GEIERENO\n- 24/02/2015\n- VH\n- WIJZIG.TGK\n- AZ ST.JAN\n- PROJECT: M.0019077.9.01\n- =11.05.95.01\n- EB HONEYWE\n- 16/60\n- VINCI\n- OS OP BORD HONEYWELL\n- BRUGGE\n- !R(II'I IfS\n- 11.05.95.01\n- 2\n- 1\n- 3\n- 4\n- I\n- 5\n- I\n- 6\n- 1\n- 7\n- 1\n- 8\n- 1\n- 9\n- I\n- 10",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0019",
+      "page_number": 18,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- {\n- 2\n- {\n- 3\n- 1\n- 4\n- 1\n- 5\n- 1\n- 6\n- 1\n- 7\n- 1\n- 8\n- 1\n- 9\n- 1\n- 10\n- DIGITALE UITGANGSMQDULE CPU05100 — MODULE 114\n- A\n- tan\n- 71\n- 72\n- 73\n- 74 h Dal\n- a\n- 149 D04\n- 75\n- ® 006 76\n- -N17.Z N® Dm\n- NONEYWELt\n- XPR824A.\n- ® B03\n- B\n- ~® D05\n- 77\n- 21\n- 23 4\n- 31 D2 33 34\n- 51 F53 54\n- 11 112 13 14\n- 51 62 63 64\n- 78\n- 16/6\n- 16/6\n- 16/6\n- C\n- C\n- 2\n- 18/1\n- X3 oL\n- X12.19-0 O\n- X37.\n- O\n- FE\n- O\n- £ S\n- 1\n- PE\n- :3\n- 6\n- PE\n- W3\n- E\n- E\n- SED04NG OP12\n- X1117.5\n- BEDIENING OP12\n- X1_HIIA\n- TEE\n- XBS-AV83\n- X2_WERKIN6 DAG\n- O  0\n- 0\n- 'X 2-0ESINFECTIE\n- GROEN\n- ROOD\n- L\n- XLEP\n- XLEP\n- IG3.1\n- IG3. 19\n- EB\n- IG/EG3. 19\n- F\n- 24/02/2015\n- VH\n- 26/02/205\n- ,r\n- WIJZIG.TGK\n- GETEKEND\n- F\n- .EB HONEYWE _L\n- VRG\n- =11.05.95.01\n- PROJECT: M.0019077.9.01\n- AZ ST.JAN\n- OS OP BORO HONEYWELL\n- m\"\n- mrnMms R\n- BRUGGE\n- 11.05.95.01\n- 17/60\n- rr\n- 8\n- {\n- 2\n- 3\n- {\n- 6\n- 7",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0020",
+      "page_number": 19,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- {\n- 2\n- I\n- 3\n- 1\n- 4\n- 1\n- 5\n- 1\n- 6\n- 1\n- 7\n- 1\n- 8\n- (\n- 9\n- {\n- 10\n- DIGITALE UITGANGSMODULE CPU05100 - MODULE 115\n- A\n- 19/1\n- 7/M\n- 3\n- 75\n- 76\n- n\n- 76\n- 71\n- 72\n- 10\n- ­O2\n- 73\n- 74 11 h2 13 14\n- H07~YWELL\n- ® nos\n- ® D04\n- -N18.2 ~® DO?\n- XM24A•\n- ® D03\n- f7~® D06\n- 8\n- B\n- 31 F7\n- 33 34\n- 51 29 54\n- 61 52 63 64\n- 2122 23 24\n- C\n- 2\n- D\n- 17110\n- 19/1 D\n- 0\n- X2.14 p 0\n- X2.19 O O\n- O X2.190.\n- 0 ---_\n- X2,19'',\n- T  PE\n- m\n- m\n- a\n- m\n- PE\n- f\n- a\n- T\n- E\n- N0\n- -X2.190\n- -X2.19 O O\n- m0\n- -X2.19' O _X2.19 j 0\n- -X219 0 0\n- EG3. 19\n- PGV319\n- 1Q. 19\n- F LTER A350LUTE\n- %LEP\n- IG3.19 FILTER\n- EG3. 19\n- EB, I G/EG3. 19\n- VHG\n- F\n- -L\n- F\n- 24/02/2015\n- GETEXEND\n- WOZIG.T&\n- EB HONEYWE\n- 26/02/2015\n- /\n- //\n- PROJECT: M.0019077.9.01\n- =11.05.95.01\n- OS OP BORD HONEYWELL\n- AZ ST.JAN\n- BRUGGE\n- mou:\n- 11.05.95.01\n- 18/60\n- //\n- I\n- 2\n- 1\n- 4\n- I\n- 5\n- I\n- 6\n- 1\n- 7",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0021",
+      "page_number": 20,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- 5\n- 1\n- 6\n- 1\n- 7\n- s\n- I\n- 9\n- J\n- 10\n- DIGITALE UITGANGSMODULE CPU05100 - MODULE 116\n- A\n- 20/1\n- laity\n- 31 2 33 34\n- 1® Do4\n- XFR824A.  10 I)m\n- 75-\n- 76-\n- ~® D06\n- 71\n- '72\n- —73\n- 41 f2 43 44\n- 10 Dos\n- HONEYWELL\n- B\n- 10 Doe\n- -NN.2 IEf ® D02\n- 5162\n- 61 62\n- 4 78-\n- —74 1, 2 13\n- 2122 23 4\n- C\n- 20/4\n- 20/4\n- 20/4\n- 0\n- 18110\n- 20/1\n- X2.20 p\n- X3 OX3 p\n- X3\n- 0\n- X2.20\"0 N\n- X2.20-\n- Xu0 0\n- V\n- m\n- £\n- F\n- m\n- PE\n- PE\n- 4\n- E\n- DEDIENRIG OP11\n- 8EMMNG 0P11\n- X1-H19.2\n- X2W-AVB3DAG\n- GROEN RG\n- X1_Hi9.3\n- 'a 2TEE\n- -X2.20-0\n- -X2.20-0 O -X2.20 4\n- -X2.20°\n- 0\n- O\n- O\n- -X08ESSINFKTIE\n- ROOD\n- i G3. 20\n- F LTER ABSOLUTE\n- KLEP\n- IG3. 20\n- FILTER\n- EG3. 20\n- KLEP\n- IG3. 20\n- KLEP VL\n- IG3, 20\n- EB. IG/EG3, 20\n- TENENO\n- 24/02/201\n- IJZIG.TG\n- 26/02/2015\n- VHG\n- /\n- AZ ST.JAN\n- PROJECT: M.0019077.9.01\n- 11.05.95.01\n- .EB HONEYWELL\n- OS OP BORD HONEYWELL\n- BRUGGE\n- 11.05.95.01\n- 19/60\n- 1\n- 1\n- 4\n- 1\n- 1\n- 6\n- I\n- I\n- a\n- I",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0022",
+      "page_number": 21,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 5\n- {\n- 6\n- 7\n- 8\n- (\n- 9\n- 10\n- DIGITALE UITGANGSMODULE CPU05100 - MODULE 117\n- A\n- 19/10\n- -71\n- -72 ~® Bill\n- -73 -\n- 75\n- 76-\n- 77 —\n- 1\n- ~4\n- 42 43 44\n- 1\n- 54\n- 1® 1303\n- 1® D134\n- ® D05\n- ~® DO6\n- -N20.2 I® D02\n- NONEYWEEL\n- XFR824A.\n- B\n- -74 11 2 13 14\n- 61 2 63 64\n- 78—\n- 21 2 23 24\n- 19/9\n- 19/9\n- 19/9\n- 21/1\n- X2.20 p\n- —p\n- X2.20\n- X3—Om O\n- 3'\n- d m\n- d\n- PE\n- P\n- W2\n- 8EDVONG ONO\n- BEDIENING OP10\n- X7 H20.7\n- X1_H2O.8\n- TEE\n- -X220-  0\n- -X2-20-  i\n- XBS-AV83\n- X2-WERK NG DAG\n- X2X\"i ECTr,\n- ROM\n- E63.20\n- PM, 20\n- GROEN\n- EB, IG/EG3. 20\n- GETEKEND\n- 24/02/2015\n- YH\n- F\n- G.TG\n- 26/02/20\n- VHG\n- PROJECT: M.0019077.9.01\n- =11.05.95.01\n- AZ ST.JAN\n- .EB HONEYWELL\n- OS OP BORD HONEYWELL\n- Ildli {i1f\n- 11.05.95.01\n- BRUGGE\n- 20160\n- 8\n- 9\n- 10\n- t\n- 4\n- 6",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0023",
+      "page_number": 22,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 2\n- 1\n- 3\n- 1\n- 4\n- 1\n- 5\n- (\n- 6\n- I\n- 7\n- 8\n- 9\n- 1\n- 10\n- VKEDING CPU 05200\n- A\n- A\n- -F21.1\n- 71\n- 75 71\n- 75 71\n- 75 71\n- 75 71 0\n- 75 71 m N 75 71 1,\n- N 75 71 0\n- 75 71 0\n- 75\n- o y\n- 72\n- N 76\n- 0\n- 72 -+ N 76\n- 0\n- 72 R N 76\n- o J\n- 72 2 N 76 72 O^ N 76 72 02 m 76 72 or  m 76 72 (N 76 72 00  N 76\n- 73 a 04 77 7301- 77 73 v m  77 73 010,. 77 730 m 77 73 a\n- 77 73 O tai 77 73\n- Im.. 77 730;-\n- m  77\n- 74 x x  76 74 x x  78 74 x x 78 74 z x 78 74 x x  78 74 =X  78 74 x x  70\n- x 78 74\n- x 7B 74 Y x  78\n- Z C60N C6//1P\n- 6/10KA\n- B\n- B\n- I1\n- i\n- 24V\n- HONEYWEL\n- -N21.1\n- XL200050A\n- RS485-1 RS485-2\n- 24 25 26\n- 25 30 31\n- T -IP\n- I\n- Ri­\n- 710\n- 75 71 -+\n- 7\n- 71W\n- 75 71 toe 75 71 1v 75 71\n- Q 75 71\n- 1 75\n- 72\n- N 76 72 . N 76 72 - N 76 72\n- m 76 72 -. m 76\n- o\n- 72\n- 0 76 72 = m 76\n- 73 040  77 73.0 m  77 73 0 4 77 73 0 ~ 77 73 0 ~ 77 73 0 t- A 73 O 6. 77\n- 74 S x  78 74 M x  76 74 M x 78 74 x x 78 74 x x 78 74 x x 78 74 £ x 78\n- 1\n- 11\n- 11\n- c\n- 259\n- Z60\n- D\n- D\n- 20110\n- 2\n- 2211\n- E\n- PE\n- PE E\n- IP-AANSLUITING\n- BMS-SYSTEEM\n- F\n- OETEKENO\n- 24/02/2015\n- VH\n- F\n- _L\n- =11.05.95.01\n- PROJECT: M.0019077.9.01\n- -ES HONEYWE\n- WUZIO.TV\n- 26/02/2015\n- VH6\n- mP @ B a6 L: I ;;,;\n- AZ ST.JAN\n- OS OP BORD HONEYWELL\n- (6(1119(5\n- ,\n- /1\n- BRUGGE\n- 11.05.95.01\n- 21/60\n- 1\n- 1\n- 2\n- 1\n- 3\n- 1\n- 4\n- 1\n- 5\n- 1\n- 6\n- 7\n- 1\n- 8\n- 1\n- 9\n- 1\n- 10",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0024",
+      "page_number": 23,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- I\n- 2\n- I\n- 3\n- J\n- 4\n- 5\n- 6\n- I\n- 7\n- A\n- ANALOGE INGANGSMODULE CPU05200 - MODULE 101\n- 2311\n- B\n- B\n- 71\n- 72\n- HONEYWEL\n- AI2 XF821A.\n- 76—\n- A18 VAUX 77-\n- 188\n- 212278—\n- GN­\n- All\n- A13\n- 13 3\n- 1\n- AI4\n- 14 4\n- AI5\n- t5 5\n- AI6\n- 16 6\n- AI7\n- 17 7\n- 12 2\n- C\n- 27/2\n- 2712\n- 21/10\n- 2\n- 3\n- X3 O O oab\n- X30- ? a\n- X3\n- :\n- 4\n- D\n- D\n- X3— 0 0\n- PE\n- T  PE\n- {I \t tiE's~\n- a~\n- L\n- C\n- 2\n- PR22.10\n- DTM0\n- DPPE00\n- t\n- 2\n- HONEYWELL\n- TRZ29\n- HONEYWELL\n- LF20\n- ~~\n- 2 WELL\n- DP\n- HN\n- SSWELL\n- HW YELL\n- OPTEt00X\n- rW\n- FY\n- RUI V00\n- DR\n- TE\n- 0D\n- O\n- MAT\n- O\n- 17\n- VLF@TI\n- IG3.4\n- P.VENT\n- RLIKEVENT\n- ~ROKK ABSL FILTER\n- *3.17\n- PULSIE TEMP\n- E\n- %\n- E\n- E63.17\n- EXTR TENP\n- 09-ZAAL 13\n- PULSIE TEMP\n- • loopa\n- DISPLAY\n- 1000Pa\n- DISPLAY\n- 1000Pa\n- DISPLAY\n- O15PlAY\n- ZIE SCHEMA EB, IG/EG3. 17 Pit.6\n- W3.17\n- ANTEVRIES\n- M\n- I Y78\n- ANTIVRIES.\n- O-tOV\n- ufl 1\n- 1\n- •\n- -TS22.4\n- HONEYWELL\n- 8/DPP-FR0-S6\n- El\n- I\n- F\n- 24/02/2015\n- VN\n- GETFKEND\n- F\n- WI/ZW TGN\n- VMG\n- 26/02/2015\n- AZ ST.}AN\n- 11.05.95.01\n- E8 HONEYWE\n- PROJECT: M.0019077.9.01\n- L\n- OS OP BORD HONEYWELL\n- 11.05.95.01\n- V'INCI\n- BRUGGE\n- rnauals\n- 22/60\n- 1\n- t\n- I\n- I\n- I\n- i\n- I\n- 3\n- 5\n- 6\n- 2\n- i\n- 9\n- f\n- 10\n- 7\n- 8",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0025",
+      "page_number": 24,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- S\n- 6\n- I\n- 7\n- A\n- ANALOGE INGANGSMODULE CPU04000 - MDDULE 102\n- 2110\n- 2411\n- B\n- B\n- 1\n- z\n- - > GND\n- HONEYWEL\n- AI2 XFe21A.\n- 76 —\n- A13\n- 13 3\n- AI4\n- 14 4\n- AI5\n- 1S 5\n- AI6\n- 16 6\n- VAUX 77-\n- AI7\n- 17 7\n- AIS\n- 18 8\n- 7a 9 10\n- I\n- 12 2\n- 21 22 78 —\n- 1\n- I\n- C\n- C\n- 2\n- 22110\n- 24/1\n- a\n- X3\n- 0\n- X3'\n- _ _D\n- 1  PE\n- tl —On\n- X3\n- %3 OOO\n- T  PE\n- zz\n- NN»H\n- N~\n- O\n- 2\n- TR23.4\n- PR23.5\n- HONEYWELL\n- DPTE1000D\n- T74600B 09\n- HONEYWELL\n- DP '—\n- TR23.3\n- HONEYWELL\n- 7746081009\n- LER\n- -TRZ3.9\n- HONEYWELL\n- LF2\n- VL\n- TR23.17\n- ONYWELL\n- xj'EDRNOOSCOP~FO.TER\n- L\n- RUMTEVOELER\n- -ENDOSCOPIE\n- ENODSCOPIE\n- POLSIE TEMP\n- E\n- E\n- 163.24\n- PULSE: TEMP\n- — E63.24\n- EXTR TEMP\n- 1000Pa\n- DISPLAY III\n- \u0013S\n- db\n- F\n- GETEICEND  24/02/2015 VH\n- F\n- WUZ16TON\n- 26/02/2015\n- -EB HONEYWE _L\n- VHG\n- AZ ST.JAN\n- =11.05.95-01\n- PROJECT: M.0019077.9.01\n- OS OP BORD HONEYWELL\n- VINCI\n- BRUGGE\n- FAMIM\n- 11.05.95.01\n- 23/60\n- /i\n- 1\n- I\n- 2\n- I\n- 3\n- I\n- 4\n- I\n- 5\n- I\n- 6\n- I\n- 7\n- I",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0026",
+      "page_number": 25,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- I\n- 2\n- I\n- 3\n- I\n- 4\n- (\n- 5\n- I\n- 6\n- I\n- 7\n- 8\n- (\n- 9\n- 1D\n- A\n- ANALGGE FNGANGSMODULE CPU05200 - MODULE 203\n- 25/1\n- B\n- 7S\n- 76\n- -N24.2\n- HONEYWEL\n- -72\n- AI2 XF821A.\n- GND\n- 4 9 10\n- I\n- VAUX 77\n- All\n- AI3\n- 13 3\n- AI4\n- 14 4\n- AI5\n- 15 5\n- AI7\n- 17 7\n- AIG\n- 16 6\n- AIB\n- 18 8\n- I\n- -7-3\n- 11 1\n- 12 2\n- 21 22 78\n- I\n- t\n- C\n- 11\n- ce\n- X3.  o\n- D\n- X3\"0\n- a  n\n- PE\n- vv v~~s\n- q\n- D\n- PE\n- mr mI\n- 12\n- 1\n- HONEYWELL\n- DPTE10000\n- IDR\n- M\n- 1\n- PR24.5\n- NONR\n- E\n- EID'\n- TRZ4.9\n- HONEYWELL\n- 774606/009\n- RUDITEVOELER\n- -PR243\n- HONNEYWELL\n- OPTEIOM\n- oh\n- y DRUK F VENT\n- 833.24\n- HONEYWELL\n- OPTES000\n- ORUK VL FLT\n- IG3.24\n- soopa\n- DISSPLAY\n- V HONEYWELL\n- DP\n- DP —\n- —1-I\n- LF20\n- 3024\n- P.VENT\n- NVUK\n- W8 3 24A ILT\n- E\n- NVWB 3.24A\n- E\n- l~\n- NVW83.24A\n- SIE TEMP\n- P\n- 1004Pa\n- DISPLAY\n- 1000Pa\n- DISPLAY\n- 1000Pa\n- DISPLAY\n- ZIE SCHEMA EH IG/EG3.24 P12.6\n- iG3.24\n- ANTIVRIES\n- S\n- h y x 4101\n- ANTIVRIES.\n- i111\n- O-i0Y\n- -TS24.2\n- HONEYWELL\n- 8/OPP-FRO-S6\n- VH\n- F\n- GETEXENO\n- 24/02/2015\n- F\n- 26/02/2015\n- /\n- WkJZIGJGK\n- VMG\n- PROJECT: M.0019077.9.01\n- L\n- 11.05.95.01\n- .EB NONEYWE\n- AZ ST.JAN\n- OS OP BORO HONEYWELL\n- rACIMI\n- aurils\n- BRUGGE\n- 11.05.95.01\n- 24/60\n- 2\n- I\n- 3\n- I\n- 4\n- I\n- i\n- 1\n- 5\n- 7\n- I\n- 8\n- I\n- 6",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0027",
+      "page_number": 26,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- J\n- 2\n- (\n- 3\n- 4\n- (\n- 5\n- 6\n- (\n- 7\n- I\n- B \tI\n- 9\n- 10\n- A\n- ANALOGE INGANGSMODULE CPU05200 - MODULE 104\n- 26/\n- 24/10\n- B\n- B\n- -71\n- -N251\n- HONEYWEL\n- AI2 XF821Ae\n- -72\n- -73\n- 76 -\n- VAUX 77-\n- 74 GND\n- 9\n- AE7\n- 16 6\n- 17 7\n- 21 22 78  -\n- AI3\n- AI4\n- AI5\n- AI6\n- 13 3\n- 14 4\n- 75 5\n- 12 2\n- C\n- A n m\n- 24/10\n- 2\n- 26/1\n- m e\n- X3-. ~a\n- X3\"-  Oni\n- PE\n- ~o o~\n- D\n- X3-\n- X3\n- O o o b\n- r\n- vNHE\n- T\n- PE\n- ~N mN\n- m wcl\n- a\n- 1\n- 0\n- 3\n- B  -TR25.6\n- 1 2\n- HTR25.5 LL\n- -TR25.9\n- HONEYWELL\n- T7460B1009\n- L\n- HON YWELL\n- HONEYWELL\n- DPTE10000\n- DRUK ABSL FILTE\n- NVWB 3.240\n- I'mYWELL\n- Lf20\n- HONEYWELL\n- DPTEN00D\n- 7746061009\n- RUBITEVOELER\n- NVW63148\n- DRUKA\n- 3\n- B BRLTER\n- N\n- RIV\n- AMTE324\n- EEER\n- bN\n- E\n- E\n- 24\n- NVW6324C\n- PULSIE TEMP\n- PULSIE TEt&\n- 1000P'\n- DISPLAY\n- 1000Pa\n- DISPLAY\n- 24/02/2015\n- VH\n- F\n- GETEKEND\n- W10G.TGR\n- F\n- 26/02/2015\n- /\n- AZ ST.JAN\n- PROJECT: M.0019077.9.01\n- =11.05.95.01\n- VHG\n- EB HONEYWE\n- L\n- 25/60\n- VI C16\n- OS OP BORD HONEYWELL\n- sn4:rtes\n- 11.05.95.01\n- BRUGGE\n- 1\n- 6\n- 4\n- 2\n- 3\n- {\n- 8\n- 7\n- 5\n- I",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0028",
+      "page_number": 27,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- 2\n- 3\n- J\n- 4\n- 5\n- 6\n- 7\n- 8\n- 9\n- I\n- 1D\n- A\n- ANALOGE INGANGSMODULE CPU05200 - MODULE 105\n- 25110\n- 27/1\n- B\n- 75-\n- 76 -\n- AI8 VAUX 77-\n- 18 8\n- 21 22 78  -\n- -71\n- -72\n- -73\n- GND\n- -74\n- 9 10\n- HONEYWEL\n- Al2 XF821A.\n- A13\n- 13 3\n- AI4\n- 14 4\n- A15\n- 155\n- AI6\n- 16 6\n- A17\n- 17 1\n- 12 2\n- 1\n- I\n- 7\n- I\n- C\n- C\n- 25110\n- 27/1\n- m e.n\n- X3—\n- 0'.~ a\n- D\n- X3~. ,\n- X3`\"0\n- X3 r\"'\n- D\n- T  PE\n- .S Sr\n- > m's's\n- PE\n- /+ N\n- M B  TR26.6\n- M B\n- TR26.2\n- 1\n- Li\n- TR26.5\n- HONEYWELL\n- T746OB1009\n- PR26.8\n- HONEYWELL\n- -TR26.9\n- HONEYWELL\n- T74608N109\n- RUIMTEVOEL£R\n- D2\n- 0\n- EYWELL\n- J3 HO ELL\n- NEYW\n- DP\n- OPTE/000D\n- 1t~ NVW8\n- ASSL\n- 314D~TER\n- HONEYWELL\n- LF2\n- P\n- ER\n- RUK~ABSL FILTER\n- NVW8324E\n- 1000Pa\n- DISPLAY\n- E\n- NVWB 3.24D\n- TEMP\n- KVIWWBB 324U\n- NVWB 3.24E\n- POLSIE TEMP\n- NVWB 3.24E\n- E\n- PDL\n- 1000Pa\n- DISPLAY\n- E\n- 20/08/2014\n- VH\n- P\n- _L\n- VINCI 9\n- GETEKEND\n- WIIZIG.T&\n- 26/02/2015\n- /\n- VHG\n- AZ ST.JAN\n- 11.05.95.01\n- PROJECT: M.0019077.9.01\n- =11.05.95.01\n- -EB HONEYWE\n- OS OP BORD HONEYWELL\n- sp(tl lrlf5 i..\n- BRUGGE\n- 26/60\n- 1\n- 2\n- 3\n- I\n- 5\n- 6\n- 7",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0029",
+      "page_number": 28,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- (\n- 2\n- 1\n- 3\n- 1\n- 4\n- 1\n- 5\n- 1\n- 6\n- 1\n- 7\n- 1\n- 8\n- 1\n- 9\n- 1\n- 10\n- ANALOGE UITGANGSMODULE CPU05200 - MODULE 106\n- A\n- 28/1\n- 26110\n- B\n- B\n- —71\n- —72\n- —73\n- —74\n- GND\n- 9 10\n- Am ®®\n- 11 1\n- -N21.2\n- MONEYWEL\n- A02®® XFR822A.\n- 70-\n- 7]\n- 78\n- 12 2\n- 3\n- A04\n- A06®®\n- A071®\n- AOBEV®\n- 14 4\n- 15 5\n- 16 6\n- 17 7\n- 18 8\n- C\n- c\n- 2413\n- 24/3\n- m m\n- 22/5\n- 2215\n- D\n- D\n- 2811\n- PE\n- 26110\n- PE\n- y~ n\n- X3 O Oro\n- )a-\n- ~ a\n- n r ~\n- iA\n- X3-0-\n- X3 0 0—\n- X3\" O i\n- NNN\n- eu~\n- N\n- zi\n- WW N\n- n\n- E\n- E\n- 24\n- 24 M Y  SMZ7.9\n- 7A-FUSION\n- SM 2-WEG\n- 2W VERW\n- IG3.24\n- 24 M Y  SM27A\n- J\n- Z4 M Y SH27.8\n- 24M Y SM27.2\n- (SM TA FUSION\n- -N27.7\n- HONEYWELL\n- FRED G3.17\n- ZIE SCHEMA P6.2\n- ER IG/EG3. 17\n- FRE4 EG3. 17\n- 2IE SCHEMA P6. 7\n- EB. IG/cG3. 17\n- TA FUSION\n- SM\n- 2M NAVERW\n- ENDOSCOPIE\n- TA-FUSION\n- 2W\n- KOE ING\n- IG3.17\n- TA FUG\n- 2W NAVER\n- CQ OP-ZAAL\n- 2-WEG\n- 2W VERW\n- ^~ IG3.17\n- vV\n- 5~ pUry\n- LD135 AVOA\n- •\n- UST AT OP13\n- •\n- •\n- F\n- GETEKEND\n- 20/08/2014\n- VS\n- F\n- MJZIG.TGN\n- 26/02/2015\n- VHG\n- x°11!\n- r;.\n- AZ ST.JAN\n- OS OP BORD HONEYWELL\n- PROJECT: M.0019077.9.01\n- _11.05.95.01\n- EB HONEYWE\n- L\n- fh(rtltrt5\n- ¢<.=\n- BRUGGE\n- 11.05.95.01\n- 27/60\n- 1\n- 1\n- 2\n- 3\n- 5\n- 6\n- 7\n- 8\n- 9\n- 10",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0030",
+      "page_number": 29,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 6\n- 1\n- 7\n- 8\n- 1\n- 9\n- 1\n- 10\n- 5\n- ANALOGE UITGANGSMO­ULE CPU05200 - MODULE 107\n- A\n- z7no\n- 29/1\n- B\n- 6\n- 75-\n- -72\n- N28.2\n- HONEYWEL\n- A02®® %FR822A.\n- 12 2\n- 76-\n- 77-\n- 78r\n- A03\n- A134HO\n- A0510\n- AO61®\n- A071®\n- -73\n- GND A01 ~®\n- -74 9 10\n- 1t 1\n- A0800\n- 13 3\n- 14 4\n- 15 5\n- 16 6\n- 17 7\n- 88\n- C\n- C\n- D\n- D\n- 27/10\n- 29/1\n- m~\n- Z-\n- -\n- X3 _p\"' a~ _X3~^'p\"' \t %3«\n- a\n- %3 O N\n- O«\n- tQ aA\n- P£\n- µ N\n- n\n- F F m \t£ E w\n- E E\n- E\n- N W n\n- N cci\n- c\n- t\n- E\n- c\n- Y SM28.9\n- E\n- 2\n- 24\n- 4 M tY\n- j4 M Y SM28.2\n- 24 NY SN28.7\n- S\n- iSA FUSION\n- 2-WEG\n- —~=-2W NAVERW\n- F\n- z4 M Y SM28.5\n- SM28.6\n- TA-FUSION\n- 241\n- A\n- FRED IG3. 24\n- ZIE SCHEMA PG 2\n- RED EM. 24\n- ZIE SCHEMA P6.2\n- E&. FM 24\n- SM Z WE\n- G ION\n- ZW KOELING\n- M IG3.24\n- TA FUS ON\n- 2- 0\n- (5 0tW\n- I><\n- AON\n- 2W NAVERW\n- NVWB 3.24E\n- S40N\n- WNA3E4\n- WS 0\n- S\n- SM T A'E\n- G\n- WEG\n- EB. IG3. 24\n- NVWB 3.24C\n- NVW63.24A\n- NYW$ 3248\n- 0\n- i\n- 0\n- F\n- _L\n- MRIGTON\n- 26/02/2015\n- F\n- GETEKENO 20/08/2014 VH\n- VHG\n- AZ ST.JAN\n- PROJECT: M.0019077.9.01\n- =11.05.95.01\n- .E8 HONEYWE\n- OS OP BORD HONEYWELL\n- VINCI\n- Tnnmi\n- 11.05.95.01\n- BRUGGE\n- 28/60\n- 2\n- 3\n- 4\n- I\n- 6\n- (\n- 7\n- 1",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0031",
+      "page_number": 30,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- I\n- 2\n- 3\n- 1\n- 4\n- 1\n- 5\n- f\n- 6\n- 1\n- 7\n- 1\n- 8\n- l\n- 9\n- I\n- i4\n- DIGITALE INGANGSMODULE CPU05200 - MODULE 108\n- A\n- 28/10\n- 4\n- 30/1\n- B\n- X71\n- 75\n- 76\n- DI12 77\n- 24 12\n- 78\n- 4\n- B\n- HONEYWEL\n- XF823A.\n- DI2\n- DI 3\n- DI4\n- DI5\n- ­I6\n- DI\n- 14 2 \t 15 3 \t 16 4 \t 17 5 \t 18 6\n- 19\n- 1\n- 1\n- 1\n- 1\n- I\n- -73\n- -174\n- DI\n- 13 1\n- 7\n- DI\n- 7 \t20\n- I\n- 8\n- DI9\n- DI10\n- Dill\n- 8\n- 21 9\n- 22 10\n- 23 11\n- !\n- 1\n- i\n- C\n- C\n- D\n- 2\n- 28/10\n- D\n- 30/1\n- X3.17-0\n- X3.T7-0\n- X3.17-0\n- X3.17-0\n- X3.17-\n- X3.17\n- X3.1770  O\n- X3.17-0\n- X3.17 U\n- X3.17 O\n- m F\n- m\n- m\n- -\n- P E\n- m\n- PE\n- T\n- E\n- E\n- -X3.17-0\"\n- -X3.17-0\n- -X3.17-0\n- -X3.17'0\n- -X3.17 O\n- 43.170\n- -X3.17-0\n- -X3.17 ~a\n- -X3.17-7\n- -X3.170\n- BRAND\n- ANTIVR\n- DEROG\n- ­FROG\n- DEROG\n- THERM\n- ALARM\n- ALIIRH\n- FB\n- FR\n- FB\n- LG3. 17\n- IG3. 17\n- PCV3.17\n- IG3. 17\n- EG8. 17\n- PCV3. 17\n- IG3 17\n- EG3. 17\n- PCV3 V\n- IG3. 17\n- EG3. 17\n- EB, IG/EG3. 17\n- FE VL\n- IG3. 17\n- E\n- eETE%END  20/08/2014  VH\n- WI1ZIG.TS\n- VHG\n- ~8R~0.wn~ ifs ~~l\n- 26/02/205\n- AZ ST.IAN\n- PROJECT: M.0019077.9.01\n- =11.05.95.01\n- .EB HONEYWE _L\n- OS OP BORD HONEYWELL\n- Ff..Cf R16 tc\n- BRUGGE\n- 11.05.95.01\n- 29/60\n- 5\n- 1\n- 6\n- t0",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0032",
+      "page_number": 31,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- 1\n- 2\n- 1\n- 3\n- 1\n- 4\n- 1\n- 5\n- 1\n- 6\n- 7\n- 8\n- 1\n- 9\n- 4\n- 10\n- DIGITALE INGANGSMUDULE CPU05200 - MODULE 109\n- A\n- 29/10\n- 4\n- 31/1\n- B\n- B\n- HDNEYWEL\n- 72\n- 76\n- XP823A•\n- 73 DI1\n- D12\n- D13\n- D14\n- DI5\n- D16\n- DI-7\n- DIB\n- DI9\n- D110\n- DII1\n- ­712 77\n- 74\n- 13 1 \t14 2 \t15 3\n- 16 4 \t4 5\n- 18 6\n- 19 7 \t20 8 \t21 9\n- 22 10\n- 23 11\n- 24 12\n- 7\n- 1\n- C\n- D\n- D\n- 29/10\n- /1\n- X3.4. .\n- X3.17:0.\n- X9.11,\n- %3 `\", . n',\n- %X3.177.\n- ^'\n- X3.17^'.,\n- X347\"'.\n- X3.17v\n- {`\n- PE\n- m 2\n- 0\n- 0l\n- m\n- I\n- PE\n- —\n- •-\n- 31\n- .o\n- W \t v\n- E\n- E\n- I\n- ~N\n- -X3.17 ¢'\n- -X3.17,\n- -X3.n7\n- 3 OEDIIENFNEWG IE\n- OP13\n- 3 DA~GIME0Pt3\n- F8 KL\n- FB KL\n- FB KL\n- EM. 17\n- GP13\n- ENDB\n- EB. IG/EG3. 17\n- BK3. 17/5\n- BK3. 17/6\n- BK3. 17/7\n- EG3, 17\n- EG3. 17\n- EM. 17\n- BK3. 17/ BK3 17/3\n- Na 17\n- IG3. 17\n- 3K3. 17/2 BK3. 17/4\n- IG3. 17\n- EG3. 17\n- 4 TEE\n- 4 TEE\n- XXF-85542\n- A31\n- GRDEN\n- EB, I G/EG3. 17\n- F\n- VH\n- VINCI\n- GETEKEND 20/08/2014\n- F\n- WUMAGN\n- 26/02/2015\n- VHG\n- PROJECT: M.0019077.9.01\n- =11.05.95.01\n- -EB HONEYWE _L\n- AZ ST.JAN\n- OS OP BORD HONEYWELL\n- //\n- ~Ammr\n- a\n- BRUGGE\n- 11.05.95.01\n- //\n- 30/60\n- /\n- 1\n- 1\n- 2\n- 1\n- 3\n- 1\n- 9\n- 1\n- 10",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0033",
+      "page_number": 32,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- I\n- 2\n- 3\n- 1\n- 4\n- 1\n- 5\n- j\n- 6\n- 1\n- 7\n- 1\n- 8\n- 1\n- 9\n- 1\n- 10\n- DIGITALE INGANGSMODULE CPU05200 - MODULE 110\n- A\n- 30/10\n- 4\n- 32/1\n- —71\n- 7s —\n- --72\n- -N311\n- NONEYW0.\n- 76-\n- XF823A.\n- -73\n- DI\n- DI2\n- D13\n- DI4\n- D15\n- DI6\n- D17\n- DIe\n- D19\n- DIIO\n- DI 1\n- DI12 77\n- -74\n- 13 1 \t14 2 \t15 3 \t16 4\n- 11 5 \t18 6\n- 19 7 \t20 6 \t21 9\n- 22 10\n- - 23 it\n- 24 12\n- 7B\n- B\n- B\n- I\n- I\n- 1\n- 1\n- C\n- c\n- IB\n- D\n- D\n- 30/10\n- 2\n- 32/1\n- X324P q\n- PE\n- m\n- X3.24P''.\n- X324P A\n- X3.24P\n- X3.24P o\n- X3.24E p\n- x3.249 m0\n- X3.24P p\n- X3.24E-\n- 'p\n- X3.24E-0\n- o\n- X324P\n- z\n- f\n- m\n- N\n- m\n- m\n- 0\n- m\n- 0\n- m\n- v\n- m\n- m\n- m\n- m\n- PE\n- E\n- E\n- X3.24P oo -X314P\"0\n- -X324fl~.\n- -X3.24P ¢ -X3.24P-.\n- -X3.24P-0  -X3.24P-\n- -X124P 0\n- X31LE p o -X3.24E 0 -X324E-0\n- BRAND\n- ANTIVR\n- DEROG\n- DEROG\n- THERM\n- ALARM\n- FB\n- FB\n- FB VL\n- LG3. 24\n- IG3. 24\n- PCY3. 24\n- IG3. 24\n- PCV3. 24\n- 10. 24\n- PCV3, 24\n- 1G3. 24\n- IG3. 24\n- DEROG\n- ALARM\n- FB\n- £G3 24\n- EG3. 24\n- EG3. 24\n- EB. EG3, 24\n- EB, IG3. 24\n- F\n- GETEKEND  20/08/2014\n- VM\n- F\n- WIZ TGN 26/92/2015\n- VMG\n- PROJECT: M.0019077.9.01\n- =11.05.95.01\n- EB HONEYWE _L\n- AZ ST.JAN\n- OS OP BORD HONEYWELL\n- /\n- FAOLItIFi n..\n- BRUGGE\n- 11.05.95.01\n- 31/60\n- 1\n- I\n- 2\n- 1\n- 3\n- 1\n- 4\n- I\n- 5\n- 1\n- 6",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0034",
+      "page_number": 33,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- 5\n- I\n- 6\n- 1\n- 7\n- 1\n- 8\n- 1\n- 9\n- i\n- m\n- DIGITALE INGANGSMODULE CPU05200 - MODULE 111\n- A\n- 33/1\n- 1/ta\n- 75 -\n- 76 -\n- 0112 77 -\n- 2412\n- 72-\n- -1432.1\n- HONEYWEL\n- B\n- -'n\n- DI1\n- D12\n- DI3\n- M23 1i14\n- DI5\n- ­16\n- DI7\n- B18\n- B19\n- DIM\n- -74\n- 13 1 \t/4 2\n- 15 3\n- 16 4 \t175\n- 16 6 \tt97\n- 20 a\n- 21 9\n- 22 10\n- i\n- 1\n- D\n- D\n- 33/t\n- 31/10\n- X3.24E'~\n- X3.24P^\n- X324P~ x314P'-\n- a\n- 24P 0 X3.24P 0 X124P C\n- Z\n- I\n- PE\n- m m\n- X314E p X3.24Em0 X3.24E-\n- X3.24E p X3.24E p\n- m\n- ip\n- m\n- m\n- m\n- m\n- PE\n- µ\n- w\n- 9\n- N\n- E\n- X3.24f a -X3.24ES0 -X3.24E--0\n- X314E\"0 -X3.2\n- -X3.24P p -X3.24Pi\n- o\n- -X314P 0 4 -*.24P =Y  -X3.24P;~ -X3.24Pl\n- BK3.24/1 BK3.24/2 BK3 24/3 BK3. 24/4 BK3.24/5 BK3. 24/6\n- BK3.24/7 BK3.24/3 SK3~ 24/9 BK3.24/10 BK3. 24!11\n- E63. 24\n- M. 24\n- EG3, 24\n- E03. 24\n- E63. 24\n- EB. EG3. 24\n- FT KL\n- EG3. 24\n- EB. EG3. 24\n- IG3.24\n- IG3.24\n- 163. 24\n- IG3. 24\n- 163. 24\n- IG3. 24\n- EB. IG3. 24\n- F\n- 20/08/201\n- btttmND\n- YHG\n- AZ ST.1AN\n- .4\n- MaT\n- 26/02/2015\n- VINCI ~w ~\n- _L\n- .11.05.95.01 ;.EB HONEYW\n- OS OP BORD HONEYWELL\n- PROJECT: M.0019077.9.0\n- tA:B~IIIi e.;\n- BRUGGE\n- /\n- 11.05.95.01\n- 32/60\n- 4\n- f\n- J\n- 6\n- 1\n- f",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0035",
+      "page_number": 34,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 3\n- 1\n- 4\n- 1\n- 5\n- 1\n- 6\n- 1\n- 7 \t8\n- 9\n- i4\n- A\n- DIGITALE INGANGSMODULE CPU05200 — MODULE 112\n- A\n- 32/10\n- L\n- 3cn\n- B\n- 75\n- 76-\n- 7?\n- 78r\n- B\n- 72\n- -033.1\n- HONEYWEL\n- Xf823 -\n- DII\n- D12 \tDI3\n- 14 2 \t15 3\n- -74 13 1\n- DIS \tDI6 \tDI7 \tDIB \tDI9\n- 116 4 \t17 5 \t18 6 \t19 7 \t20 8 \t21 9\n- I\n- DIIO\n- DI11\n- 1111?\n- 22 10 \t23 11 \t24 12\n- i\n- (\n- 1 \t{\n- i\n- 1\n- t \t I\n- I\n- F\n- 38/1\n- 33/1\n- 38/1\n- 38/1\n- 3zno\n- X324P\n- m\n- X3.24E p\n- X324P\n- X3.24P` o\n- X3.24P p\n- X324P\n- E E \tE\n- PE\n- m m\n- m\n- m m\n- m\n- PE\n- W\n- E\n- -X3.24P\n- X3.24E O 0 -X3.24f p\n- -X3.24P p -X3.24P\n- -X324P\n- 3Ka 24/12 W3. 24/13\n- EG3. 24\n- EG3. 24\n- EB, EG3. 24\n- KL NV B\n- 3. 24A\n- KL NVVB\n- KL NYVB\n- KL NVYB\n- a\n- KL Km\n- a 24B\n- EB. IG3. 24\n- 3.240\n- 3. 24E\n- GETEXEND\n- 20/08/2014\n- V\n- F\n- EB HONEYWELL\n- WUZIGT\n- 26/02/20\n- G\n- 1.05.95.01\n- PROJECT: M.0019077.9.01\n- AZ ST.JAN\n- OS OP BORD HONEYWELL\n- BRUGGE\n- fM1f1t111F1 il^\n- 11.05.95.01\n- /\n- 33/60\n- 4\n- J\n- /\n- f\n- I\n- {\n- 6\n- i",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0036",
+      "page_number": 35,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 8\n- 1\n- 9\n- y\n- 10\n- DIGITALE UITGANGSM©DULE CPU05200 - MDDULE 113\n- A\n- 33110\n- 35/f\n- j® DO1\n- 71\n- -72\n- -73\n- -74\n- HONEYWELL\n- XFR824A- 1® D03\n- 75\n- 76\n- 77\n- 7a\n- -\"34.2 h DO2\n- N® 005\n- 101106\n- B\n- 2 33 34\n- 41 f~73 44\n- t 2 13 14\n- 21 2'!\n- 2 43 24\n- 51 2 33 54\n- 61 2 63 64\n- 35/1\n- 35/1\n- 35/1\n- 1r\n- 35/3\n- 35/3\n- 35/3\n- J\n- v\n- D 33110\n- 2\n- D\n- 35/f\n- PE\n- mi J\n- 0\n- £\n- m\n- X2.177\n- x2.17=0\n- 0\n- F\n- m\n- 0\n- O\n- E\n- m\n- E\n- m\n- m\n- E\n- J\n- 0\n- -X217'-,\n- i\n- ml J\n- -x2.17 p o -X2.17-0-0\n- 4 0\n- PCV3 17\n- EG3. 17\n- IG3 17\n- F LTER ASSUL ABSOLUTE\n- KLEP\n- IG3. 17 FILTER FILTER\n- EG3. 17\n- GP13 ENMSC13PIE\n- KLEP NLEP KLEP VL\n- IG3. 3TG3. ITG3. 17\n- EB, IG/EG3. 17\n- F\n- VH\n- GETEKEND 20/08/2014\n- WU2tG.TGN\n- 26/02/2015\n- F\n- -L\n- VK\n- AZ ST.JAN\n- r/\n- VINCI\n- PROJECT: M.0019077.9.01\n- =11-05.95 01\n- -EB HONEYWE\n- OS OP BORD HONEYWELL\n- r/\n- ~n;nm\n- BRUGGE\n- 11.05.95.01\n- 34/60\n- 1\n- 1\n- 2\n- 3\n- 4\n- y\n- 5\n- 6\n- I\n- 1",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0037",
+      "page_number": 36,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 5\n- 6\n- 1\n- 7\n- 8\n- J\n- 9\n- )\n- 10\n- DIGITALE UITGANGSMKDULE CPU05200 - MODULE 114\n- A\n- 34/10\n- l\n- -\n- 36/1\n- 4352 1\n- 0 D02\n- 75-\n- 10\n- D04\n- ® B05\n- ® D06 76-\n- —71\n- B\n- —72\n- —73\n- —74\n- 3t 02 33\n- 101003\n- HONETWEI.0\n- XfR824A.\n- 1101)01\n- B\n- 77—\n- 1\n- 3 4\n- 51 B2\n- 3\n- 4\n- 61\n- 63 bL\n- '78—\n- i\n- 11\n- 3\n- 21 f2 Z3 24\n- 34/3\n- 440\n- 34/3\n- 442\n- 34/3\n- 443\n- 34/9\n- 446\n- 34/9\n- 446\n- C\n- 34/9\n- 449\n- D\n- 6/1\n- D 34/10\n- X3  TL\n- T  PE\n- w\n- V\n- PE\n- E\n- E\n- BEDIENING OP13\n- BEDIENING OP13\n- XI-H355\n- %1_I{35.fi\n- %BS—AVB3\n- XBS—AVBG\n- X2--\n- WE\n- R2%OAG\n- %2R~NfEOTIE\n- -W\n- ER\n- F\n- GETENEND\n- 20/08/2014\n- VH\n- F\n- .EB HONEYWELL\n- tt\n- Wi1ZIG.TGN\n- 26/02/2015\n- VHG\n- V&N01\n- PROJECT: M.0019077.9.01\n- =11.05.95,01\n- AZ ST.JAN\n- OS OP BORD HONEYWELL\n- BRUGGE\n- 11.05.95.01\n- Intlums F~\n- 35/60\n- 1\n- 1\n- 2\n- I",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0038",
+      "page_number": 37,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- 1\n- 2\n- l\n- 3\n- 1\n- 4\n- 1\n- 5\n- 1\n- 6\n- 1\n- 7\n- 1\n- 8\n- 1\n- 9\n- 1\n- 10\n- DIGITALE UITGANGSMKRULE CPU05200 - MODULE 115\n- A\n- 37/1\n- 35/10\n- 1® B04\n- 1® D06\n- 71\n- 75\n- 76\n- 77\n- 78\n- ~® DDl\n- ~® D03\n- NONEYWELL\n- XFR824A.\n- -N36.2 (8) D02\n- B\n- 72-\n- 73\n- 74\n- B\n- 3\n- 51 2 53 54\n- 61\n- 2 13 14\n- 21 2 23 24\n- 31 2 33 34\n- 46B\n- 37/2\n- C\n- t\n- 37/2\n- 37/2\n- 3712\n- 37/2\n- 37/2\n- 476\n- D 35/10 \t 2\n- 37/1\n- X224P-, O X2.24Pm0\n- PE\n- '\"O  X2.24P 9 O _ O\n- X2.24E 0\n- X2.24E ^ 0\n- O\n- E\n- PE\n- 3E\n- @\n- 9\n- v\n- @\n- v\n- a a v\n- E\n- E\n- X2.24P o\n- `\"p -X2.24P p ''O -X2.24P 0 D\n- la\" \t IGA 24\n- F LTER\n- IG3. 24\n- 163, 24\n- 0 0 0\n- ABSM F\n- ABSOL F\n- ASSGL F\n- PCV3. 24\n- NVYB 3. 24A\n- NVYB 3.240\n- NVNB 3.24E\n- APML F\n- ABStL F\n- NVYB 3.242\n- NVYB 3.84D\n- -X2.24E p\n- -X2-24f O O\n- EGA 24\n- KLEP\n- E03. 24\n- EB. IG3. 24\n- EB. EG3, 24\n- F\n- F\n- 20/08/2014\n- VN\n- GETEKEND\n- w1;21G.TD\n- 26/02/2015\n- VHG\n- AZ ST.JAN\n- PROJECT: M.0019077.9.01\n- =11.05.95.01\n- ~EB HONEYW£\n- -L\n- OS OP BORD HONEYWELL\n- //\n- BRUGGE\n- 11.05.95.01\n- 36/60\n- t 7",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0039",
+      "page_number": 38,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- 1\n- 2\n- 1\n- 3\n- I\n- 4\n- I\n- S\n- 1\n- 6\n- 1\n- 7\n- 1\n- 8\n- 1\n- 9\n- 1\n- 10\n- DIGITALE UITGANGSMDDULE CPU05200 - MUDULE lib\n- A\n- 36/10\n- i\n- 3871\n- 75 —\n- 76 —\n- 77 —\n- 78 —\n- —71\n- -72 10)  DDJ\n- —73\n- —74 11 2 13 14\n- -N37.2 ~® D02 HONEYWELL\n- B\n- NO B04\n- ~® D05 \t {~10 DD6\n- N® DD3\n- B\n- _~- %FR824A+\n- 3 34\n- [~\n- F1 2 53 54\n- &i 92 63 64\n- 1 2 43 44\n- 21 R2 23 24\n- 36/10\n- C\n- 36/t0\n- 36/10\n- 36/18\n- C\n- 36/10\n- MAO\n- D\n- 36/10\n- 2\n- 38/1 0\n- PE\n- PE\n- E\n- F\n- GETEKENO\n- 20/08/2014\n- VH\n- F\n- -EB HONEYWE -L\n- MJZrG.TGH\n- 26/02/208\n- //\n- / /\n- rncmncs ~'€\n- PROJECT: M.0019077.9.01\n- =11.05.95.01\n- AZ ST.JAN\n- OS OP BORD HONEYWELL\n- 11.05.95.01\n- BRUGGE\n- 37/60\n- 1\n- 6\n- T\n- 7\n- 1\n- 9\n- 1\n- to\n- 6\n- 4\n- I\n- 1\n- 2\n- 1\n- 3",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0040",
+      "page_number": 39,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 3\n- 5\n- 6\n- 7\n- I\n- 8\n- I\n- 10\n- DOORMELDINGEN BORDEN LUCHTGRKEDEN\n- I\n- 37/10\n- 4\n- 39/1\n- 5\n- 33/8\n- 435\n- 33/8\n- 439\n- 39/7\n- 33/8\n- 436\n- 39/1\n- 33/8\n- 438\n- 39/1\n- 490\n- 493\n- 496\n- 499\n- 39/1\n- 491\n- 494\n- 497\n- S00\n- 39/1\n- 492\n- 498\n- 501\n- 39/1\n- 37/10\n- 2\n- 3911\n- 1\n- X3.19\n- X3.2\n- m0\n- X3.18\n- , \tX3.17\",\",\n- OoO\n- f\n- PE\n- a\n- Y\n- Y\n- PE\n- W\n- T\n- -X320 :\"'\n- d\n- \"~',\n- O\n- -%3.18'„\n- -Xit9'v\n- '„•\n- 230Y\n- 24V\n- •\n- -X3.77\",\n- 3\n- •\n- 230v\n- o 0\n- O\n- ,]\n- BRM\n- 0P 0\n- 1\n- 230Y\n- 24Y\n- GREEK\n- dP\n- 0PI2\n- GREEK\n- 230V\n- 2Av\n- 24v\n- GREEK\n- OP 3\n- EB,\n- IG/EG3.\n- 18\n- EB,\n- IG/EG3,\n- 19\n- EB,\n- IG/EG3,\n- 20\n- EB.\n- IG/EG3.\n- 17\n- GEFIXEM\n- 20/08/2014\n- vH\n- w1/zfG.r\n- 26rozno15\n- vxc\n- PROJECT: M.0019077.9.01\n- _11.05.95.01\n- .EB HONEYWE\n- AZ ST.JAN\n- OS OP BORD HONEYWELL\n- BRUGGE\n- 11.05.95.01\n- 38/60\n- F\n- -^\n- -L\n- 4\n- i\n- 7\n- 9\n- 10",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0041",
+      "page_number": 40,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 1\n- 1\n- 2\n- 1\n- 3\n- 1\n- 4\n- 1\n- 5\n- 1\n- 6\n- 1\n- 7\n- 1\n- 8\n- 1\n- 9\n- 1\n- 10\n- DOORMEL­INGEN BORDEN LUCHTGROEPEN\n- A\n- 38/10\n- 4\n- B\n- B\n- 38/,0\n- 439\n- c\n- c\n- 38/10\n- 436\n- 38/10\n- 438\n- 38110\n- 499\n- 38/10\n- 500\n- —'\n- 508\n- 38/10\n- 501\n- 509\n- 0\n- D\n- 38110\n- X3.244,—\",o\n- X3.24E-Q7b, —'\n- O O\n- _ T\n- £ E E\n- mm a\n- PE\n- PE\n- mm m m\n- 4 9 9 9\n- m\n- T\n- E\n- E\n- -X3.24E o O 0 O\n- 0~0 r c\n- 280V\n- e4V\n- BREEK 230V 24V\n- GANG\n- EB. EG3. 24\n- EB, IG3. 24\n- F\n- 20/08/2014 VH\n- 26/02/204\n- /\n- AZ ST.JAN\n- GETEKENO\n- PROJECT: M.0019077.9.01\n- =11.05.95.01\n- VHG\n- WlJM.TGK\n- 11.05.95.01\n- •EB HONEYWE LL\n- OS OP BORO HONEYWELL\n- 39/60\n- VINCI\n- rnnnnrs :..\n- BRUGGE\n- 1\n- 5\n- I\n- 6\n- k\n- 7\n- 1\n- 1\n- 2\n- I\n- 3\n- I",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0042",
+      "page_number": 41,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- Date\n- 26/02/2015\n- Reports of Cables\n- Page\n- 1\n- 11~ I\" = B\n- AZ ST. JAN\n- BRUGGE\n- OS OP BORD HONEYWELL\n- 11.05.95.01\n- Cable\n- Description\n- Function\n- Lenqth\n- Remarks\n- 1W1.2\n- XGB3G2.5\n- HALO POWER CABLE 20A\n- KLANT\n- 1W11.3\n- LIHCH-JZ4*1\n- HALO CONTROL CABLE\n- SHIELDED\n- 1W12.9\n- LIHCH-JZ4*1\n- HALO CONTROL CABLE\n- SHIELDED\n- 1W14.7\n- LIHCH-JZ 4*1\n- HALO CONTROL CABLE\n- SHIELDED\n- 1W17.5\n- LIHH-JZ4*1\n- HALO CONTROL CABLE\n- 1W19.2\n- LIHH-JZ4*1\n- HALO CONTROL CABLE\n- 1W20.7\n- LIHH-JZ4*1\n- HALO CONTROL CABLE\n- 1 W22.10 LIHCH-JZ 4*1\n- HALO CONTROL CABLE\n- SHIELDED\n- 1W22.2\n- LIHCH-JZ W1\n- HALO CONTROL CABLE\n- SHIELDED\n- 1W22.3\n- LIHCH-JZ3*1\n- HALO CONTROL CABLE\n- SHIELDED\n- '\" MA\n- LIHCH-JZ 7*1\n- HALO CONTROL CABLE\n- SHIELDED\n- 1W22.5\n- LIHCH-JZ4*1\n- HALO CONTROL CABLE\n- SHIELDED\n- 1W22.6\n- LIHCH-JZ4*1\n- HALO CONTROL CABLE\n- SHIELDED\n- 1 W22.8\n- LIHCH-JZ 4*1\n- HALO CONTROL CABLE\n- SHIELDED\n- 1W22.9\n- LIHCH-JZ3*1\n- HALO CONTROL CABLE\n- SHIELDED\n- 1 W23.10 LIHCH-JZ 3*1\n- HALO CONTROL CABLE\n- SHIELDED\n- 1W23.3\n- LIHCH-JZ 4*1\n- HALO CONTROL CABLE\n- SHIELDED\n- 1 W23.4\n- LIHCH-JZ 3*1\n- HALO CONTROL CABLE\n- SHIELDED\n- IW23.5\n- LIHCH-JZ4*1\n- HALO CONTROL CABLE\n- SHIELDED\n- 1 W23.7\n- LIHCH-JZ 4*1\n- HALO CONTROL CABLE\n- SHIELDED\n- IW23.9\n- LIHCH-JZ3*1\n- HALO CONTROL CABLE\n- SHIELDED\n- c4,-4.2\n- LIHCH-JZ 7*1\n- HALO CONTROL CABLE\n- SHIELDED\n- IW24.3\n- LIHCH-JZ4*1\n- HALO CONTROL CABLE\n- SHIELDED\n- I W24A\n- LIHCH-JZ 4*1\n- HALO CONTROL CABLE\n- SHIELDED\n- IW24.5\n- LIHCH-JZ4*1\n- HALO CONTROL CABLE\n- SHIELDED\n- IW24.6\n- LIHCH-JZ3*1\n- HALO CONTROL CABLE\n- SHIELDED\n- IW24.8\n- LIHCH-JZ4*1\n- HALO CONTROL CABLE\n- SHIELDED\n- IW24.9\n- LIHCH-JZ4*1\n- HALO CONTROL CABLE\n- SHIELDED\n- W25.2\n- LIHCH-JZ 3*1\n- HALO CONTROL CABLE\n- SHIELDED\n- W25.3\n- LIHCH-JZ 4*1\n- HALO CONTROL CABLE\n- SHIELDED\n- W25.5\n- LIHCH-JZ4*1\n- HALO CONTROL CABLE\n- SHIELDED\n- W25.6\n- LIHCH-JZ 3*1\n- HALO CONTROL CABLE\n- SHIELDED",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0043",
+      "page_number": 42,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- Date 26/02/201'5\n- Reports Of Cables\n- Page\n- 2\n- AZ ST.JAN\n- BRUGGE\n- OS OP BORD HONEYWELL\n- 11.05.95.01\n- Cable Description\n- Function\n- 1 W25.g LIHCH-JZ 4`1\n- HALO CONTROL CABLE\n- SHIELDED\n- 1 W25.9 LIHCH-JZ 4`1\n- HALO CONTROL CABLE\n- SHIELDED\n- 1W26,2 LIHCW-JZ 3*1\n- HALO CONTROL CABLE\n- SHIELDED\n- 1 W26.3\n- HALO CONTROL CABLE\n- SHIELDED\n- 1 W26.5 LIHCH-JZ 4*1\n- HALO CONTROL CABLE\n- SHIELDED\n- 1W26,6 LIHCH-JZ 3*1\n- HALO CONTROL CABLE\n- SHIELDED\n- 1 W26.8 LIHCH-JZ 4*1\n- HALO CONTROL CABLE\n- SHIELDED\n- 1W26.9 LIHCH-JZ 4`1\n- HALO CONTROL CABLE\n- SHIELDED\n- 1W27,2 LIHH-JZ 4*1\n- HALO CONTROL CABLE\n- ?\"117,3 LIHH-JZ 4\"1\n- HALO CONTROL CABLE\n- 1 27.4\n- HALO CONTROL CABLE\n- SHIELDED\n- 1W27.6 LIHCH-JZ 3`1\n- HALO CONTROL CABLE\n- SHIELDED\n- 1 W27.6 LIHH-JZ 4*1\n- HALO CONTROL CABLE\n- 1 W27.7 LIMCH-JZ 5*1\n- HALO CONTROL CABLE\n- SHIELDED\n- 1W27.8\n- HALO CONTROL CABLE\n- 1W27.9 LIHH-JZ 4*1\n- HALO CONTROL CABLE\n- 1W28.2 LIHH-JZ 4*1\n- HALO CONTROL CABLE\n- 1W28.3 LIHGH-JZ 3*1\n- HALO CONTROL CABLE\n- SHIELDED\n- 1 W28.4 LIHCH-JZ 3*1\n- HALO CONTROL CABLE\n- SHIELDED\n- 1 W28.5 LIHN-JZ 4*1\n- HALO CONTROL CABLE\n- 1W28.6 LIHH-JZ 4*1\n- HALO CONTROL CABLE\n- 1W28.7 LIHH-JZ 4\"1\n- HALO CONTROL CABLE\n- 1 W28.g LIHH-JZ 4*1\n- HALO CONTROL CABLE\n- 1W28.9 LIHH-JZ 4*1\n- HALO CONTROL CABLE\n- 1 W30.3\n- HALO CONTROL CABLE\n- SHIELDED\n- 1\n- LIHH-JZ 4`1\n- , . ro.5\n- HALO CONTROL CABLE\n- 1 W4.2 LIHCH-JZ 3`1\n- HALO CONTROL CABLE\n- SHIELDED\n- 1W4.3 LIHCH-JZ 3*1\n- HALO CONTROL CABLE\n- SHIELDED\n- 1W4.4 LIHCH-JZ 7*1\n- HALO CONTROL CABLE\n- SHIELDED\n- I W4.5 LIHCH-JZ 4`1\n- HALO CONTROL CABLE\n- SHIELDED\n- I W4.6 LIHCH-JZ 4*1\n- HALO CONTROL CABLE\n- SHIELDED\n- IW4.8\n- HALO CONTROL CABLE\n- SHIELDED\n- I W4.8 LIMCH-JZ 4*1\n- HALO CONTROL CABLE\n- SHIELDED\n- IW5.10\n- HALO CONTROL CABLE\n- SHIELDED\n- IW5.2\n- HALO CONTROL CABLE\n- SHIELDED\n- I W5.3 LIHCH-JZ 3*1\n- HALO CONTROL CABLE\n- SHIELDED\n- I W5.4 LIHCH-J2 3*1\n- HALO CONTROL CABLE\n- SHIELDED\n- Length \tRemarks\n- LIHCH-JZ 4`1\n- LIHCH-JZ 3*1\n- LIHH-JZ 4`1\n- LIHCW-JZ 4\"1\n- LIHCH-JZ 4*1\n- LIMCH-JZ 4*1\n- LIHCH.IZ 4*1",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0044",
+      "page_number": 43,
+      "section_heading": "HVAC Diagram Legend / Schedule",
+      "sheet_name": null,
+      "block_type": "table",
+      "markdown_content": "| Reports of Cables | Col_2 | Page |\n| :--- | :--- | :--- |\n| AZ ST.JAN  BRUGGE  OS OP BORD HONEYWELL  11.05.95.01  Function  HALO CONTROL CABLE  SHIELDED  HALO CONTROL CABLE  SHIELDED  HALO CONTROL CABLE  SHIELDED  HALO CONTROL CABLE  SHIELDED  HALO CONTROL CABLE  SHIELDED  HALO CONTROL CABLE  SHIELDED  HALO CONTROL CABLE  SHIELDED  HALO CONTROL CABLE  SHIELDED  HALO CONTROL CABLE  SHIELDED  HALO CONTROL CABLE  SHIELDED  HALO CONTROL CABLE  SHIELDED  HALO CONTROL CABLE  SHIELDED  HALO CONTROL CABLE  SHIELDED  HALO CONTROL CABLE  SHIELDED  HALO CONTROL CABLE  HALO CONTROL CABLE  HALO CONTROL CABLE  SHIELDED  HALO CONTROL CABLE  SHIELDED  HALO CONTROL CABLE  SHIELDED  HALO CONTROL CABLE  HALO CONTROL CABLE  HALO CONTROL CABLE  SHIELDED  HALO CONTROL CABLE  SHIELDED  HALO CONTROL CABLE  SHIELDED  HALO CONTROL CABLE  HALO CONTROL CABLE  HALO CONTROL CABLE  SHIELDED  HALO CONTROL CABLE  SHIELDED  HALO CONTROL CABLE  SHIELDED  HALO CONTROL CABLE  HALO CONTROL CABLE  HALO CONTROL CABLE  HALO CONTROL CABLE  HALO CONTROL CABLE  HALO CONTROL CABLE  HALO CONTROL CABLE  HALO CONTROL CABLE  HALO CONTROL CABLE  HALO CONTROL CABLE | Lenqth | Remarks |",
+      "table_headers": [
+        "Reports of Cables",
+        "Col_2",
+        "Page"
+      ]
+    },
+    {
+      "block_id": "pdf-blk-0045",
+      "page_number": 43,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 3\n- HALO CONTROL CABLE\n- HALO CONTROL CABLE\n- 1 WEB18.2LIHH-JZ 18*1\n- HALO CONTROL CABLE\n- 1WEB18.3LIHH-JZ 18*1\n- HALO CONTROL CABLE\n- 1WEB19.1LIHH-JZ 18*1\n- HALO CONTROL CABLE\n- 1WEB19.2LIHH-JZ 18*1\n- iWEB19.3LIHH-JZ 18*1\n- HALO CONTROL CABLE\n- HALO CONTROL CABLE\n- 1 WEB20.1LIHH-JZ 18*1\n- HALO CONTROL CABLE",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0046",
+      "page_number": 44,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- Date 26/02/2015\n- Reports of Cables\n- Page\n- 4\n- AZ ST.JAN\n- BRUGGE\n- OS OP BORD HONEYWELL\n- 11.05.95.01\n- Function\n- HALO CONTROL CABLE\n- HALO CONTROL CABLE\n- HALO CONTROL CABLE\n- HALO CONTROL CABLE\n- HALO CONTROL CABLE\n- HALO CONTROL CABLE\n- HALO CONTROL CABLE\n- HALO CONTROL CABLE\n- Length\n- Remarks\n- Cable\n- Description\n- 1WEB20.2LIHH-JZ 18\"1\n- 1WEB20.3LIHH-JZ 18`1\n- 1 WEB24E LIHH-JZ 7\"1\n- 1WEB24ELIHH-JZ 18\"1\n- 1 WEB24E LIHH-JZ 7*1\n- 1 WEB24P LIHH-JZ 18`1\n- 1 WEB24P LIHH-JZ 18'1\n- 1 WEB24P LIHH-JZ 18\"1",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0047",
+      "page_number": 45,
+      "section_heading": "HVAC Diagram Legend / Schedule",
+      "sheet_name": null,
+      "block_type": "table",
+      "markdown_content": "| 2  {  3 | 8  5  {  6  f  7  {  4 | A |\n| :--- | :--- | :--- |\n| Utz  M 3GL5 |  | C |\n| Cablemarking  Cabletype  Pin Number. |  |  |\n| Conne< |  | 0 |\n| Destination  symboL  Designation |  |  |\n| Terminat number | z 6 |  |\n| o. Link | O  O  O O O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  0  O  O  O  O  O'    O  0  O  01010 O E |  |\n| N  c  E  Destination  symbol  r  Connection no.  Designation |  |  |\n| Pin Number. |  |  |\n| 24102/2015  26/02/2015  GETEKEND  WLRIG.TGN  VH  VHG  i  3  I  2  I  rncarirs i!.e | f  7  f 8  4  I  5  6  I  PROJECT: M.0019077.9.01  AZ ST.JAN  BRUGGE  OS OP BORD HONEYWELL  11.05.95.01  =06.05.95  1/1  F  .EB HONEYWE L  $1/60 |  |",
+      "table_headers": [
+        "2  {  3",
+        "8  5  {  6  f  7  {  4",
+        "A"
+      ]
+    },
+    {
+      "block_id": "pdf-blk-0048",
+      "page_number": 46,
+      "section_heading": "HVAC Diagram Legend / Schedule",
+      "sheet_name": null,
+      "block_type": "table",
+      "markdown_content": "| SHEET | 5  I  6  I  7  I  8  I  9  J  m  N ViN |\n| :--- | :--- |\n|  | Q |\n|  | E |\n| lw5.9  IW5.8  1W5.6  1W5.5  L1HQt-1Z 4.1  lJHCH-1Z G=1  LIHCH-JZ 4.1  LIHCH-R 7.1 | V |\n| 1W5.4  1W5.3  1W5.2  UHCH-JZ 3.1  UHCH-JZ 3.1  LIHCH-R 4.1  1W4.9  UHCH-JZ 4.1 | t  C |\n| twl.8  L;HLH-JZ 4.1 | v |\n| MA  IW4.5  LM-1Z 4.1  LHKH-JZ 4.1  MA  1W4.3  LNKH-JZ 7.1  UHCH-1Z 3.1  lw4.2  LIHCH-R 3.1 | V |\n| Pin Number.  Cabtemarking  Cabietype |  |\n| Connection no. | m  s  m  s m  m  M m  0 |\n| Destination  symbot  Designation | n i m   c  a  o_  6 Q  6  >  I  ' c J o:  o.  2'e  c c  z |\n| Terminal number | n  P  n  n  a  a.  6  a  6  d  6.  h m  ze  n  a |\n| Pin Number.  Terminal strip    Link  Connection no.  Destination  symbol  Designation | O O  O  O  O  O  O O  O  O  O  O  O  O  O  O  O  O  0  O O  0  z  O  O  O  O  O  O  0  O O O  O 0  O  O O O  O  O  O  O  O  O  O  O O  O  x  O O  000    z  0  O  O  O  x  O  E |\n| GETEKEND 24/02/2015 | 1/1  F |\n| WIJZW.TGK 26/02/2015 YHG  VINCI | AZ ST.JAN  OS OP BORD HONEYWELL  PROJECT: M.0019077.9.01  -EB HONEYWE  =06.05.95  LL |\n| snnures 7. | BRUGGE  11.05.95.01 |\n| I  2  I  3 | I  I  5  I  6  E  I $2/60  7 |",
+      "table_headers": [
+        "SHEET",
+        "5  I  6  I  7  I  8  I  9  J  m  N ViN"
+      ]
+    },
+    {
+      "block_id": "pdf-blk-0049",
+      "page_number": 47,
+      "section_heading": "HVAC Diagram Legend / Schedule",
+      "sheet_name": null,
+      "block_type": "table",
+      "markdown_content": "| l 3M.l3NOH j | H 83'  S6'S | L SO'90'  x | 0'6'LL0 | 1 06L00'W UW02M  w  W | 113MX3NOH G80 9/L  W  W | Col_7 | Col_8 | 02 dO W | O SO  NVFIS ZV  61 9HA  HA  SfO aagw | /  10ZFZ0/92  o OZ/ZO/9Z O nN wd  u | fmzrm  ONM12D  uopeu61saO | A  fi  logw4s  um;eup saO |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| O O O O O | O  O 0  O O O 0  O  V | O O 0  O O O | O O 0  0 | 0  000 00 0  O O 00 | 0  O O O O | O 0  O | O O O | O O O | O  O 0  O O 0 O 0  0 O O 0  0  O O O O  2  a  19 n  m | 'Ou | L0I4Ja.UO3  a | um;eup saO  ywl  agwnu leuwual |\n|  | z  m | x z | a a | v  a a | v v ~o |  |  | a | -6  a  P  p S  a  b a A  a  a a | uoyeu6jsaO |  | logwAs  uaNeul{sap |\n|  | s K |  |  |  |  |  |  | D | D7 S a7 | .ou | uoi;oauuo) |  |\n| 4 | s  K |  |  |  |  |  |  | D | D7  S a7  aag | gwnN wd | adA4alge3 | 3  buiyaewalge:l |\n|  |  |  |  |  |  |  |  |  | g | g | g | y g |\n|  |  |  |  |  |  |  |  |  | n |  | M Zf-HNfn | 6\"S141 |\n|  |  |  |  |  |  |  |  |  |  |  | 1.9 Zf-HNflI | OL S141 |\n|  |  |  |  |  |  |  |  |  |  |  | M zr-HNin | E\"9141 |\n|  |  |  |  |  |  |  |  |  |  |  | VE Zf-HNHI | \"m |\n|  |  |  |  |  |  |  |  |  | c |  | VE Zf-H)Hn | S'9ML |\n|  |  |  |  |  |  |  |  | ~ | N |  | ) L•E Zf-H)I41 | 9-W |\n|  |  |  |  |  | m |  |  |  |  |  | ) L+L Zf-HIM  L 7 Zf H)H | LSML 6'9141 |\n|  |  |  |  |  |  |  |  |  |  |  | L•7 Zf-H)Hn  1•1 zr-H)Hn  Lr9 zr-HNin | 6'9141 ZLML ELML |\n|  | n  n  c |  |  |  |  |  |  |  |  |  | L•9 Zf-HNeI  L'0 zf-HHn  lam, zf-HHn  E Zf H)H | S CML N141 EAML I'M |\n| 8 |  |  |  |  |  |  |  |  |  | vE Zf-H)Hn |  | I'M |\n| 7 |  |  |  |  |  |  |  |  |  |  |  |  |\n|  | m  m |  |  |  |  |  |  |  | Po,a |  |  |  |\n|  |  |  |  |  |  |  |  | WW eaae  133NS |  |  |  |  |",
+      "table_headers": [
+        "l 3M.l3NOH j",
+        "H 83'  S6'S",
+        "L SO'90'  x",
+        "0'6'LL0",
+        "1 06L00'W UW02M  w  W",
+        "113MX3NOH G80 9/L  W  W",
+        "Col_7",
+        "Col_8",
+        "02 dO W",
+        "O SO  NVFIS ZV  61 9HA  HA  SfO aagw",
+        "/  10ZFZ0/92  o OZ/ZO/9Z O nN wd  u",
+        "fmzrm  ONM12D  uopeu61saO",
+        "A  fi  logw4s  um;eup saO"
+      ]
+    },
+    {
+      "block_id": "pdf-blk-0050",
+      "page_number": 47,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- L\n- I\n- 9\n- {\n- S\n- OL\n- /r\n- LO'S6'SO'LL\n- 113MX3NOH G802 dO SO\n- 3DE)n68\n- NVFIS ZV\n- 09/ES",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0051",
+      "page_number": 48,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- OL\n- 09/9s\n- L\n- I\n- 9\n- I\n- S\n- I\n- I\n- z\n- 4\n- E\n- I\n- L O'S 6'S0'LL\n- 1-13MJ,3NOH 0805 dO SO\n- 3MJ.3NOH 23-\n- 399ndl3\n- Nvr-1S zd\n- aurae\n- I=3+1IA\n- S6'SO'90'\n- 10'6'LL06L00'W :iMr02ld\n- //\n- 11\n- 3\n- 9HA\n- 90ZJZO/9Z\n- NA\n- StDZ/ZO/'9Z\n- ~91'91ZfIM\n- 9!Z\n- ON3N3139\n- -JagwnN wd\n- ~ WP\n- W\n- n\n- W\n- uoNeu6'sap\n- m\n- 104WAS\n- uapeugsap\n- ou m4>auuo~\n- 3\n- 0 0 0 0 0 0 0 0 0 0 0 0 0\n- 0 0 0 0 0\n- 0\n- 0 0\n- 0\n- 0\n- 0 0\n- 0\n- 0 0\n- 0 0 0 0\n- 0 0 0 0 0\n- 0 0 0 0 0 0\n- 0 0 0 0\n- 0 0\n- 0 0 0 0\n- 00\n- 0 0\n- 0\n- au'i\n- 9\n- m m\n- m\n- T\n- m\n- m\n- m\n- aagwnu lew.ja1\n- N 3-W\n- m\n- u014eu6lsap\n- 3\n- ~S\n- 3\n- e\n- r\n- m\n- S\n- m\n- lggwAS\n- uoytui;sap\n- -ou uo4>auua:)\n- c\n- s\n- z\n- z\n- K\n- Q\n- vagwnN u!d\n- 6u1Njewalge3\n- adA4alge)\n- VE Zr-NJHIl\n- vs zr-Nmn\n- 9'BMl\n- I\" zr-HWl\n- M zr-Mn\n- VE zf-H)W1\n- L*f zr-Hm\n- 1=s zr-Hwn\n- t•t zr-NWl\n- l~ zr-W9n\n- t•E zrrtoxn\n- 1•E zr-H]Hn\n- vs zr-mNn\n- m zr-wHn\n- 1•7 zf-FONn\n- q-\n- n\n- 6'8ML\n- zfiMl\n- FM\n- n\n- c\n- J\n- 56141\n- n\n- 0\n- n\n- 9-6141\n- 8'6Ml\n- E'HMl\n- 6ZtMl\n- l•1 zf-H]Hn i\n- LI Ml\n- 9\n- V\n- m\n- ~rr~WWWWWw oo\n- e~mmmm~~~ae,aaa~N\n- 133HS\n- I\n- t\n- of\n- 1\n- 6\n- I\n- s\n- 9\n- I\n- S",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0052",
+      "page_number": 49,
+      "section_heading": "HVAC Diagram Legend / Schedule",
+      "sheet_name": null,
+      "block_type": "table",
+      "markdown_content": "| 09 l-3MA 3 | 9/s$  A3NOH 83'  WSO | L0 O-90 | 0-6'LL06 | 6L00'W :03W | 113Ml.3 W0 ld | W,WSOU  3NOH 62108 dO S 9/£ | SO | N | 399MG  NVf'1S ZV  SHA  HA  vag | / / SOZ/ SLOZ/ gwnN | /r  /r  /ZO/9Z  orgaf /ZO/1Z ON3N3L u!d  uo4eu | IM  L30  uStsaO | fID:InJVs  W IMMA  ti  3 |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| 3 0 0 | 0 0 0 0 0 0 0 0 0 0 0 | 0 0 0 0 0 0 | 0 0 0 o a | o o o o o o | ,o  o o o 0 0 0 0 | s-  0  0 0 0 0 0 o o o | o o o A | 0  o  o o oo 0 A | 00,000  0  0 0 |  | ou uogo | oauuo3  la | 3  UL    ua eu4—u  xen  agwnu !e W W Jal |\n|  | a a | -6 a | ' a 9 | A | Al |  |  | s | N N s |  | uo4eu | Sisa(3 |  |\n|  | a a  a v | 6  a | 'x a  9 | A x s  s s  N | Al  s a | a |  | s | N N  s |  | uo4eu | Sisa(3 | loq.As |\n|  | _  D' | N~o |  | P P P | P N |  |  |  |  |  |  |  | loq.As   ua'4eNUsaQ |\n|  | 3 |  | S m |  |  | D7 |  |  |  |  | -ou UO4 | 0d000] |  |\n| a | 3 |  | S  m |  |  | D7 |  | N  X | X X |  |  | ] |  |\n| a |  |  |  |  |  |  |  |  | -j | jaq=N | ad/ N wd | /,4aigeD | D bwn,ewajgeD |\n|  |  |  |  |  |  |  |  |  | j | jaq N | ad/ N wd  Lx1 Zf | /,4aigeD f-H]Hil | D  bwn,ewajgeD rnMl |\n|  |  |  |  |  |  |  |  |  |  |  | I.1 Z | H]Hil  Zf-HWI | rnMl 5'11M1 |\n|  |  |  |  |  |  |  |  | cnh |  |  | VI Z | Zf-HlAI | runt |\n|  |  |  |  |  |  |  |  |  |  |  | L•1 Z | Zf-HC | u t rain |\n|  |  |  |  |  |  | `E? |  |  |  |  | VE Z l'E Z | Zf-wwi  f-H)wl | Z'ZZnf EZZMI |\n| J |  |  |  |  | n |  |  |  |  |  | K Zf I 7 Z | ) f-HBNI  f N)Hfl | EZZMI SI Mf |\n| I |  | n |  |  | 1 |  |  |  |  |  | I.7 Z M Zf LSO Z let Z | f-N)Hfl  f-H]Ml  Zf-H)MI  f-H)MI | SI Mf nm 9'ZZMI 6'ZZnI |\n| c |  |  |  |  |  |  |  |  |  |  | Z•1 U 1'1 Zf NE Z | ) U-00  f-H)Hfl  Zf-fl3kn  ) l | OLZZnI CUM YEZMI S\"EZM |\n| a |  |  |  |  |  |  |  |  |  |  | M Zf | f-H)Ml | S\"EZM |\n| a |  |  |  |  |  |  |  |  |  |  |  |  |  |\n|  |  |  |  |  |  |  |  |  | 133HS |  |  |  |  |\n|  |  |  |  | L  I |  | 9  S |  |  |  |  |  |  |  |",
+      "table_headers": [
+        "09 l-3MA 3",
+        "9/s$  A3NOH 83'  WSO",
+        "L0 O-90",
+        "0-6'LL06",
+        "6L00'W :03W",
+        "113Ml.3 W0 ld",
+        "W,WSOU  3NOH 62108 dO S 9/£",
+        "SO",
+        "N",
+        "399MG  NVf'1S ZV  SHA  HA  vag",
+        "/ / SOZ/ SLOZ/ gwnN",
+        "/r  /r  /ZO/9Z  orgaf /ZO/1Z ON3N3L u!d  uo4eu",
+        "IM  L30  uStsaO",
+        "fID:InJVs  W IMMA  ti  3"
+      ]
+    },
+    {
+      "block_id": "pdf-blk-0053",
+      "page_number": 49,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- L\n- E\n- Z\n- l",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0054",
+      "page_number": 50,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 6\n- I\n- 9\n- I\n- {\n- 9\n- S\n- 1\n- E\n- I\n- z\n- 1\n- l\n- of\n- 09/9$\n- 3MA3NOH 93'\n- l0'S6'S011\n- 1-13MA3NOH 02i49 dO SO\n- 399nda\n- Nbf'15 zV\n- IA\n- LOM 6' LL06M'W '1D3f 0bd\n- S6'SO'90-\n- r191'912lIM\n- 9m\n- S OWO/9Z\n- 9/1\n- soZ/zo/1Z ON39313D\n- vaqu N uld\n- y\n- m\n- uol}eu6isap\n- togwRs\n- uoNeuµsN3 m\n- -ou uol}>auua3\n- 3\n- 0\n- 'o\n- 0\n- 3\n- 0 0\n- 0 0\n- 0\n- 0 0\n- 0 0 0 0 0 0 0 0 0 0 0 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0 0 0 0 0\n- 0 0 0 0 0 0 0 0\n- 0 0\n- 0\n- 0\n- 0 0 0\n- 0\n- 0 0\n- 0\n- 0 0 0 0 0 0\n- 0\n- 4url\n- m\n- m\n- a\n- v\n- s S\n- v\n- v\n- m\n- uagwnu leww'ay x\n- w\n- M\n- uq}eu6lsap\n- a\n- 'a\n- a\n- W\n- 3i z\n- 9\n- >7\n- 9\n- W\n- w\n- z\n- N\n- Dt\n- v 9\n- N\n- F\n- S\n- S\n- 9\n- ti\n- v\n- A\n- ZA\n- v N\n- u\n- logw6s\n- Vnl}QUI}sap\n- rou uol}>auun3\n- m\n- 3\n- Q\n- H\n- N\n- P\n- m\n- A\n- P\n- m\n- m\n- S\n- 5uhyuewalge3\n- addyalge7\n- vaq=N wd\n- c\n- 5E MI\n- VE MI\n- 1x1 Zf-H7NIl\n- n\n- lx'I Zf-HAtlI\n- K 7f-H)HR\n- 6EZM1\n- K Zf-H)HR\n- 5l'EZMI\n- R\n- IxIZr- AttI\n- Z'1ZM1\n- E'11MI\n- 1x1 Zf-HNn\n- S Al\n- 1x1 If-HAOI\n- 9\"12/41\n- VE Zf-HAIII\n- n\n- 1x1 Zf-N)HR\n- 9 I\n- n\n- Ix1 Zf-HAIR\n- 6 AI\n- n\n- c~\n- K Zf-HAill\n- Z3ZMl\n- 1x1 Zf-HAIR\n- ESZML\n- ci\n- S'SZMI\n- 1x1 ZN4MI\n- K Zf-HAHI\n- 9 SZMI\n- 9\n- d\n- -- P N--\n- b m- m - — — P P P P un N N N- A P— W w W\n- 133H5\n- of\n- I\n- 6\n- I\n- s\n- I\n- L\n- I\n- s`\n- E\n- s\n- 1\n- f",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0055",
+      "page_number": 51,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- a JT\n- 5\n- {\n- 8\n- 9\n- 10\n- 2\n- I\n- 3\n- 1\n- SHEET\n- - - r\n- m m m m a. e. — e.— .. — m m m m d -+ -e\n- N Hnti\n- A\n- B\n- LIHH-1Z 4.1\n- 1W27.8\n- IW27.7\n- 11427.6\n- IW775\n- LIHCH-JZ 5.1\n- UM-JZ 4.1\n- UKH-JZ 3.1\n- mv-\n- UKH-JZ 3.1\n- 11427.4\n- TW273\n- UHH-,'Z 4.1\n- LM-JZ 4.1\n- C\n- UH6i-JI 4.1\n- C\n- UHN-JZ 4.1\n- UHCH-JZ 3.1\n- IW27.2\n- IW26.3\n- TW269\n- 11426.6\n- 1426.5\n- TW263\n- IW26.2\n- m V\n- uHCH-JZ 4.1\n- LIHCH-1Z 4.1\n- UHCH-JZ 3.1\n- u\n- 1\n- UHCH-JZ 4.1\n- 0\n- LIHCH-1Z 4.1\n- 1W25.9\n- iW25.8\n- Cabkemarking\n- Cabletype\n- Pin Number.\n- D\n- 0\n- i\n- £\n- a\n- z\n- £\n- Y\n- d\n- Y\n- Y\n- m\n- ConnectioR no.\n- Destination\n- symbol\n- D7\n- m\n- b b\n- N N\n- b\n- a\n- Q\n- - 6\n- 6\n- N\n- N\n- 1\n- C Q\n- a C\n- H\n- R\n- Designation\n- N\n- a\n- S\n- N\n- Q\n- Q\n- H\n- 4\n- N\n- N\n- N\n- rn\n- x Terminal number\n- a\n- a\n- Q\n- i\n- a\n- a\n- n\n- 6\n- 6.\n- link\n- O\n- O\n- O 00\n- O O\n- O O\n- 00 O 000 00\n- O O O O\n- O O\n- O O\n- O O\n- O O O O O O O O 0\n- O 0\n- O 00\n- O 0 O O O O O O O O O O O\n- O\n- E\n- 00 0\n- 7erminal strip\n- E\n- Connection ..\n- Destination\n- symbol\n- X\n- Designation\n- X\n- X\n- X\n- Pin Number,\n- d r\n- 24/02/2015\n- GETS%Et10\n- F\n- g/6\n- W112IG.TGt\n- 76/02/2615\n- VHG\n- =06.05.95\n- PROJECT: M.0019077.9.01\n- .EB HONEYWE\n- AZ ST.IAN\n- -L\n- OS OP BORD HONEYWELL\n- 11.05.95.01\n- 1 /\n- $7/60\n- 11\n- BRUGGE\n- f\n- 2\n- I\n- 3\n- I\n- 5\n- I\n- 6\n- I\n- 7\n- 1\n- 4\n- 8",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0056",
+      "page_number": 52,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 5\n- [\n- 6\n- I\n- 7\n- SHEET\n- 00\n- — - .n `n v ,c u—\n- a 2 R\n- A\n- B\n- 1W355\n- LM-R 4.1\n- 1W303\n- U KH-JZ 4a1\n- V\n- 1W28.9\n- Uw-1Z 4.1\n- IW28.8\n- UHH-R 4A\n- 1W28.1\n- UHH-JZ 4.1\n- v\n- 1W28.6\n- UHH-R 4.1\n- is\n- C\n- 1W2&5\n- UHH-JZ 4.1\n- 1W28.4\n- LFKH-JZ 3.1\n- IWZ83\n- 1W281\n- UKH-R 3.1\n- lJHH-JZ 4.1\n- v\n- IW27.9\n- LMH-JZ 4.1\n- 1W27.8\n- LOTH-R 4.1\n- Cablemarking\n- Cabletype\n- Pin Number.\n- D\n- Y\n- Y\n- Y\n- Y\n- Y\n- X X X\n- N\n- Connection no.\n- Destination\n- symbot\n- Designation\n- N\n- N w\n- N £\n- N\n- £\n- N\n- E\n- N £\n- N\n- £\n- N £\n- N\n- N N\n- N\n- N\n- E\n- N\n- £\n- N\n- s\n- N\n- £\n- rn\n- vi\n- Terminal number\n- r\n- r\n- a\n- a\n- a\n- r\n- a\n- 1\n- r\n- 6\n- Link\n- O\n- O O O O O O O O\n- O\n- O\n- O\n- O O\n- O\n- O O O\n- O\n- O O\n- O\n- O\n- 0\n- O\n- O O\n- O O\n- 0 O\n- O O\n- O O O O O O O O O O O O O O O O O O O O 0 O O O O E\n- Terminat strip\n- Connection no.\n- Destination\n- symbol\n- Designation\n- x\n- X\n- X\n- X\n- X\n- X\n- Pin Number.\n- GETEKEND 24/02/2015 VH\n- 6/6\n- F\n- WUZtG.T& 26/02/2015 VHG\n- VINCI\n- s,\n- AZ STJAN\n- i\n- LL\n- PROJECT: M.00190779.01\n- =06.05.95\n- EB HONEYWE\n- .aa:mr\n- BRUGGE\n- OS OP BORD HONEYWELL\n- 11.05.95.01\n- 88/60\n- 1\n- [\n- 2\n- 1\n- 3\n- 4 \t I\n- 5\n- [\n- 6\n- {\n- 7",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0057",
+      "page_number": 53,
+      "section_heading": "HVAC Diagram Legend / Schedule",
+      "sheet_name": null,
+      "block_type": "table",
+      "markdown_content": "| Col_1 | 1  y  2  I  3 | 4  1  5  I  6  {  7  9  1  10  8  I |\n| :--- | :--- | :--- |\n| INJZ 18.1  IWEBT1.1 |  |  |\n| Cabletype  Pin Number.  Cablemarking |  | D |\n|  | Destination  symbol  Designation  Connection no. | o.  X  X  X  X  X  X  x  C  X  N  x  L^  X  C  X |\n| N  X | Terminal number | a |\n| Terminal strip | Link  Connection no.  Destination  symbol  Designation | O  O  0  O  O  O  O  O  O  O  O  O  O  0  O  O  O  O  O  O  O  O O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  0  O  O  O  O  CO  O  O  O  O  O  O  E |\n|  | Pin Number. |  |\n|  | VN  GETEKEND  24/02/20TS | t/4  F |\n| WIJZIG.TGN  26/02/2015  VHG  4VINCI j  4fI1111115 ~~.' |  | AZ ST.JAN  BRUGGE  OS OP BORE) HONEYWELL  11.05.95.01  PROJECT: M.0019077.9.01  =06.05.95  -EB HONEYWE LL |\n|  | I  2 | 5  I  6  f $9/60  7 |",
+      "table_headers": [
+        "Col_1",
+        "1  y  2  I  3",
+        "4  1  5  I  6  {  7  9  1  10  8  I"
+      ]
+    },
+    {
+      "block_id": "pdf-blk-0058",
+      "page_number": 54,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- OL \tI\n- 6 \tI\n- 8 \tI \tL\n- 4\n- S\n- I \t?\n- J \tE\n- I \tZ\n- I\n- E\n- 09/0Ls\n- WWS0'LL\n- 399mi9\n- ti\n- uriwm\n- 3M,l3NOH 83-\n- S6'S0'90=\n- W'6'LL0600 W :iAfWjd\n- 1l3M.l3NOH 0308 dO SO\n- NVf'1S ZV\n- 9HA\n- SWUM )MimmM\n- I=NIA\n- l-\n- UL\n- SLOZ/ZO/VZ\n- j\n- ON3N313~\n- '. agwnN uid\n- t\n- H\n- m\n- 3\n- b\n- u0i4eu6!sap\n- iogwAs\n- 0-4ew{sap\n- 'ou uoµ>auu03\n- S\n- 3 O O\n- O\n- O\n- v\n- O O O O O O O 0 O\n- O O O\n- O\n- 00 O O O O O O\n- 0\n- O\n- O\n- O\n- O\n- O O O\n- O\n- 0\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- 0\n- O\n- O\n- O\n- 0\n- O O O\n- O O O O\n- O O O\n- yui-!\n- X\n- N\n- W\n- >agwnu lewway\n- X\n- X X\n- v X X X X v\n- UONeu6ISap\n- u\n- v\n- t\n- logw4S\n- uoµeu~{sap\n- N\n- 'ou no14>auu-D\n- Q\n- vagwnN u!d\n- 6u!aiuewajge7\n- ad.yaige~\n- tx6l ZhHNtI\n- L BL93ML\n- 1\n- 1\n- l\n- 8\n- tl\n- 233HS\n- of\n- I\n- 6\n- I\n- s\n- k\n- L\n- I\n- 9\n- I\n- s\n- I\n- t\n- I\n- e\n- I\n- z\n- I",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0059",
+      "page_number": 55,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- Ol\n- I\n- rr\n- rr\n- .r\n- SLOW819Z\n- SLOUZO/W\n- NA\n- 4\n- I\n- h\n- Z\n- (\n- t\n- 09!118\n- MS6'SOU\n- 113M.k3NOH 0809 dO SO\n- 399(189\n- NVf'1S ZV\n- ~v s;:Lnuve\n- 3MA3NOH 93'\n- S6'SO'90=\n- 10 6'LL06100'W UAfOdd\n- 61'91ZAM\n- aN3A31 O\n- L/1\n- J NA\n- jagwnN wd\n- dld4 s leulwd6 j\n- u0i4eu6isaa\n- 1o4WAS\n- uol;eui{saa\n- 'ou ueµ>auuop\n- 3 O\n- 0\n- 0\n- O\n- O\n- 0\n- O\n- 0 O\n- 0\n- 0\n- 0\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- 0\n- O O\n- O O O O o\n- O O O O O O 00\n- 1\n- o 0\n- O O O O O O O O O O O O O O\n- O 6\n- O O O\n- yw1\n- a\n- X\n- N\n- J\n- ~agwnu 1eww~ay\n- X\n- X\n- X\n- X\n- UO({eU6Kaa\n- 10gW ~5\n- uo~{eui;sap\n- w\n- -ou ua;~auUOD\n- Q\n- IJ\n- ,;agwnN U!d\n- adA4a1ge)\n- bw4uewajga7\n- VOL 9-HRI\n- C6193ML\n- 9\n- b\n- P P\n- 133+!5\n- L\n- 1\n- 9\n- I\n- S",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0060",
+      "page_number": 56,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 2\n- i\n- 3\n- I\n- 5\n- I\n- 6\n- i\n- 7\n- 1\n- 8\n- k\n- 9\n- i\n- 113\n- SHEET\n- i\n- A\n- I\n- -C\n- 1WES20.1\n- tIHN-JZ 18.1\n- I\n- Cablemarking\n- Cable6ype\n- Ain Number,\n- D\n- Connection no.\n- I\n- ti afon\n- symbol\n- N N\n- Designation\n- X X\n- X X\n- X X\n- X\n- Terminal number\n- e.\n- Link\n- O O O O O O O O O OO O O O O O O O O O 0 O O O O O O O O O O O O O O O O o 0o 00 O O O O O O 00 O O O O O O O O E\n- Terminal strip\n- Connection no.\n- Destination\n- symbol\n- Designation\n- Pin Number.\n- GETEKEND 24/02/2015 V}1\n- 1/1\n- F\n- VINCI\n- Pu\n- N Z1G.TGK 26/02/2015\n- VNG\n- AZ ST.JAN\n- OS OP BORD HONEYWELL\n- PROJECT: M.0019077.9.01\n- =06.05.95\n- EB HONEYWE\n- /r\n- BRUGGE\n- 11.05.95.01\n- 512/60\n- 1\n- i\n- 2\n- I\n- 3\n- k\n- 4\n- J\n- 5\n- I\n- 6\n- i\n- 7\n- I\n- FAnuT¢s",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0061",
+      "page_number": 57,
+      "section_heading": "HVAC Diagram Legend / Schedule",
+      "sheet_name": null,
+      "block_type": "table",
+      "markdown_content": "| l  3  3  3MA3NOH 93  S6 S 0 0 0 0 0 0 0 0 0 0 0 0 | SO 90  0 0 0 0  0  0  0  0  0  0  0  0  LOWU06L00 W :D3f0dd  00  ll3M 0  0 0 0  0 0  0 | MA3N 0  0 0  0 | OH Ob09 dO SO  0  to  0 0 0 0 0  0 0  00 | NV 00 | Vf 1S ZV  9Nn  S vagw 0  O O | >R roariM  ON3Na139  uoNeu6isap  ~OQW/.5  UONPUNSaQ  -au uogoauua~  jagwnu 7eupwial  SMIZO/9Z  StOZ/ZO/OZ  wnN u!d |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| Q  3 | 1  I | I |  |  | X  N  X  va | uoileu6MaO  'ou uo!pauuOD  joq.AS  uolyeuNsa¢  agwnN U~d   odL{ajge~  K Zf-Wn   6wKjewalge~  L31MN |\n| 9 |  |  |  |  |  |  |\n| v |  |  |  |  |  |  |\n|  |  |  |  | 133HS |  |  |",
+      "table_headers": [
+        "l  3  3  3MA3NOH 93  S6 S 0 0 0 0 0 0 0 0 0 0 0 0",
+        "SO 90  0 0 0 0  0  0  0  0  0  0  0  0  LOWU06L00 W :D3f0dd  00  ll3M 0  0 0 0  0 0  0",
+        "MA3N 0  0 0  0",
+        "OH Ob09 dO SO  0  to  0 0 0 0 0  0 0  00",
+        "NV 00",
+        "Vf 1S ZV  9Nn  S vagw 0  O O",
+        ">R roariM  ON3Na139  uoNeu6isap  ~OQW/.5  UONPUNSaQ  -au uogoauua~  jagwnu 7eupwial  SMIZO/9Z  StOZ/ZO/OZ  wnN u!d"
+      ]
+    },
+    {
+      "block_id": "pdf-blk-0062",
+      "page_number": 57,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- OL \tI \t6 \tI\n- B\n- 6\n- i\n- 9\n- I\n- 5\n- {\n- 9\n- I\n- E\n- I\n- rr\n- 399 fib 9\n- r/\n- NVf'1S ZV\n- r/\n- 9Nn\n- SMIZO/9Z\n- StOZ/ZO/OZ\n- z\n- i\n- 09/ELS\n- LO'S6'SO'LL\n- ll3MA3NOH Ob09 dO SO\n- 3MA3NOH 93'\n- S6'SO\"90'",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0063",
+      "page_number": 58,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- OL\n- 09/7LS\n- S\n- 1\n- h\n- C\n- E\n- I\n- Z\n- f\n- i\n- LO'S6'SO'LL\n- 113MA3NOH CZ109 d0 SO\n- ~; ssuruvl\n- z ;; HMN@A\n- u91'91zfm\n- 399nb9\n- N7t'15 ZV\n- 3MJ,3NOH 83'\n- S6'SO'9V\n- LO'6'LL06L00'W ;iD3fOdd\n- SIOZ/ZO/9Z\n- SiOZ/ZO/7Z\n- 9HA\n- HA\n- pN3X3130\n- vagwnN u1d\n- dW{s  leopial\n- u0~}eu6lsap\n- ogwFs\n- u0lyeui4sap\n- 'au uwy0auua:)\n- 3\n- o o o o\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0 0\n- o\n- 0\n- 0\n- 0\n- 0 0\n- o'\n- o o\n- o\n- (:5'o o\n- 000\n- 000\n- o o o o o o\n- o o\n- uil\n- I\n- Jagwnu 3eunuual\n- X X\n- X X\n- X\n- X X\n- X N\n- u01{euBmap\n- ogwRs\n- 1101}eul}Sd(3\n- V\n- 9 L\n- -ou u0sPauuoD\n- 0\n- vagwnN wd\n- ad4a1ge3\n- 6ulryaem Jqe)\n- pl.\n- t\" a Zf-HNII\n- [d1Z93AI\n- 8\n- tl\n- 133HS\n- OT\n- I\n- 6\n- I\n- 6\n- L\n- I\n- 9\n- 9",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0064",
+      "page_number": 59,
+      "section_heading": "HVAC Diagram Legend / Schedule",
+      "sheet_name": null,
+      "block_type": "table",
+      "markdown_content": "| c | Q  m  4  Q~  co | W  I  1  U  4  .EB HCNEYWE    O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  CT: M.0019077.9.01    O  O  O  O  O  O  O  O  O | Col_4 | Col_5 | Col_6 | Col_7 | Col_8 |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| n a L v | 8/8E  818E  8/8E  ME  ME  L/BE  WE  B/OE  L/06  UOE  ME  910E  ME   E/OE  ME  ZIO£  UOE  6162  B/6Z  UR   U6Z   9162  5/6Z  5/6Z   1161  1/6 Z  UR   /6 n  a  i  LO  v | PROJEC O  O  O  10S{   061  005  161  661  I  OE ll'FX-!  OE  O  It  z1  11  01  6  1 61 AIX-  U  O  1 BZ OZ'FX  {  1  81 LITX-  81  O  O  1 LZ LITX-  LZ  1 9Z 0Z'EX  1 91 Oix-  9Z  O  t sd L\"X-  51  0  1  1C OL'EX  8  L  9  5  1  E  Z  t  961  06(  L6F  96E  SK  16E  E6E  Z6f  8OF  LBE   90E  SBE  \"1  (BE  Ut  IBE  OBE  611  Ott  UE ,  9LE  SLE  1LE O  1 11 LIU-  1Z  O  1  EZ LI'EX-  EZ  1 U LI'£X-  ZZ  O  L  I  IZ LITX-  IZ  O  1 OZ LIU-  OZ  O  1  61 LI'EX-  61   O  1  81 LIU-  8  O  O  I  Ll LVEX-  U  Lt  91  1  91 LIU-  91  O  1  SI LI'EX-  S  51  11  EI  U  11  Ot  O  O  O  1  11 LI'EX-  1  I  It LI'EX-  E  1  ZI VEX-  ZI   O  1 it Olk  It  O  O  I  0t 1C£X-  01  1  6 LIU-  6  O  6  8  L  O  1 0L1'EX-  8  z  Q L9  H Lo  D  N CO  I  LLt'fX-  O  O  9  1 9Ll'fX-  9  1  S LIU-  5  O  5  1  O  1  1 Lt'EX-  1  O E I E VEX E |  |  |  |  |  |",
+      "table_headers": [
+        "c",
+        "Q  m  4  Q~  co",
+        "W  I  1  U  4  .EB HCNEYWE    O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  CT: M.0019077.9.01    O  O  O  O  O  O  O  O  O",
+        "Col_4",
+        "Col_5",
+        "Col_6",
+        "Col_7",
+        "Col_8"
+      ]
+    },
+    {
+      "block_id": "pdf-blk-0065",
+      "page_number": 59,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- SLE\n- 1LE\n- [LE\n- I\n- E VEX-\n- E\n- Z/6Z\n- Z/6Z\n- O\n- 1 ZLI'EX-\n- Z\n- LI'EX-\n- 1\n- O\n- 1\n- t/6Z\n- ZLE\n- m\n- Pan Number.\n- Pin Number.\n- 24/D2/zo1s\n- ry\n- onnection no.\n- Connection no.\n- Y\n- N\n- S~\n- Z\n- N\n- 0\n- Terminal number\n- c\n- Cablemarking\n- co\n- ~n\n- nE\n- a >,\n- ON\n- J\n- L~ ~\n- EIJ45 12apJ21\n- ll'EX\n- I \t A \t I \t LJ\n- a \t 1 \t m \t I \t u\n- I\n- Li",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0066",
+      "page_number": 60,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- oL\n- 09/918\n- LO WSO'LL\n- Il3M k2NOH OHOB dO SO\n- 3H9f1238\n- NVf'1S ZV\n- sn:unva\n- 8~Pd8\n- M91'9Rnm\n- 3MJ.3N0H 93-1\n- 56'80'90=\n- l\n- LO'6'LL06L00'W '1J3r Ddd\n- St0 /zom\n- SIOZ/so/17z\n- 9HA\n- d\n- LA\n- NA\n- QN3N3139\n- vagwnN u!d\n- u X X W W\n- uw;eu6isap\n- m\n- 7ogwA(\n- uow;eul;sap\n- 'ou uai;aauuo)\n- 3\n- 3\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- (5\n- 0\n- 0\n- 0 0\n- 0\n- 0\n- 0\n- 0\n- o\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0 0\n- 9\n- 0\n- 0\n- Hull\n- lagwnu )eulwaal\n- m\n- uo~;eu6~sap\n- )t\n- X\n- W\n- X\n- JC\n- X\n- X\n- X\n- X\n- W\n- X\n- W\n- X\n- W\n- X\n- X\n- X\n- logwFs\n- uw{eui{sap\n- 'ou uw;oauuo]\n- X A\n- tt\n- ZB\n- vagwnN uld\n- r\n- ad6;ajge:)\n- 6usysewalge)\n- L=BL zr-M\n- tasPJ\n- vai ZE-Hwi\n- EV93Ml\n- J\n- 8\n- V\n- f\n- 133N5\n- sew\n- t-awnsti\n- s\n- i\n- G\n- I\n- s\n- I\n- s\n- E\n- b\n- i\n- e\n- I\n- z\n- I\n- t\n- of",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0067",
+      "page_number": 61,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- M\n- ty\n- Terminal strip\n- X3.19\n- v\n- m\n- 3\n- jagwnu leuiwjay\n- W\n- !1\n- 'ou uoµ>auuoD\n- O\n- A\n- v\n- A\n- N N\n- n\n- n\n- N\n- P N\n- 'iagwnN uid\n- vagwnN uid\n- O\n- N\n- O\n- G\n- S S\n- x3.191\n- 1\n- 1\n- 154\n- 155\n- it/8\n- 11/8\n- 11/8\n- 11/9\n- 12/I\n- 12/2\n- 12/2\n- 12/3\n- 12/4\n- O\n- 1\n- O 2\n- O i 3\n- -X3.192\n- 1\n- 2\n- -X3.193\n- 1\n- 3\n- O 4\n- 43.194 1\n- r\n- S\n- O 5\n- -X3.195\n- 1\n- O 6\n- -X3.196 1\n- 159\n- 160\n- 161\n- 162\n- 163\n- 1S6\n- 157\n- 150\n- 6\n- O\n- 7\n- 43.19 7 1\n- •X3.19 8\n- 1\n- L\n- O 8\n- 8\n- O 9\n- -X3.199 1\n- 9\n- O\n- 10\n- -X3.1910 1\n- 10\n- 12/4\n- -X3.1911\n- 1\n- 11\n- 164\n- 165\n- 166\n- 167\n- 168\n- O\n- 11\n- O\n- 12\n- 12/5\n- -X3.1912 1\n- 11\n- 12/5\n- -X3.1913 1\n- 13\n- 12/6\n- O\n- O 14\n- 43.1914 1\n- 11/7\n- 14\n- -X3.1915 1\n- O 15\n- 15\n- 12/7\n- -X3.1916 1\n- -X3,1911\n- 1\n- -X3.1918 1\n- -X3.1919 1\n- -X3.19 20 1\n- UI\n- 12/8\n- 169\n- Ill\n- 174\n- US\n- O\n- 16\n- O\n- 17\n- 17\n- 13/2\n- 13/2\n- 13/3\n- 13/4\n- 13/4\n- 1315\n- 38/4\n- 38/4\n- 38/4\n- 38/4\n- 30/5\n- 38/5\n- O\n- 18\n- 1\n- O\n- 19\n- 2\n- O 20\n- 3\n- T\n- rn\n- O\n- 21\n- -X3.19 21 1\n- 177\n- 178\n- 490\n- 493\n- 491\n- 176\n- 4\n- 5\n- 1\n- 43.19 22 1\n- O\n- 21\n- X3.1813 1 O 23\n- -X3.1923 1\n- 6\n- 3.2023 1 O 24\n- 43.19 24 1\n- 7\n- X3.1825 1 O 25\n- -X3,19 25 1\n- X3.10 25 1\n- O\n- 26\n- X3.18 27 1\n- o\n- 27\n- X3.2027 1 O 20\n- -X3.1926 1\n- 9\n- 494\n- 492\n- 495\n- -X3.19 27 I\n- 10\n- -X31920 1\n- 11\n- U\n- O\n- O\n- O\n- L0 '6'LL06L00 'W ID3rod\n- O\n- 1\n- O\n- O\n- O\n- O\n- 61.0\n- m\n- 0\n- 0\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- O\n- 0\n- O\n- O\n- O\n- O\n- O\n- 0\n- m\n- m\n- n",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0068",
+      "page_number": 62,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- 6\n- I\n- 9\n- I\n- L\n- I\n- 9\n- I\n- 5\n- I\n- 7\n- E\n- J\n- Z\n- OL\n- 09/818\n- b0'WSO'LL\n- 113MJ.3NO14 (1809 dO SO\n- 399nb8\n- NV('1S TV\n- ~ sn;nnv,\n- i\n- N E A\n- l0'6'LL06600'W '1nmdd\n- 56'50'90'\n- 3MA3NOH 93'\n- P91-Dar t\n- ON3N3130\n- NA\n- SLOZ/ZO/9Z\n- SLOZ/ZO/7Z\n- NA\n- d d e\n- vagwnN ald\n- W W W W W W\n- uapeu6lsaO\n- loq.As\n- UOI~eUI{Sa(J\n- 'OU LLOt~]a0UO3\n- 3\n- 00\n- 0\n- 0 0 0\n- 0\n- 0 0\n- 0 0 0 0\n- O 0 0 0\n- O O O O O 0 O O 0 0\n- O\n- 0 O\n- o O olo\n- 00\n- O O O O 0\n- 0\n- O O O O O O O O O O 00\n- O O\n- O\n- yu!7\n- jagwnu leulWJ41\n- uoNeu6lsap\n- W\n- w W\n- W w w u W w w u W W w W\n- w w\n- W\n- u\n- logwls\n- UGHeuysap\n- zg\n- w\n- W\n- CA\n- 'ou uoy]auu03\n- I\n- adA4alge3\n- 6unl.rcwalge)\n- -jagwnN Uld\n- Val ZC-HNf3\n- vaff-al\n- N\n- Z'UZ93ltl\n- F0293A11\n- S\n- 8\n- V\n- mtg&\n- P P PPP P N N\n- 133HS\n- OI\n- I\n- 6\n- I\n- 8\n- I\n- L\n- 1\n- 9\n- E\n- S",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0069",
+      "page_number": 63,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- OL\n- 9\n- I\n- 5\n- fi\n- 09/6L$\n- LO'S6'SO'LL\n- 113M.13NOH (1809 dO SO\n- 9:)Dnb9\n- N7('15 ZV\n- ow\n- MNIA\n- 3M)i3NOH e9-\n- S6'SO'90\n- LO'6'LL06LO0'W :1)3fO8d\n- 11\n- j\n- 5[OUZOl9Z\n- 01'9IZfIM\n- t/l\n- HA\n- StOUZ0/9Z (IMU3130\n- ~~agwnN u14\n- W\n- v\n- i\n- uoa{euBmap\n- log.As\n- uolAeu4sap\n- ou uoHoauuo)\n- 3 0 0\n- 0 0 0\n- aiulZ\n- 0 0\n- o o o 0\n- o o\n- 0 0 0\n- 0 0 0 0 0 0 0 0 0 0 0\n- 0 0 0\n- 010\n- 0 0 0 0 0 0\n- 0 0 0 0 0 0 0\n- 0 0\n- o o\n- o\n- o\n- o\n- o\n- o\n- o\n- o o\n- o\n- .= m\n- ,agwnu lewwaal\n- uayeu6lsap\n- X\n- X\n- W\n- W\n- W\n- X\n- X\n- X\n- %\n- W\n- loquAs\n- uoNeul;sap\n- 'ou uoyDauuo)\n- Q\n- vagwnN uld\n- adR{a}ge:)\n- bu{HuewalgeD\n- im II-mn\n- Z31Z93ML\n- K ZFFWII\n- DIM&\n- 3\n- tl\n- 133HS\n- of\n- I\n- 6\n- I\n- 8\n- E\n- G\n- I\n- s\n- 9",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0070",
+      "page_number": 64,
+      "section_heading": "HVAC Diagram Callouts",
+      "sheet_name": null,
+      "block_type": "diagram_callout",
+      "markdown_content": "- Ol\n- 09/OZS\n- 7\n- {\n- E\n- I\n- Z\n- f\n- l\n- rr\n- I\n- 9\n- I\n- s\n- rr\n- rr\n- 399n?39\n- NVf'1S Zb\n- SWVZOM\n- SLOZ/Z0r1Z\n- LO WSOU\n- -113MA3NOH CHOO dO SO\n- snwova\n- r\n- pl-wriM\n- 3MA3NOH 83\"\n- S6'SO'9V\n- L0'6'U06L00'W 'll3Md\n- NA\n- rrc\n- ONMI39\n- NA\n- vagwnN u!d\n- dills\n- JUUIWJaA\n- uogeu6isaa\n- logw6s\n- UOµeulasa0\n- 'ou uw{oauu03\n- 3\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0\n- 0 0\n- 0\n- 0\n- 0\n- 0 0\n- 0\n- 0\n- 0 0\n- 0\n- 0 0\n- 0\n- 0\n- 0 0\n- 0 0 0\n- 0 0 0\n- 0\n- 0\n- 0\n- 0\n- 0 0\n- 0 0 0\n- 0 0 0\n- 0\n- 0 0 0 0\n- 0\n- 00\n- 0 0\n- 0\n- 0\n- 0 0\n- plan\n- P\n- lagwm lewwiay\n- L\n- v\n- X\n- X\n- X\n- X\n- X\n- X\n- X\n- X\n- uo.4eu6isap\n- W\n- 9\n- 2\n- W\n- 9\n- W\n- S\n- W\n- i\n- w\n- S\n- 9\n- w\n- S\n- W\n- W\n- W\n- W\n- W\n- W\n- ogw6s\n- UOLIEWaSaQ\n- i- v\n- v\n- 9\n- 9\n- R\n- 9\n- 9\n- V\n- 0\n- m\n- P\n- N W\n- m\n- 'Ou uVlPawcO\n- Q\n- -uaq=N wd\n- adApige3\n- 6ul4uewalgeD\n- l•9l ZF-NWI\n- n zr-NH(I\n- Z'dtZ93Rl\n- NIZ93M1\n- akw,\n- r\n- J\n- 8\n- b\n- 1\n- W~NN Na~N ~W--  - WWW\n- _W N\n- 133HS\n- I\n- s\n- I\n- G\n- 1\n- s\n- i\n- S\n- I\n- b\n- I\n- E\n- i\n- z",
+      "table_headers": null
+    },
+    {
+      "block_id": "pdf-blk-0071",
+      "page_number": 65,
+      "section_heading": "HVAC Diagram Legend / Schedule",
+      "sheet_name": null,
+      "block_type": "table",
+      "markdown_content": "| Date  26/02/201;  Bill of Materials | Col_2 | Col_3 | 1 Page |\n| :--- | :--- | :--- | :--- |\n|  | OS OP  AZ ST.JAN  BRUGGE  BORD HONEYWELL |  |  |\n| Quantity  1  1  1  9 | 11.05.95.01  Description  Cataloque  OVERSPANNINGS BEVEILGING  DEHN  TRANSFO 24V/1000VA  EREA  TRANSFO 24V/63VA  EREA  ANALOGE INPUT MODULE  HONEYWEL | Reference  DEHNGUARDTNS  E244SB1000  EDR24TC63  XF821A | Svmbo(  -1.4  -T1.5  -T2.2  -N22.2, -N23.2, -N24.2, |\n| 11 | DIGITALE INPUT MODULE  HONEYWEL | XF823A | -N25.2, -N26.2, -N4.2,  -N5.2, -N6.2, -N7.2  -N10.1, -N11.1, -N12A, |\n| 9 | DIGITALE OUTPUT MODULE LON +  HONEYWEL  OVERRIDE | XFLR824A | -N13.1, -N14.1, -N15.1,  -N29.1, -N30.1, -N31.1,  -N32.1, -N33.1  -N16.2, -N17.2, -N18.2,  -N19.2, -N20.2, -N34.2, |\n| 4 | ANALOGE OUTPUT MODULE +  HONEYWEL | XFR822A | -N35.2,-N36.2,-N37.2  -N27.2, -N28.2, -N8.2, |\n| 2  13 | OVERRIDE  <Reference not found in HONEYWEL>  TERMINAL BLOK 821-822  HONEYWEL  HONEYWEL | XL2000BOA  XS821-22 | -N9.2  -N21.1, -N3.1  -N22.2, -N23.2, -N24.2, |\n| 11 | TERMINAL BLOK 823  HONEYWEL | XS823 | -N25.2, -N26.2, -N4.2,  -N5.2, -N6.2, -N7.2,  -N27.2, -N28.2, -N8.2,  -N92  -N10.1, -N11.1, -N12.1, |\n| 9 | TERMINAL BLOK 824-825  HONEYWEL | XS824-25 | -N13.1, -N14.1, -N15.1,  -N29.1, -N30.1, -N31.1,  -N32.1, -N33.1  -N16.2, -N17.2, -N18.2, |\n| 5 | ANTIVRIES+ANALOGE STURING  HONEYWELL | B/OPP-FRO-S6 | -N19.2, -N20.2, -N34.2,  -N35.2, -N36.2, -N37.2  -TS22.4, -TS24.2, |\n| 20 | DRUKVOELER 1000Pa + DISPLAY  HONEYWELL | DPTE1000D | -TS4.4, -TS5.5, -TS6.7  -PR22.10, -PR22.6, |\n| 5 | DRUKVOELER 500Pa + DISPLAY  HONEYWELL | DPTE500D | -PR22.6, -PR23.5,  -PR24.4, -PR24.5,  -PR24.8, -PR25.3,  -PR25.8, -PR26.3,  -PR26.8, -PR4.6,  -PR4.8, -PR4.9,  -PR5.10, -PR5.8,  -PR5.9, -PR6.10,  -PR7.2, -PR7.3  -PR22.5, -PR24.3, |\n| 4 | <Reference not found in HONEYWELL>  HONEYWELL | LDI35 AVOA | -PR4.5, -PR5.6, -PR6.9  -N27.7, -N8.6, -N9.3, |\n| 18 | KANAALVOELER T  HONEYWELL | LF20 | -N9.8  -TR22.2, -TR22.3, |\n| 10 | RUIMTEVOELERT+INSTELLING  HONEYWELL | T7460B1009 | -TR22.9, -TR23.17,  -TR23.4, -TR23.9,  -TR24.6, -TR25.2,  -TR25.6, -TR26.2,  -TR26.6, -TR4.2,  -TR4.3, -TR5.3, -TR5.4,  -TR6.4, -TR6.5, -TR6.6  -TR23.3, -TR23.7, |\n| 1  1  1 | <Reference not found in HONEYWELL>  HONEYWELL  AUTOMAAT 2P 20A C-KURVE 10/15KA  MER-GER  AUTOMAAT 2P 2A C-KURVE 6/10KA  MER-GER | X1882A  C60H C20/2P  C60N C2/2P | -TR24.9, -TR25.5,  -TR25.9, -TR26.5,  -TR26.9, -TR5.2,  -TR6.3, -TR7.5  -N2.3  -F1.2  -F2.2 |",
+      "table_headers": [
+        "Date  26/02/201;  Bill of Materials",
+        "Col_2",
+        "Col_3",
+        "1 Page"
+      ]
+    },
+    {
+      "block_id": "pdf-blk-0072",
+      "page_number": 66,
+      "section_heading": "HVAC Diagram Legend / Schedule",
+      "sheet_name": null,
+      "block_type": "table",
+      "markdown_content": "| Date 26/02/201;  Bill of Materials | Col_2 | Col_3 | Page  2 |\n| :--- | :--- | :--- | :--- |\n|  | AZ ST.JAN  BRUGGE  OS OP BORD HONEYWELL |  |  |\n| Quantity  1  4 | 11.05.95.01  Description  Cataloque  AUTOMAAT 1 P 40A C-KURVE 6/10KA  MER-GER  AUTOMAAT 1 P 6A C-KURVE 6/10KA  MER-GER | Reference  C60N C40/1P  C60N C6/1 P | symbol,  -F 1.6  -171.6, -F1.8, -F21.1, |\n| 1  1  1  17 | DIFF.ELEMENT 2P 300mA  MER-GER  <Reference not found in RITTAL>  RITTAL  <Reference not found in RITTAL>  RITTAL  <Reference not found in TA-FUSION>  TA-FUSION | VIGI C60/300/2P  PS4103.600  PS4315.500  2-W EG | -F3.1  -F1.2  -1-11.3  -S1.3  -SM27.2, -SM27.3, |\n| 1  1  4 | 3 PHASE CIRCUIT BREAKER  TEE  3 PHASE CIRCUIT BREAKER  TEE  GREEN CAP NO PB  TEE | GV2-RT03  GV2-RT10  X82-BA31 | -SM27.6, -SM27.8,  -SM27.9, -SM28.2,  -SM28.5, -SM28.6,  -SM28.7, -SM28.8,  -SM28.9, -SM8.2,  -SM8.3, -SM8.7,  -SM8.8, -SM9.4, -SM9.5  -Q2.2  -Q1.5  -S11.3, -S12.9, -S14.7, |\n| 4 | RED CAP NC EMERG. STOP PB  TEE | XB2-BS542 | -S30.4  -S11.4,-S12.10,-S14.8, |\n| 4 | LED 24V  TEE | XB5-AVB3 | -530.5  -1-117.5, -1-119.2, -1-12O.7, |\n| 4 | LED 24V  TEE | XB5-AVB4 | -H35.5  -H17.6, -H19.3, -1-12O.8, |\n| 1  403 | HOOFDSCHAKELAAR 20A 2P  VC  KLEM 2.5#  WIELAND | 492/105001/200  WK2.5/U | -H35.6  -S1.2  X3.24P 16, X3.24P 17, |\n| 97 | KLEM 2.5#  WIELAND | WK2.5/U PE | X3.241? 18, X3.24P 19,  X3.24P 2, X3.24P 20,  X3.24P 21, X3.24P 22,  X3.24P 23, X3-24P 3,  X3.24P 4, X3.24P 5,  X3.24P 6, X3.241? 7,  X3.24P 8, X3.24P 9  X3 PE, X3 PE, X3 PE, |\n| 112 | KLEM 4#  WIELAND | WK4/U | X3 PE, X3 PE, X3 PE,  X3 PE, X3 PE, X3 PE,  X3 PE, X3 PE, X3 PE,  X3 PE, X3 PE, X3 PE,  X3 PE, X3 PE, X3 PE,  X3 PE, X3 PE, X3 PE,  X3 PE, X3 PE, X3 PE,  X3 PE, X3 PE, X3 PE  X3.24E 16, X3.24E 17,  X3.24E 18, X3.24P 24,  X3.24P 25, X3.24P 26,  X3.24P 27, X3.24P 28,  X3.24P 29 |",
+      "table_headers": [
+        "Date 26/02/201;  Bill of Materials",
+        "Col_2",
+        "Col_3",
+        "Page  2"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "metadata": {
+    "doc_id": "4e964fbec7e82678",
+    "file_name": "06038.003 pulsiedebieten OP4-5-6.xlsx",
+    "file_extension": ".xlsx",
+    "file_hash_sha256": "252184c633fffbabd39e49204924feb6bd7ebf7dee141a1df82160725393ea78",
+    "sharepoint_url": "https://ingeniumnv.sharepoint.com/sites/06038004-INT/_layouts/15/Doc.aspx?sourcedoc=%7B3D05B49B-D918-43BC-B36A-11BF32750EA0%7D&file=06038.003%20pulsiedebieten%20OP4-5-6.xlsx&action=default&mobileredirect=true",
+    "relative_folder_path": "General/00_Berekeningen",
+    "sharepoint_item_id": "01L557GEU3WQCT2GGZXRB3G2QRX4ZHKDVA",
+    "sharepoint_etag": "\"{3D05B49B-D918-43BC-B36A-11BF32750EA0},3\"",
+    "project_id": "UNKNOWN_PROJECT",
+    "project_name": "AZ Sint-Jan Brugge",
+    "building": "UNKNOWN_BUILDING",
+    "phase": "UNKNOWN_PHASE",
+    "doc_category": "schedule_table",
+    "extraction_method": "openpyxl_table",
+    "is_scanned": false,
+    "is_hvac_diagram": false,
+    "extraction_confidence": 1.0,
+    "quality_warnings": [],
+    "processed_at": "2026-11-18T12:39:29.699279Z"
+  },
+  "blocks": [
+    {
+      "block_id": "xlsx-blk-0001",
+      "page_number": null,
+      "section_heading": "Blad1 (Rows 1-19)",
+      "sheet_name": "Blad1",
+      "block_type": "table",
+      "markdown_content": "| Col_1 | OP4 | OP5 | OP6 |\n| :--- | :--- | :--- | :--- |\n|  | pulsie | pulsie | pulsie |\n|  | (m3/h) | (m3/h) | (m3/h) |\n|  | 417 | 410 | 382 |\n|  | 410 | 437 | 422 |\n|  | 420 | 455 | 322 |\n|  | 420 | 407 | 422 |\n|  | 382 | 385 | 430 |\n|  | 360 | 360 | 385 |\n|  | 328 | 320 | 407 |\n|  | 395 | 360 | 402 |\n|  |  |  | 402 |\n|  |  |  | 432 |\n|  |  |  | 420 |\n|  |  |  | 415 |\n| totaal | 3132 | 3134 | 4841 |\n| gemid. | 391.5 | 391.75 | 484.1 |",
+      "table_headers": [
+        "Col_1",
+        "OP4",
+        "OP5",
+        "OP6"
+      ]
+    }
+  ]
+}
