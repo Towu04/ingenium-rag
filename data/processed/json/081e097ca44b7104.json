@@ -1,0 +1,41 @@
+{
+  "metadata": {
+    "doc_id": "081e097ca44b7104",
+    "file_name": "1003-004 lijst IGEG's _001.pdf",
+    "file_extension": ".pdf",
+    "file_hash_sha256": "7607196a079ed6aa8b75fcd52e0e44382b10301e2c09d4d6bff7461344260270",
+    "sharepoint_url": "https://ingeniumnv.sharepoint.com/sites/06038004-INT/Shared%20Documents/General/00_Info/1003-004%20lijst%20IGEG%27s%20_001.pdf",
+    "relative_folder_path": "General/00_Info",
+    "sharepoint_item_id": "01L557GESI3RUP525SEFE3AMMDO432GIHF",
+    "sharepoint_etag": "\"{FE68DC48-B2EB-4921-B031-837737A320E5},1\"",
+    "project_id": "1003-004",
+    "project_name": "AZ Sint-Jan Brugge",
+    "building": "UNKNOWN_BUILDING",
+    "phase": "UNKNOWN_PHASE",
+    "doc_category": "unknown",
+    "extraction_method": "pymupdf_ocr",
+    "is_scanned": true,
+    "is_hvac_diagram": false,
+    "extraction_confidence": 0.2,
+    "quality_warnings": [
+      "Page 1: Scanned raster page with < 50 selectable chars and no local Tesseract OCR output.",
+      "Page 2: Scanned raster page with < 50 selectable chars and no local Tesseract OCR output.",
+      "Page 3: Scanned raster page with < 50 selectable chars and no local Tesseract OCR output.",
+      "Page 4: Scanned raster page with < 50 selectable chars and no local Tesseract OCR output.",
+      "Page 5: Scanned raster page with < 50 selectable chars and no local Tesseract OCR output.",
+      "Page 6: Scanned raster page with < 50 selectable chars and no local Tesseract OCR output.",
+      "Page 7: Scanned raster page with < 50 selectable chars and no local Tesseract OCR output.",
+      "Page 8: Scanned raster page with < 50 selectable chars and no local Tesseract OCR output.",
+      "Page 9: Scanned raster page with < 50 selectable chars and no local Tesseract OCR output.",
+      "Page 10: Scanned raster page with < 50 selectable chars and no local Tesseract OCR output.",
+      "Page 11: Scanned raster page with < 50 selectable chars and no local Tesseract OCR output.",
+      "Page 12: Scanned raster page with < 50 selectable chars and no local Tesseract OCR output.",
+      "Page 13: Scanned raster page with < 50 selectable chars and no local Tesseract OCR output.",
+      "Page 14: Scanned raster page with < 50 selectable chars and no local Tesseract OCR output.",
+      "Page 15: Scanned raster page with < 50 selectable chars and no local Tesseract OCR output.",
+      "No extractable text or table blocks found."
+    ],
+    "processed_at": "2026-11-18T12:39:43.283860Z"
+  },
+  "blocks": []
+}

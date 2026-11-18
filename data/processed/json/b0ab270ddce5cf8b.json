@@ -1,0 +1,53 @@
+{
+  "metadata": {
+    "doc_id": "b0ab270ddce5cf8b",
+    "file_name": "6038.004 Facturatie - Sjabloon (_).pdf",
+    "file_extension": ".pdf",
+    "file_hash_sha256": "7741dbab25dbb567f7fc88348b13893390bae1c1f9bd05c8289488608694feb1",
+    "sharepoint_url": "https://ingeniumnv.sharepoint.com/sites/06038004-INT/Shared%20Documents/General/00_Algemeen/Contract/Prestatiestaten/6038.004%20Facturatie%20-%20Sjabloon%20(_).pdf",
+    "relative_folder_path": "General/00_Algemeen/Contract/Prestatiestaten",
+    "sharepoint_item_id": "01L557GEVZG3VBOAVSPVFJHX3BKTN34NCX",
+    "sharepoint_etag": "\"{17EA36B9-B202-4A7D-93DF-6154DBBE3457},1\"",
+    "project_id": "6038.004",
+    "project_name": "AZ Sint-Jan Brugge",
+    "building": "UNKNOWN_BUILDING",
+    "phase": "UNKNOWN_PHASE",
+    "doc_category": "unknown",
+    "extraction_method": "pymupdf_digital",
+    "is_scanned": false,
+    "is_hvac_diagram": false,
+    "extraction_confidence": 1.0,
+    "quality_warnings": [],
+    "processed_at": "2026-11-18T12:39:24.671910Z"
+  },
+  "blocks": [
+    {
+      "block_id": "pdf-blk-0001",
+      "page_number": 1,
+      "section_heading": null,
+      "sheet_name": null,
+      "block_type": "table",
+      "markdown_content": "| 06038.004 | AZ st. Jan Brugge renovatie OP 8-9 | Col_3 | Col_4 | Col_5 | Col_6 | Col_7 | 16/10/2026 | Col_9 |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| Perceel | Raming | Offertes | Toewijzing | Meerwerken | Herziening | Totaal uitgevoerd | Ereloon (%) | Ereloon (EUR) |\n| HVAC | € 651.621,34 | € 938.103,70 | € 775.292,31 | € 89.276,54 | € 22.458,91 | € 887.027,76 | 7,00% | € 62.091,94 |\n| elektriciteit | € 290.108,00 | € 340.833,34 | € 340.833,34 | € 4.675,94 | € 7.183,42 | € 352.692,70 | 7,00% | € 24.688,49 |\n| sanitair | € 45.189,50 | € 68.306,33 | € 68.306,33 | € 3.091,30 | € 731,64 | € 72.129,27 | 7,00% | € 5.049,05 |\n| medische gassen | € 130.290,84 | € 120.458,69 | € 120.458,69 | -€ 565,88 | € 2.541,01 | € 122.433,82 | 7,00% | € 8.570,37 |\n| totaal | € 1.117.209,68 | € 1.467.702,06 | € 1.304.890,67 | € 96.477,90 |  | € 1.434.283,55 |  | € 100.399,85 |\n| Facturatieschema | Schijf (%) | Schijf (EUR) | Te factureren (%) | Te factureren (EUR) |  |  | Gefactureerd (EUR) | Factuur (EUR) |\n| Voorontwerp | 20% | 20.079,97 | 100% | 20.079,97 |  |  | 12.348,00 | 7.731,97 |\n| Ontwerp | 50% | 50.199,92 | 100% | 50.199,92 |  |  | 42.395,27 | 7.804,65 |\n| Aanbesteding | 5% | 5.019,99 | 100% | 5.019,99 |  |  | 22.311,09 | -17.291,10 |\n| Werfopvolging | 20% | 20.079,97 | 100% | 20.079,97 |  |  | 9.720,87 | 10.359,10 |\n| Voorlopige oplevering | 5% | 5.019,99 | 100% | 5.019,99 |  |  | 0,00 | 5.019,99 |\n| niet uitgevoerde werken |  | 1193,10 | 100% | 1.193,10 |  |  | 0,00 | 1.193,10 |\n| Totaal | 100% | 101.592,94 | 100% | € 101.592,94 |  |  | € 86.775,23 | € 14.817,71 |",
+      "table_headers": [
+        "06038.004",
+        "AZ st. Jan Brugge renovatie OP 8-9",
+        "Col_3",
+        "Col_4",
+        "Col_5",
+        "Col_6",
+        "Col_7",
+        "16/10/2026",
+        "Col_9"
+      ]
+    },
+    {
+      "block_id": "pdf-blk-0002",
+      "page_number": 1,
+      "section_heading": null,
+      "sheet_name": null,
+      "block_type": "text",
+      "markdown_content": "niet uitgevoerde werken die aanbesteed zijn:\n\nHVAC: verrekening 5 kleinere stoombevochtigers -2546,16 verrekening 20 niet uitgevoerde werken -20180,75 correctie post 39.07.01 vaste som (10.000,00 EUR) 10000,00 correctie post 39.07.02 Te verrekenen manuren 7200,00\n\nElektriciteit: verrekening 3: klokken en chrono voorzien door derden -6297,65 verrekening 4: bijkomende schermen isolatiebewaking nvt -4728,06 verrekening 12: niet uitgevoerde zaken -3417,18 correctie post 11.05.01 Regie-uren normale uren 2320,00 correctie post 11.05.02 Regie-uren nacht-of weekendwerk (nachtwerk is vanaf 20h tot 6h) 4640,00 correctie post 11.06.01 Vaste Som (2500,00 EUR) 2500,00\n\nSanitair: Verrekening 3: Wijziging sniatire toestellen -5416,80 Verrekening 8: Afrekening stelposten en VH -10391,19 correctie post 20.06 Vaste Som 5000,00 correctie post 20.06 Manuren 3400,00\n\nMedische gassen: Verrekening 4b: minwerken - niet uitgevoerde werken -9732,25 correctie post 09.09 Te verrekenen manuren 2424,40 correctie post 09.10 Vaste Som (2,500,00 EUR) 2500,00\n\nTotaal niet uitgevoerde werken en ereloon op voorontwerp, ontwerp en aanbesteding -22725,64 x 7 % x  75 % x (-1) = 1193,10",
+      "table_headers": null
+    }
+  ]
+}
