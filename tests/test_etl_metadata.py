@@ -21,7 +21,7 @@ def test_flagship_az_sint_jan_sample_path() -> None:
     result = MetadataMatcher().match(sample_path)
     assert result.project == "PRJ_104"
     assert result.phase == "Aanbesteding"
-    assert result.building == "Blok B - Operatiekwartier"
+    assert result.building == "Blok B"
     assert result.doc_category == DocCategory.SPECIFICATION
 
 

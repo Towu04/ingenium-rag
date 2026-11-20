@@ -278,6 +278,13 @@ class LocalHybridRepository:
         )
         return parents, children
 
+    def known_buildings(self) -> list[str]:
+        """Return sorted distinct building labels currently indexed in `parent_chunks`."""
+        seen: set[str] = set()
+        for parent in self.iter_parents():
+            seen.update(parent.metadata.buildings)
+        return sorted(seen)
+
     @staticmethod
     def _build_filter(**kwargs: str | None) -> models.Filter | None:
         conditions: list[models.Condition] = [

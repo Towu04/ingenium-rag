@@ -350,7 +350,13 @@ class RAGPipeline:
             for k, v in (("project", project), ("building", building), ("phase", phase))
             if v is not None
         }
-        inferred = extract_metadata_filters(query) if auto_filter else {}
+        known_buildings_fn = getattr(self.searcher.repository, "known_buildings", None)
+        known_bldgs = (
+            known_buildings_fn() if (auto_filter and callable(known_buildings_fn)) else None
+        )
+        inferred = (
+            extract_metadata_filters(query, known_buildings=known_bldgs) if auto_filter else {}
+        )
         eff_project = project if project is not None else inferred.get("project")
         eff_building = building if building is not None else inferred.get("building")
         eff_phase = phase if phase is not None else inferred.get("phase")

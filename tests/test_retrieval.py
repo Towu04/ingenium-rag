@@ -144,3 +144,9 @@ def test_query_filter_extracts_natural_and_explicit_filters() -> None:
         "project:PRJ-2021-104 building:Blok A phase:Aanbesteding luchtgroepen"
     )
     assert f2 == {"project": "PRJ-2021-104", "building": "Blok A", "phase": "Aanbesteding"}
+
+    f3 = extract_metadata_filters(
+        "What is the airflow in West Wing during execution?",
+        known_buildings=["East Wing", "West Wing"],
+    )
+    assert f3 == {"building": "West Wing", "phase": "Uitvoering"}

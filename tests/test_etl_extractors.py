@@ -59,11 +59,9 @@ def test_xlsx_extractor_separates_kv_preamble_and_skips_unused_wb_templates(tmp_
     ws.append(["Projectnummer:", "6038004"])
     ws.append(["Naam wijzigingsbericht", "Beschrijving", "Bedrag", "Advies ING"])
     ws.append(["WB E1", "Branddetectie werf", "855.59", "Goedgekeurd"])
-    ws.append(["WB+ perceel volgnummer", "0", "0", ""])
+    ws.append(["0", "0", "0", ""])
 
     ws_blank = wb.create_sheet("x17")
-    ws_blank.append(["", "WIJZIGING", "", "WB+ perceel volgnummer"])
-    ws_blank.append(["", "Onderwerp:", "", ""])
     ws_blank.append(["Art.", "Omschrijving", "EP", "Som"])
     ws_blank.append(["", "SUBTOTAAL", "", "0"])
     wb.save(xlsx_path)
@@ -81,7 +79,7 @@ def test_xlsx_extractor_separates_kv_preamble_and_skips_unused_wb_templates(tmp_
         == "| Naam wijzigingsbericht | Beschrijving | Bedrag | Advies ING |"
     )
     assert "WB E1" in tables[0].text
-    assert "WB+ perceel volgnummer" not in tables[0].text
+    assert "| 0 | 0 | 0 |" not in tables[0].text
 
 
 def test_pdf_extractor_rejects_postal_code_heading_strips_footers_and_coalesces_prose(
@@ -160,7 +158,7 @@ def test_docx_deduplicates_horizontally_merged_cells_and_infers_cover_building(
     docx_path = tmp_path / "Verslag_Algemeen.docx"
     doc = docx.Document()
     doc.add_heading("1. Projectomschrijving", level=1)
-    doc.add_paragraph("AZ Sint-Jan Brugge — Renovatie L-blok en OP-zalen 8 en 9.")
+    doc.add_paragraph("Project 12345.001 — Renovatie L-blok en Vleugel Noord.")
 
     table = doc.add_table(rows=4, cols=3)
     # Row 0: full-width merged title banner
@@ -179,7 +177,7 @@ def test_docx_deduplicates_horizontally_merged_cells_and_infers_cover_building(
     doc.save(str(docx_path))
 
     parsed = DocxExtractor().extract(docx_path, relative_path="General/05_Uitvoering/Verslag.docx")
-    assert parsed.metadata.buildings == ["Blok L", "Operatiekwartier"]
+    assert parsed.metadata.buildings == ["Blok L", "Vleugel Noord"]
     assert "cover_page_building" in parsed.metadata.extra["resolution_sources"]
 
     tables = [s for s in parsed.sections if s.block_type == "table"]
@@ -197,12 +195,12 @@ def test_pdf_digital_cover_page_building_fallback(tmp_path: Path) -> None:
     p1 = doc.new_page(width=595, height=842)
     p1.insert_text(
         (50, 70),
-        "AZ Sint-Jan Brugge\n1. Scope\nAanpassing klimatisatie in MT-blok en Spoed.",
+        "Technisch Dossier\n1. Scope\nAanpassing klimatisatie in A-blok en Gebouw 2.",
         fontsize=11,
     )
     doc.save(str(pdf_path))
     doc.close()
 
     parsed = PdfExtractor().extract(pdf_path, relative_path="General/05_Uitvoering/Verslag.pdf")
-    assert parsed.metadata.buildings == ["Blok MT", "Spoed"]
+    assert parsed.metadata.buildings == ["Blok A", "Gebouw 2"]
     assert "cover_page_building" in parsed.metadata.extra["resolution_sources"]

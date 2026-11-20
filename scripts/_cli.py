@@ -4,10 +4,11 @@ import argparse
 import os
 import re
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from pathlib import Path
 
 from rich.console import Console
+from rich.table import Table
 
 # Strict stdout vs stderr separation: primary output -> stdout, logs/status/errors -> stderr.
 out_console = Console(highlight=False)
@@ -117,6 +118,31 @@ def suppress_hf_noise_early() -> None:
         os.environ.setdefault("HF_HUB_DISABLE_PROGRESS_BARS", "1")
         os.environ.setdefault("TRANSFORMERS_VERBOSITY", "error")
         os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
+
+
+def print_kv_table(title: str, rows: Sequence[tuple[str, object]]) -> None:
+    """Print a compact two-column summary table to stdout."""
+    tbl = Table(title=title, header_style="bold cyan")
+    tbl.add_column("Metric", style="cyan")
+    tbl.add_column("Value", justify="right", style="green")
+    for k, v in rows:
+        tbl.add_row(k, str(v))
+    out_console.print(tbl)
+
+
+def ensure_qdrant_ready(qdrant_path: Path, *, require_docs: bool = True) -> None:
+    """Fail fast with a friendly hint if the local Qdrant index is missing or empty."""
+    if not qdrant_path.exists():
+        raise CLIError(f"Qdrant index not found at '{qdrant_path}'. Run 'make ingest' first.")
+    if not require_docs:
+        return
+    from storage import LocalHybridRepository
+
+    with LocalHybridRepository(path=str(qdrant_path)) as repo:
+        if repo.collection_counts()["documents"] == 0:
+            raise CLIError(
+                f"Qdrant index at '{qdrant_path}' is empty (0 documents). Run 'make ingest' first."
+            )
 
 
 def run_cli(main_fn: Callable[[], None]) -> None:

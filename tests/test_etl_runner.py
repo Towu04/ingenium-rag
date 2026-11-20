@@ -88,7 +88,7 @@ def test_local_incremental_etl_and_load_processed_docs(tmp_path: Path) -> None:
     loaded = load_processed_docs(processed)
     assert len(loaded) == 2
     assert all(d.metadata.project == "PRJ_104" for d in loaded)
-    assert all(d.metadata.buildings == ["Blok B", "Operatiekwartier"] for d in loaded)
+    assert all(d.metadata.buildings == ["Blok B"] for d in loaded)
     assert all(d.metadata.phase == "Aanbesteding" for d in loaded)
 
 

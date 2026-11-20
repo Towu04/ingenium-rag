@@ -82,7 +82,8 @@ class Settings(BaseSettings):
     sharepoint_drive_name: str = "Documents"
 
     # --- ETL Extraction & Quality Thresholds ---
-    default_project_name: str = "AZ Sint-Jan Brugge"
+    default_project_name: str | None = None
+    building_aliases: dict[str, str] = {}
     min_digital_text_chars_per_page: int = 50
     oversized_page_min_dimension_pt: float = 1250.0
     high_vector_drawings_threshold: int = 250

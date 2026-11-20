@@ -3,7 +3,7 @@
 Resolution priority (highest accuracy to fallback):
   1. Layer 1: Excel/CSV Document Register (`Documentenlijst` / `Borderel`)
   2. Layer 2: Master Project Catalog (`projects_catalog.csv`)
-  3. Layer 2.5: SharePoint site URL (`/sites/06038004-INT/...`)
+  3. Layer 2.5: SharePoint site URL (`/sites/12345001-INT/...`)
   4. Layer 3: Folder path & filename Flemish engineering heuristics
 """
 
@@ -23,6 +23,7 @@ from domain import (
     infer_phase,
     infer_project_id_from_path,
     infer_project_id_from_sharepoint_url,
+    normalize_building,
     normalize_phase,
     normalize_project,
     split_buildings,
@@ -36,7 +37,7 @@ class MatchedMetadata:
     """Intermediate resolution result used for inventory previews and building `DocumentMetadata`."""
 
     project: str | None = None
-    project_name: str = field(default_factory=lambda: get_settings().default_project_name)
+    project_name: str | None = field(default_factory=lambda: get_settings().default_project_name)
     sharepoint_url: str | None = None
     building: str | None = None
     phase: str | None = None
@@ -67,9 +68,11 @@ class MetadataMatcher:
         rel_posix = rel_path.as_posix()
         parent_posix = rel_path.parent.as_posix() if rel_path.parent != Path(".") else ""
 
-        default_name = get_settings().default_project_name
+        settings = get_settings()
+        default_name = settings.default_project_name
+        aliases = settings.building_aliases or None
         project: str | None = None
-        project_name = default_name
+        project_name: str | None = default_name
         resolved_sp_url = sharepoint_url
         building: str | None = None
         phase: str | None = None
@@ -97,7 +100,7 @@ class MetadataMatcher:
             phase = file_phase
             sources.append("layer3_regex_file_phase")
 
-        if inferred_bldg := infer_building(rel_posix):
+        if inferred_bldg := infer_building(rel_posix, extra_aliases=aliases):
             building = inferred_bldg
             sources.append("layer3_regex_building")
 
@@ -113,7 +116,7 @@ class MetadataMatcher:
             project_name = catalog_entry.project_name or default_name
             resolved_sp_url = resolved_sp_url or catalog_entry.sharepoint_url
             if building is None and catalog_entry.building:
-                building = infer_building(catalog_entry.building) or catalog_entry.building
+                building = normalize_building(catalog_entry.building) or catalog_entry.building
             if phase is None and catalog_entry.phase:
                 phase = normalize_phase(infer_phase(catalog_entry.phase) or catalog_entry.phase)
             sources.append("layer2_catalog")
@@ -122,7 +125,7 @@ class MetadataMatcher:
         reg_entry = self.register_index.match_file(rel_path)
         if reg_entry is not None:
             if reg_entry.building:
-                building = infer_building(reg_entry.building) or reg_entry.building
+                building = normalize_building(reg_entry.building) or reg_entry.building
             if reg_entry.phase:
                 phase = normalize_phase(infer_phase(reg_entry.phase) or reg_entry.phase)
             if reg_entry.doc_category and reg_entry.doc_category != DocCategory.UNKNOWN:

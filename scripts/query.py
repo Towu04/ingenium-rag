@@ -15,6 +15,7 @@ from scripts._cli import (
     add_common_args,
     build_parser,
     clean_preview,
+    ensure_qdrant_ready,
     err_console,
     out_console,
     run_cli,
@@ -129,7 +130,7 @@ def _main() -> None:
         epilog=(
             "Examples:\n"
             "  ingenium-query 'Wat zijn de eisen voor brandwerende deuren?'\n"
-            "  ingenium-query 'brandwerende deuren' --building 'Blok L' --debug\n"
+            "  ingenium-query 'brandwerende deuren' --building 'Blok A' --debug\n"
             "  ingenium-query 'fire-resistant doors' --json | jq '.trace.results[0]'"
         ),
     )
@@ -185,18 +186,8 @@ def _main() -> None:
     if not question:
         raise CLIError("No question provided. Pass a question argument or use Q='...' with make.")
 
-    # Fail fast if the local Qdrant index is missing or empty before loading BGE-M3 weights.
+    ensure_qdrant_ready(args.qdrant_path, require_docs=True)
     from storage import LocalHybridRepository
-
-    if not args.qdrant_path.exists():
-        raise CLIError(f"Qdrant index not found at '{args.qdrant_path}'. Run 'make ingest' first.")
-    with LocalHybridRepository(path=str(args.qdrant_path)) as check_repo:
-        doc_count = check_repo.collection_counts()["documents"]
-        if doc_count == 0:
-            raise CLIError(
-                f"Qdrant index at '{args.qdrant_path}' is empty (0 documents). "
-                "Run 'make ingest' first."
-            )
 
     t0 = time.perf_counter()
     if not args.quiet and not args.as_json:

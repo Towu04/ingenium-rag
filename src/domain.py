@@ -7,6 +7,7 @@ defined in this module.
 
 import hashlib
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
@@ -154,96 +155,21 @@ _PHASE_RULES: list[tuple[re.Pattern[str], re.Pattern[str], str]] = [
 ]
 
 _BUILDING_CODE = r"(Noord|Zuid|Oost|West|[A-Z]{1,2}\d{0,2}|\d{1,3})"
+_B_END = r"(?=$|[_\-\s/\\.,;?!\)])"
 _STRUCTURAL_BUILDING_PATTERNS: list[tuple[re.Pattern[str], str]] = [
+    (re.compile(r"(?:^|[_\-\s/\\])(Blok)[_\-\s]+" + _BUILDING_CODE + _B_END, re.I), "prefix"),
+    (re.compile(r"(?:^|[_\-\s/\\])([A-Z]{1,2}\d{0,2})-blok" + _B_END, re.I), "blok_inv"),
+    (re.compile(r"(?:^|[_\-\s/\\])(Vleugel)[_\-\s]+" + _BUILDING_CODE + _B_END, re.I), "prefix"),
     (
-        re.compile(
-            r"(?:^|[_\-\s/\\])(Blok)[_\-\s]+" + _BUILDING_CODE + r"(?=$|[_\-\s/\\.,;?!\)])",
-            re.IGNORECASE,
-        ),
-        "Blok {1}",
+        re.compile(r"(?:^|[_\-\s/\\])(Gebouw)[_\-\s]+([A-Z]\d{0,2}|\d{1,3})" + _B_END, re.I),
+        "prefix",
     ),
-    (
-        # Inverted Dutch form: "L-blok", "MT-blok", "A-blok" -> "Blok L", "Blok MT"
-        re.compile(
-            r"(?:^|[_\-\s/\\])([A-Z]{1,2}\d{0,2})-blok(?=$|[_\-\s/\\.,;?!\)])",
-            re.IGNORECASE,
-        ),
-        "Blok {0}",
-    ),
-    (
-        re.compile(
-            r"(?:^|[_\-\s/\\])(Vleugel)[_\-\s]+" + _BUILDING_CODE + r"(?=$|[_\-\s/\\.,;?!\)])",
-            re.IGNORECASE,
-        ),
-        "Vleugel {1}",
-    ),
-    (
-        re.compile(
-            r"(?:^|[_\-\s/\\])(Gebouw)[_\-\s]+([A-Z]\d{0,2}|\d{1,3})(?=$|[_\-\s/\\.,;?!\)])",
-            re.IGNORECASE,
-        ),
-        "Gebouw {1}",
-    ),
-    (
-        re.compile(
-            r"(?:^|[_\-\s/\\])(Campus)[_\-\s]+(Sint[_\-\s]*Jan|SFX|Henri[_\-\s]*Serruys|[A-Za-z0-9]+)(?=$|[_\-\s/\\.,;?!])",
-            re.IGNORECASE,
-        ),
-        "Campus {1}",
-    ),
-    (
-        re.compile(
-            r"(?:^|[_\-\s/\\])(Verdieping)[_\s]*([+-]?\d{1,2})(?=$|[_\-\s/\\.,;?!])",
-            re.IGNORECASE,
-        ),
-        "Verdieping {1}",
-    ),
-    (
-        re.compile(
-            r"(?:^|[_\-\s/\\])Niv(?:eau)?\.?[_\s]*([+-]?\d{1,2})(?=$|[_\-\s/\\.,;?!])",
-            re.IGNORECASE,
-        ),
-        "Niv {0}",
-    ),
+    (re.compile(r"(?:^|[_\-\s/\\])(Campus)[_\-\s]+([A-Za-z0-9]+)" + _B_END, re.I), "prefix"),
+    (re.compile(r"(?:^|[_\-\s/\\])(Verdieping)[_\s]*([+-]?\d{1,2})" + _B_END, re.I), "floor"),
+    (re.compile(r"(?:^|[_\-\s/\\])Niv(?:eau)?\.?[_\s]*([+-]?\d{1,2})" + _B_END, re.I), "niv"),
 ]
 
-_HOSPITAL_ZONE_PATTERNS: list[tuple[re.Pattern[str], str]] = [
-    (
-        re.compile(
-            r"(?:^|[_\-\s/\\])(?:operatiekwartier|operatieza(?:al|len)|(?:op|ok)[_\-\s]*za(?:al|len)|op\s*\d+(?:\s*(?:en|&|-)\s*\d+)+)(?=$|[_\-\s/\\.,;?!\)])",
-            re.IGNORECASE,
-        ),
-        "Operatiekwartier",
-    ),
-    (
-        re.compile(
-            r"(?:^|[_\-\s/\\])spoed(?:afdeling|eisende)?(?=$|[_\-\s/\\.,;?!])", re.IGNORECASE
-        ),
-        "Spoed",
-    ),
-    (re.compile(r"(?:^|[_\-\s/\\])labo(?:ratorium)?(?=$|[_\-\s/\\.,;?!])", re.IGNORECASE), "Labo"),
-    (
-        re.compile(r"(?:^|[_\-\s/\\])technische[_\-\s]+ruimte(?=$|[_\-\s/\\.,;?!])", re.IGNORECASE),
-        "Technische Ruimte",
-    ),
-    (
-        re.compile(r"(?:^|[_\-\s/\\])intensieve[_\-\s]+zorgen(?=$|[_\-\s/\\.,;?!])", re.IGNORECASE),
-        "Intensieve Zorgen",
-    ),
-    (re.compile(r"(?:^|[_\-\s/\\])radiologie(?=$|[_\-\s/\\.,;?!])", re.IGNORECASE), "Radiologie"),
-    (re.compile(r"(?:^|[_\-\s/\\])apotheek(?=$|[_\-\s/\\.,;?!])", re.IGNORECASE), "Apotheek"),
-    (
-        re.compile(
-            r"(?:^|[_\-\s/\\])centrale[_\-\s]+sterilisatie(?=$|[_\-\s/\\.,;?!])", re.IGNORECASE
-        ),
-        "Centrale Sterilisatie",
-    ),
-    (re.compile(r"(?:^|[_\-\s/\\])materniteit(?=$|[_\-\s/\\.,;?!])", re.IGNORECASE), "Materniteit"),
-    (re.compile(r"(?:^|[_\-\s/\\])pediatrie(?=$|[_\-\s/\\.,;?!])", re.IGNORECASE), "Pediatrie"),
-    (re.compile(r"(?:^|[_\-\s/\\])polikliniek(?=$|[_\-\s/\\.,;?!])", re.IGNORECASE), "Polikliniek"),
-]
-
-PRIMARY_DOC_CATEGORY_RULES: list[tuple[re.Pattern[str], DocCategory]] = [
+DOC_CATEGORY_RULES: list[tuple[re.Pattern[str], DocCategory]] = [
     (DOCUMENT_REGISTER_FILENAME_RE, DocCategory.DOCUMENT_REGISTER),
     (
         re.compile(r"(bestek|lastenboek|technische[_\-\s]*specificatie)", re.IGNORECASE),
@@ -276,9 +202,6 @@ PRIMARY_DOC_CATEGORY_RULES: list[tuple[re.Pattern[str], DocCategory]] = [
         ),
         DocCategory.REPORT_MEETING,
     ),
-]
-
-SECONDARY_DOC_CATEGORY_RULES: list[tuple[re.Pattern[str], DocCategory]] = [
     (
         re.compile(r"(ventilatie|luchtgroep(?:en)?|debiet(?:en)?|roosterlijst)", re.IGNORECASE),
         DocCategory.SCHEDULE_TABLE,
@@ -297,14 +220,12 @@ def strip_unknown_sentinel(value: str | None) -> str | None:
 
 
 def normalize_project(value: str | None) -> str | None:
-    """Normalize project identifiers (e.g. `6038.004`, `06038-004` -> `06038.004`)."""
+    """Normalize project identifiers (e.g. `1234.001`, `01234-001` -> `01234.001`)."""
     cleaned = strip_unknown_sentinel(value)
     if cleaned is None:
         return None
     m = _DOSSIER_CODE_RE.match(cleaned)
-    if m:
-        return f"{m.group(1).zfill(5)}.{m.group(2)}"
-    return cleaned
+    return f"{m.group(1).zfill(5)}.{m.group(2)}" if m else cleaned
 
 
 def normalize_phase(value: str | None) -> str | None:
@@ -314,9 +235,7 @@ def normalize_phase(value: str | None) -> str | None:
         return None
     base = re.sub(r"\s*\([^)]*\)\s*", " ", cleaned).strip()
     key = re.sub(r"[_\s]+", " ", base.lower()).strip()
-    if key in _PHASE_CANONICAL_MAP:
-        return _PHASE_CANONICAL_MAP[key]
-    return base or None
+    return _PHASE_CANONICAL_MAP.get(key, base or None)
 
 
 def split_buildings(value: str | None) -> list[str]:
@@ -324,23 +243,17 @@ def split_buildings(value: str | None) -> list[str]:
     cleaned = strip_unknown_sentinel(value)
     if cleaned is None:
         return []
-    raw_parts = re.split(r"\s+-\s+|[,;/]+", cleaned)
     result: list[str] = []
     seen: set[str] = set()
-    for part in raw_parts:
+    for part in re.split(r"\s+-\s+|[,;/]+", cleaned):
         item = " ".join(part.split()).strip()
-        if not item:
+        if not item or item.lower() in _BOGUS_BUILDING_LABELS or item.upper() in UNKNOWN_SENTINELS:
             continue
-        lowered = item.lower()
-        if lowered in _BOGUS_BUILDING_LABELS or item.upper() in UNKNOWN_SENTINELS:
-            continue
-        # Canonicalize casing for known patterns (e.g. "blok l" -> "Blok L", "spoed" -> "Spoed")
         canonical = infer_building(item)
-        candidates = canonical.split(" - ") if canonical else [item]
-        for cand in candidates:
-            cand_key = cand.lower()
-            if cand_key not in seen:
-                seen.add(cand_key)
+        for cand in canonical.split(" - ") if canonical else [item]:
+            key = cand.lower()
+            if key not in seen:
+                seen.add(key)
                 result.append(cand)
     return result
 
@@ -352,7 +265,7 @@ def normalize_building(value: str | None) -> str | None:
 
 
 def is_bogus_heading(heading: str | None) -> bool:
-    """Return True for regex false-positive headings like Belgian postal codes ('8000. Brugge')."""
+    """Return True for regex false-positive headings like Belgian postal codes ('1000. Brussel')."""
     if not heading:
         return False
     m = _POSTAL_CODE_HEADING_RE.match(heading.strip())
@@ -360,7 +273,7 @@ def is_bogus_heading(heading: str | None) -> bool:
 
 
 def infer_project_id_from_sharepoint_url(sharepoint_url: str | None) -> str | None:
-    """Extract canonical project ID from an Ingenium SharePoint URL (e.g. `/sites/06038004-INT/...`)."""
+    """Extract canonical project ID from a SharePoint site URL (e.g. `/sites/12345001-INT/...`)."""
     if not sharepoint_url:
         return None
     slug_match = _SHAREPOINT_SITE_SLUG_RE.search(sharepoint_url)
@@ -379,8 +292,7 @@ def infer_project_id_from_sharepoint_url(sharepoint_url: str | None) -> str | No
 
 def infer_project_id_from_path(text_or_path: str | Path) -> str | None:
     """Extract a project identifier code from a relative path or query string."""
-    parts = [p for p in Path(text_or_path).parts if p not in {".", "/", "\\"}]
-    for part in parts:
+    for part in (p for p in Path(text_or_path).parts if p not in {".", "/", "\\"}):
         for pattern in PROJECT_ID_PATTERNS:
             m = pattern.search(part)
             if m:
@@ -393,67 +305,64 @@ def infer_phase(text: str, *, allow_abbreviations: bool = True) -> str | None:
     if not text or not text.strip():
         return None
     for full_pattern, abbr_pattern, canonical in _PHASE_RULES:
-        if full_pattern.search(text):
-            return canonical
-        if allow_abbreviations and abbr_pattern.search(text):
+        if full_pattern.search(text) or (allow_abbreviations and abbr_pattern.search(text)):
             return canonical
     return None
 
 
-def infer_building(text: str) -> str | None:
-    """Infer structural building/wing/floor and hospital zone tokens from path or text."""
+def infer_building(
+    text: str,
+    *,
+    extra_aliases: Mapping[str, str] | None = None,
+) -> str | None:
+    """Infer generic structural building/wing/floor tokens (plus optional project aliases)."""
     if not text or not text.strip():
         return None
-    matched_parts: list[str] = []
-    for pattern, template in _STRUCTURAL_BUILDING_PATTERNS:
-        for match in pattern.finditer(text):
-            raw_groups = [g.strip() for g in match.groups()]
-            if template == "Niv {0}":
-                formatted = f"Niv {raw_groups[0]}"
-            elif template == "Verdieping {1}":
-                formatted = f"Verdieping {raw_groups[1]}"
-            elif template == "Blok {0}":
-                label = raw_groups[0].strip().upper()
-                if label in _BUILDING_STOPWORDS:
+    matched: list[str] = []
+    for pattern, kind in _STRUCTURAL_BUILDING_PATTERNS:
+        for m in pattern.finditer(text):
+            groups = [g.strip() for g in m.groups()]
+            if kind == "niv":
+                formatted = f"Niv {groups[0]}"
+            elif kind == "floor":
+                formatted = f"Verdieping {groups[1]}"
+            elif kind == "blok_inv":
+                code = groups[0].upper()
+                if code in _BUILDING_STOPWORDS:
                     continue
-                formatted = f"Blok {label}"
+                formatted = f"Blok {code}"
             else:
-                prefix = raw_groups[0].replace("_", " ").replace("-", " ").strip().title()
-                label = raw_groups[1].replace("_", " ").replace("-", " ").strip()
+                prefix = groups[0].title()
+                label = re.sub(r"[_\-]+", " ", groups[1]).strip()
                 if label.upper() in _BUILDING_STOPWORDS:
                     continue
-                if len(label) <= 3 or any(ch.isdigit() for ch in label):
-                    label = label.upper()
-                else:
-                    label = label.title()
+                label = (
+                    label.upper()
+                    if (len(label) <= 3 or any(c.isdigit() for c in label))
+                    else label.title()
+                )
                 formatted = f"{prefix} {label}"
-            if formatted not in matched_parts:
-                matched_parts.append(formatted)
+            if formatted not in matched:
+                matched.append(formatted)
 
-    for pattern, canonical_zone in _HOSPITAL_ZONE_PATTERNS:
-        if pattern.search(text) and canonical_zone not in matched_parts:
-            matched_parts.append(canonical_zone)
+    if extra_aliases:
+        for alias, canonical in extra_aliases.items():
+            if not alias.strip():
+                continue
+            pat = re.compile(r"(?:^|[_\-\s/\\])" + re.escape(alias.strip()) + _B_END, re.I)
+            if pat.search(text) and canonical not in matched:
+                matched.append(canonical)
 
-    return " - ".join(matched_parts) if matched_parts else None
+    return " - ".join(matched) if matched else None
 
 
 def infer_doc_category(file_path: str | Path) -> DocCategory:
     """Infer document category from filename (primary) and parent path (fallback)."""
     path = Path(file_path)
-    filename = path.name
-    full_path_str = str(path)
-    for pattern, cat in PRIMARY_DOC_CATEGORY_RULES:
-        if pattern.search(filename):
-            return cat
-    for pattern, cat in SECONDARY_DOC_CATEGORY_RULES:
-        if pattern.search(filename):
-            return cat
-    for pattern, cat in PRIMARY_DOC_CATEGORY_RULES:
-        if pattern.search(full_path_str):
-            return cat
-    for pattern, cat in SECONDARY_DOC_CATEGORY_RULES:
-        if pattern.search(full_path_str):
-            return cat
+    for target in (path.name, str(path)):
+        for pattern, cat in DOC_CATEGORY_RULES:
+            if pattern.search(target):
+                return cat
     return DocCategory.UNKNOWN
 
 
@@ -472,7 +381,7 @@ class DocumentMetadata(BaseModel):
     )
     sharepoint_url: str | None = Field(default=None, description="Direct SharePoint web URL.")
     project: str | None = Field(
-        default=None, description="Canonical project code (e.g. '06038.004')."
+        default=None, description="Canonical project code (e.g. '12345.001')."
     )
     building: str | None = Field(
         default=None, description="Building/zone label (joined with ' - ' if multiple)."

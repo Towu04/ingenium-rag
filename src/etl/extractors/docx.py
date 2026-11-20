@@ -10,6 +10,7 @@ from docx.oxml.text.paragraph import CT_P
 from docx.table import Table
 from docx.text.paragraph import Paragraph
 
+from config import get_settings
 from domain import (
     ExtractionMethod,
     ParsedDoc,
@@ -177,7 +178,8 @@ class DocxExtractor:
         )
         if metadata.building is None and sections:
             cover_text = "\n".join(s.text for s in sections)[:1200]
-            if inferred_bldg := infer_building(cover_text):
+            aliases = get_settings().building_aliases or None
+            if inferred_bldg := infer_building(cover_text, extra_aliases=aliases):
                 bldgs = split_buildings(inferred_bldg)
                 metadata.buildings = bldgs
                 metadata.building = " - ".join(bldgs) if bldgs else None

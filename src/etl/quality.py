@@ -21,25 +21,56 @@ _MEANINGFUL_TOKEN_RE = re.compile(
 
 
 def score_callout_readability(text: str) -> float:
-    """Score readability of a `diagram_callout` block in `[0.0, 1.0]`.
-
-    Legacy-OCR'd electrical/HVAC schematics often emit dozens of 1-2 character glyph fragments
-    (`- f`, `- ~n`, `- I`). Returns the fraction of non-empty lines containing a valid technical
-    word, equipment tag, or measurement with >=55% alphanumeric characters.
-    """
-    lines = [re.sub(r"^\s*[-*•]\s*", "", raw).strip() for raw in text.splitlines()]
-    lines = [line for line in lines if line]
+    """Return the fraction in `[0.0, 1.0]` of non-empty callout lines with readable tokens."""
+    lines = [
+        cleaned
+        for raw in text.splitlines()
+        if (cleaned := re.sub(r"^\s*[-*•]\s*", "", raw).strip())
+    ]
     if not lines:
         return 0.0
-
-    readable = 0
-    for line in lines:
-        alnum = sum(ch.isalnum() for ch in line)
-        if len(line) < 3 or (alnum / len(line)) < 0.55:
-            continue
-        if _MEANINGFUL_TOKEN_RE.search(line):
-            readable += 1
+    readable = sum(
+        1
+        for line in lines
+        if len(line) >= 3
+        and (sum(ch.isalnum() for ch in line) / len(line)) >= 0.55
+        and _MEANINGFUL_TOKEN_RE.search(line)
+    )
     return round(readable / len(lines), 3)
+
+
+def _classify_limitation(
+    *, is_empty: bool, is_scanned: bool, is_hvac_diagram: bool, needs_ocr: bool
+) -> tuple[str, str, str]:
+    if is_empty and is_scanned:
+        return (
+            "scanned_pdf_needs_ocr",
+            "Scanned PDF produced 0 extracted sections; run OCR before re-ingestion.",
+            "Scanned PDF with 0 extracted text sections (needs_ocr=True).",
+        )
+    if is_empty:
+        return (
+            "empty_or_unreadable_document",
+            "Verify source file integrity or run external OCR before re-ingestion.",
+            "No extractable text or table sections found.",
+        )
+    if is_hvac_diagram:
+        return (
+            "complex_hvac_diagram",
+            "Graphical schematic with sparse callouts; cross-reference with equipment schedule or CAD.",
+            "Oversized/vector diagram with sparse text callouts.",
+        )
+    if is_scanned or needs_ocr:
+        return (
+            "low_confidence_scan",
+            "Scanned PDF with low OCR confidence; re-scan at 300+ DPI or review manually.",
+            "Scanned PDF with low OCR readability confidence.",
+        )
+    return (
+        "low_extraction_confidence",
+        "Inspect extracted Markdown for layout or encoding artifacts.",
+        "Extraction confidence below threshold.",
+    )
 
 
 class LimitationRecord(BaseModel):
@@ -85,16 +116,15 @@ class QualityLogger:
 
     def evaluate_and_log(self, doc: ParsedDoc) -> LimitationRecord | None:
         """Inspect `doc` quality; flag `needs_ocr` and log a `LimitationRecord` when below threshold."""
-        meta = doc.metadata
-        extra = meta.extra
+        meta, extra = doc.metadata, doc.metadata.extra
         total_chars = sum(len(s.text.strip()) for s in doc.sections)
-        warnings: list[str] = list(extra.get("quality_warnings") or [])
+        is_empty = len(doc.sections) == 0 or total_chars == 0
         confidence = float(extra.get("extraction_confidence", 1.0))
         is_scanned = bool(extra.get("is_scanned", False))
         is_hvac_diagram = bool(extra.get("is_hvac_diagram", False))
         needs_ocr = bool(extra.get("needs_ocr", False))
 
-        if len(doc.sections) == 0 or total_chars == 0:
+        if is_empty:
             confidence = min(confidence, 0.2)
             extra["extraction_confidence"] = confidence
             if is_scanned:
@@ -104,40 +134,20 @@ class QualityLogger:
         if confidence >= self.confidence_threshold and not needs_ocr:
             return None
 
-        if (len(doc.sections) == 0 or total_chars == 0) and is_scanned:
-            limitation_type = "scanned_pdf_needs_ocr"
-            recommended_action = (
-                "Scanned PDF produced 0 extracted sections; run Docling/Tesseract or external "
-                "high-DPI OCR before re-ingestion."
-            )
-            msg = "Scanned PDF with 0 extracted text sections (needs_ocr=True)."
+        limitation_type, action, msg = _classify_limitation(
+            is_empty=is_empty,
+            is_scanned=is_scanned,
+            is_hvac_diagram=is_hvac_diagram,
+            needs_ocr=needs_ocr,
+        )
+        if limitation_type == "scanned_pdf_needs_ocr":
             logger.warning(
                 "Scanned PDF '%s' (doc_id=%s) yielded 0 sections; flagged needs_ocr=True.",
                 meta.source_path,
                 doc.document_id,
             )
-        elif len(doc.sections) == 0 or total_chars == 0:
-            limitation_type = "empty_or_unreadable_document"
-            recommended_action = (
-                "Verify source file integrity or run external OCR before re-ingestion."
-            )
-            msg = "No extractable text or table sections found."
-        elif is_hvac_diagram:
-            limitation_type = "complex_hvac_diagram"
-            recommended_action = (
-                "Graphical HVAC/PID schematic with sparse text callouts; "
-                "cross-reference with equipment schedule (Toestellenlijst) or native CAD (.dwg)."
-            )
-            msg = "Oversized/vector HVAC diagram with sparse text callouts."
-        elif is_scanned or needs_ocr:
-            limitation_type = "low_confidence_scan"
-            recommended_action = "Scanned archival PDF with low OCR confidence; re-scan at 300+ DPI or review manually."
-            msg = "Scanned PDF with low OCR readability confidence."
-        else:
-            limitation_type = "low_extraction_confidence"
-            recommended_action = "Inspect extracted Markdown for layout or encoding artifacts."
-            msg = "Extraction confidence below threshold."
 
+        warnings: list[str] = list(extra.get("quality_warnings") or [])
         if msg not in warnings:
             warnings.append(msg)
         extra["quality_warnings"] = warnings
@@ -159,7 +169,7 @@ class QualityLogger:
             total_char_count=total_chars,
             quality_warnings=warnings,
             limitation_type=limitation_type,
-            recommended_action=recommended_action,
+            recommended_action=action,
         )
         self.write_record(record)
         return record
@@ -180,12 +190,10 @@ class QualityLogger:
             project=project,
             building=building,
             phase=phase,
-            doc_category="unknown",
             extraction_method="failed",
-            extraction_confidence=0.0,
             quality_warnings=[f"Extraction error: {error_message}"],
             limitation_type="corrupted_or_unreadable_file",
-            recommended_action="Replace corrupted file from SharePoint archive.",
+            recommended_action="Verify or replace corrupted source file.",
         )
         self.write_record(record)
         return record
@@ -200,8 +208,7 @@ class QualityLogger:
             return []
         records: list[LimitationRecord] = []
         for line in self.report_path.read_text(encoding="utf-8").splitlines():
-            line = line.strip()
-            if not line:
+            if not line.strip():
                 continue
             try:
                 data: dict[str, Any] = json.loads(line)

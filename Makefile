@@ -63,7 +63,7 @@ help: ## Show available make targets and usage examples
 	@echo "  make ingest                                                # index data/processed -> data/qdrant_poc"
 	@echo "  make ingest MODE=sharepoint PREFIX='General/05_Uitvoering' LIMIT=10"
 	@echo "  make ingest-dry-run MODE=sharepoint PREFIX='General/04_Prijsvraag'"
-	@echo "  make query Q='Wat zijn de eisen voor brandwerende deuren?' BUILDING='Blok L'"
+	@echo "  make query Q='Wat zijn de eisen voor brandwerende deuren?' BUILDING='Blok A'"
 	@echo "  make query Q='brandwerende deuren' RETRIEVAL_ONLY=1 NO_RERANK=1"
 	@echo "  make eval DATASET=data/eval_questions.json"
 

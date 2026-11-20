@@ -14,6 +14,7 @@ from scripts._cli import (
     add_common_args,
     build_parser,
     clean_preview,
+    ensure_qdrant_ready,
     err_console,
     out_console,
     run_cli,
@@ -59,8 +60,7 @@ def _main() -> None:
 
     configure_logging(verbose=args.verbose, quiet=args.quiet, json_mode=args.as_json)
 
-    if not args.qdrant_path.exists():
-        raise CLIError(f"Qdrant index not found at '{args.qdrant_path}'. Run 'make ingest' first.")
+    ensure_qdrant_ready(args.qdrant_path, require_docs=True)
     rows = load_eval_rows(args.dataset)
     if not rows:
         raise CLIError(f"Evaluation dataset '{args.dataset}' is empty.")
@@ -73,11 +73,6 @@ def _main() -> None:
 
     pipeline, repo = build_rag_pipeline(qdrant_path=args.qdrant_path, device=args.device)
     with repo:
-        if repo.collection_counts()["documents"] == 0:
-            raise CLIError(
-                f"Qdrant index at '{args.qdrant_path}' is empty (0 documents). "
-                "Run 'make ingest' first."
-            )
         results = run_evaluation(pipeline, rows, top_k=args.top_k)
 
     elapsed = time.perf_counter() - t0

@@ -198,7 +198,8 @@ class PdfExtractor:
             page1_text = "\n".join(s.text for s in sections if 1 in s.page_numbers)[:1200]
             if not page1_text:
                 page1_text = "\n".join(s.text for s in sections)[:1200]
-            if inferred_bldg := infer_building(page1_text):
+            aliases = get_settings().building_aliases or None
+            if inferred_bldg := infer_building(page1_text, extra_aliases=aliases):
                 bldgs = split_buildings(inferred_bldg)
                 metadata.buildings = bldgs
                 metadata.building = " - ".join(bldgs) if bldgs else None

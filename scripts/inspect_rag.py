@@ -18,6 +18,7 @@ from scripts._cli import (
     add_common_args,
     build_parser,
     clean_preview,
+    ensure_qdrant_ready,
     err_console,
     out_console,
     run_cli,
@@ -26,13 +27,8 @@ from scripts._cli import (
 from storage import LocalHybridRepository
 
 
-def _ensure_index_exists(qdrant_path: Path) -> None:
-    if not qdrant_path.exists():
-        raise CLIError(f"Qdrant index not found at '{qdrant_path}'. Run 'make ingest' first.")
-
-
 def _cmd_stats(args: argparse.Namespace) -> None:
-    _ensure_index_exists(args.qdrant_path)
+    ensure_qdrant_ready(args.qdrant_path, require_docs=False)
     with LocalHybridRepository(path=str(args.qdrant_path)) as repo:
         counts = repo.collection_counts()
 
@@ -155,7 +151,7 @@ def _cmd_stats(args: argparse.Namespace) -> None:
 
 
 def _cmd_export(args: argparse.Namespace) -> None:
-    _ensure_index_exists(args.qdrant_path)
+    ensure_qdrant_ready(args.qdrant_path, require_docs=False)
     out_dir: Path = args.out
     out_dir.mkdir(parents=True, exist_ok=True)
     doc_filter = args.doc_id
@@ -264,7 +260,7 @@ def _render_markdown_report(traces: list[RetrievalTrace]) -> str:
 
 
 def _cmd_batch_query(args: argparse.Namespace) -> None:
-    _ensure_index_exists(args.qdrant_path)
+    ensure_qdrant_ready(args.qdrant_path, require_docs=True)
     questions = _load_questions(args.questions)
     if not questions:
         raise CLIError(f"No questions found in '{args.questions}'.")
@@ -279,11 +275,6 @@ def _cmd_batch_query(args: argparse.Namespace) -> None:
     pipeline, repo = build_rag_pipeline(qdrant_path=args.qdrant_path, device=args.device)
     traces: list[RetrievalTrace] = []
     with repo:
-        if repo.collection_counts()["documents"] == 0:
-            raise CLIError(
-                f"Qdrant index at '{args.qdrant_path}' is empty (0 documents). "
-                "Run 'make ingest' first."
-            )
         for item in questions:
             trace = pipeline.retrieve_with_trace(
                 item["question"],

@@ -9,24 +9,19 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from config import get_settings
-from domain import (
-    DOCUMENT_REGISTER_FILENAME_RE,
-    PRIMARY_DOC_CATEGORY_RULES,
-    SECONDARY_DOC_CATEGORY_RULES,
-    DocCategory,
-)
+from domain import DOC_CATEGORY_RULES, DOCUMENT_REGISTER_FILENAME_RE, DocCategory
 
 
 class ProjectCatalogEntry(BaseModel):
     """Single row from the master project catalog (CSV/XLSX)."""
 
     project_id: str
-    project_name: str = Field(default_factory=lambda: get_settings().default_project_name)
+    project_name: str | None = Field(default_factory=lambda: get_settings().default_project_name)
     folder_name: str | None = None
     sharepoint_url: str | None = None
     building: str | None = None
     phase: str | None = None
-    client: str = Field(default_factory=lambda: get_settings().default_project_name)
+    client: str | None = None
     extra: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -55,12 +50,57 @@ def _clean_cell(val: Any) -> str:
     return "" if text.lower() in {"nan", "none", "null", "n/a", "-"} else text
 
 
+def _pick(row_map: dict[str, str], keys: set[str]) -> str | None:
+    for k in keys:
+        if row_map.get(k):
+            return row_map[k]
+    return None
+
+
+def _read_tabular_grids(path: Path) -> list[list[list[str]]]:
+    """Read a CSV or Excel file into one or more non-empty 2D string grids."""
+    ext = path.suffix.lower()
+    if ext == ".csv":
+        content = None
+        for encoding in ("utf-8-sig", "utf-8", "latin-1"):
+            try:
+                content = path.read_text(encoding=encoding)
+                break
+            except UnicodeDecodeError:
+                continue
+        lines = [line for line in (content or "").splitlines() if line.strip()]
+        if not lines:
+            return []
+        delim = ";" if lines[0].count(";") > lines[0].count(",") else ","
+        return [[[_clean_cell(c) for c in row] for row in csv.reader(lines, delimiter=delim)]]
+
+    if ext in {".xlsx", ".xls"}:
+        import openpyxl
+
+        wb = openpyxl.load_workbook(path, data_only=True, read_only=True)
+        try:
+            grids: list[list[list[str]]] = []
+            for sheet_name in wb.sheetnames:
+                rows = [
+                    cleaned
+                    for row in wb[sheet_name].iter_rows(values_only=True)
+                    if any(cleaned := [_clean_cell(c) for c in row])
+                ]
+                if rows:
+                    grids.append(rows)
+            return grids
+        finally:
+            wb.close()
+
+    raise ValueError(f"Unsupported tabular file extension: {ext}")
+
+
 def is_document_register_file(file_path: str | Path) -> bool:
     """Return True if the filename matches Flemish document register patterns."""
     path = Path(file_path)
-    if path.suffix.lower() not in {".xlsx", ".xls", ".csv"}:
-        return False
-    return bool(DOCUMENT_REGISTER_FILENAME_RE.search(path.stem))
+    return path.suffix.lower() in {".xlsx", ".xls", ".csv"} and bool(
+        DOCUMENT_REGISTER_FILENAME_RE.search(path.stem)
+    )
 
 
 class ProjectCatalog:
@@ -112,83 +152,25 @@ class ProjectCatalog:
         self.entries: list[ProjectCatalogEntry] = list(entries or [])
         self._by_id: dict[str, ProjectCatalogEntry] = {}
         self._by_folder: dict[str, ProjectCatalogEntry] = {}
-        self._rebuild_indices()
-
-    def _rebuild_indices(self) -> None:
-        self._by_id.clear()
-        self._by_folder.clear()
         for entry in self.entries:
-            norm_id = _normalize_token(entry.project_id)
-            if norm_id:
+            if norm_id := _normalize_token(entry.project_id):
                 self._by_id[norm_id] = entry
-            if entry.folder_name:
-                norm_folder = _normalize_token(entry.folder_name)
-                if norm_folder:
-                    self._by_folder[norm_folder] = entry
+            if entry.folder_name and (norm_folder := _normalize_token(entry.folder_name)):
+                self._by_folder[norm_folder] = entry
             if entry.sharepoint_url:
-                slug = self._extract_url_folder_slug(entry.sharepoint_url)
-                if slug:
-                    self._by_folder[_normalize_token(slug)] = entry
-
-    @staticmethod
-    def _extract_url_folder_slug(url: str) -> str | None:
-        cleaned = url.split("?")[0].rstrip("/")
-        if not cleaned:
-            return None
-        last_segment = re.sub(r"%20", "_", cleaned.split("/")[-1])
-        return last_segment or None
+                slug = entry.sharepoint_url.split("?")[0].rstrip("/").split("/")[-1]
+                if norm_slug := _normalize_token(slug.replace("%20", "_")):
+                    self._by_folder[norm_slug] = entry
 
     @classmethod
     def from_file(cls, catalog_path: str | Path) -> "ProjectCatalog":
         path = Path(catalog_path)
         if not path.exists():
             raise FileNotFoundError(f"Catalog file not found: {path}")
-        if path.suffix.lower() == ".csv":
-            rows = cls._read_csv_rows(path)
-        elif path.suffix.lower() in {".xlsx", ".xls"}:
-            rows = cls._read_excel_rows(path)
-        else:
-            raise ValueError(f"Unsupported catalog file extension: {path.suffix}")
-        return cls(cls._parse_dict_rows(rows))
+        grids = _read_tabular_grids(path)
+        if not grids or len(grids[0]) < 2:
+            return cls([])
 
-    @staticmethod
-    def _read_csv_rows(path: Path) -> list[dict[str, Any]]:
-        content = None
-        for encoding in ("utf-8-sig", "utf-8", "latin-1"):
-            try:
-                content = path.read_text(encoding=encoding)
-                break
-            except UnicodeDecodeError:
-                continue
-        if not content or not content.strip():
-            return []
-        lines = [line for line in content.splitlines() if line.strip()]
-        if not lines:
-            return []
-        delimiter = ";" if lines[0].count(";") > lines[0].count(",") else ","
-        return [dict(row) for row in csv.DictReader(lines, delimiter=delimiter)]
-
-    @staticmethod
-    def _read_excel_rows(path: Path) -> list[dict[str, Any]]:
-        import openpyxl
-
-        wb = openpyxl.load_workbook(path, data_only=True, read_only=True)
-        try:
-            sheet = wb.active
-            if sheet is None:
-                return []
-            raw_rows = list(sheet.iter_rows(values_only=True))
-            if not raw_rows:
-                return []
-            headers = [_clean_cell(h) or f"col_{idx}" for idx, h in enumerate(raw_rows[0])]
-            return [
-                dict(zip(headers, row)) for row in raw_rows[1:] if any(_clean_cell(c) for c in row)
-            ]
-        finally:
-            wb.close()
-
-    @classmethod
-    def _parse_dict_rows(cls, rows: list[dict[str, Any]]) -> list[ProjectCatalogEntry]:
         default_name = get_settings().default_project_name
         known_cols = (
             cls.PROJECT_ID_COLS
@@ -199,59 +181,45 @@ class ProjectCatalog:
             | cls.PHASE_COLS
             | cls.CLIENT_COLS
         )
+        raw_headers = grids[0][0]
+        norm_headers = [_normalize_token(h) for h in raw_headers]
         entries: list[ProjectCatalogEntry] = []
-        for raw_row in rows:
-            normalized_map: dict[str, tuple[str, str]] = {}
-            for k, v in raw_row.items():
-                if k is None:
-                    continue
-                norm_k = _normalize_token(str(k))
-                val_str = _clean_cell(v)
-                if norm_k and val_str:
-                    normalized_map[norm_k] = (str(k), val_str)
-            if not normalized_map:
+        for row in grids[0][1:]:
+            row_map = {
+                norm_headers[i]: val
+                for i, val in enumerate(row)
+                if i < len(norm_headers) and norm_headers[i] and val
+            }
+            if not row_map:
                 continue
-
-            project_id = cls._pick_first(normalized_map, cls.PROJECT_ID_COLS)
-            folder_name = cls._pick_first(normalized_map, cls.FOLDER_NAME_COLS)
-            if not project_id and folder_name:
-                project_id = folder_name.split("/")[0]
+            folder_name = _pick(row_map, cls.FOLDER_NAME_COLS)
+            project_id = _pick(row_map, cls.PROJECT_ID_COLS) or (
+                folder_name.split("/")[0] if folder_name else None
+            )
             if not project_id:
                 continue
-
             entries.append(
                 ProjectCatalogEntry(
                     project_id=project_id,
-                    project_name=cls._pick_first(normalized_map, cls.PROJECT_NAME_COLS)
-                    or default_name,
+                    project_name=_pick(row_map, cls.PROJECT_NAME_COLS) or default_name,
                     folder_name=folder_name,
-                    sharepoint_url=cls._pick_first(normalized_map, cls.SHAREPOINT_URL_COLS),
-                    building=cls._pick_first(normalized_map, cls.BUILDING_COLS),
-                    phase=cls._pick_first(normalized_map, cls.PHASE_COLS),
-                    client=cls._pick_first(normalized_map, cls.CLIENT_COLS) or default_name,
+                    sharepoint_url=_pick(row_map, cls.SHAREPOINT_URL_COLS),
+                    building=_pick(row_map, cls.BUILDING_COLS),
+                    phase=_pick(row_map, cls.PHASE_COLS),
+                    client=_pick(row_map, cls.CLIENT_COLS),
                     extra={
-                        orig_k: val
-                        for norm_k, (orig_k, val) in normalized_map.items()
-                        if norm_k not in known_cols
+                        raw_headers[i]: row[i]
+                        for i in range(min(len(raw_headers), len(row)))
+                        if norm_headers[i] and norm_headers[i] not in known_cols and row[i]
                     },
                 )
             )
-        return entries
-
-    @staticmethod
-    def _pick_first(
-        normalized_map: dict[str, tuple[str, str]], candidate_keys: set[str]
-    ) -> str | None:
-        for key in candidate_keys:
-            if key in normalized_map:
-                return normalized_map[key][1]
-        return None
+        return cls(entries)
 
     def match_path(self, relative_path: str | Path) -> ProjectCatalogEntry | None:
         if not self.entries:
             return None
-        parts = [p for p in Path(relative_path).parts if p not in {".", "/", "\\"}]
-        for part in parts:
+        for part in (p for p in Path(relative_path).parts if p not in {".", "/", "\\"}):
             norm_part = _normalize_token(part)
             if not norm_part:
                 continue
@@ -323,26 +291,19 @@ class DocumentRegisterIndex:
             self.entries.append(entry)
             if entry.file_name:
                 self._by_filename[Path(entry.file_name).name.lower()] = entry
-                stem_norm = _normalize_token(Path(entry.file_name).stem)
-                if stem_norm:
+                if stem_norm := _normalize_token(Path(entry.file_name).stem):
                     self._by_stem[stem_norm] = entry
-            if entry.doc_code:
-                code_norm = _normalize_token(entry.doc_code)
-                if code_norm:
-                    self._by_doc_code[code_norm] = entry
+            if entry.doc_code and (code_norm := _normalize_token(entry.doc_code)):
+                self._by_doc_code[code_norm] = entry
 
     def load_register_file(self, register_path: str | Path) -> list[DocumentRegisterEntry]:
         path = Path(register_path)
         if not path.exists():
             raise FileNotFoundError(f"Document register not found: {path}")
-        if path.suffix.lower() == ".csv":
-            raw_grids = [self._read_csv_grid(path)]
-        elif path.suffix.lower() in {".xlsx", ".xls"}:
-            raw_grids = self._read_excel_grids(path)
-        else:
+        if path.suffix.lower() not in {".csv", ".xlsx", ".xls"}:
             return []
         parsed: list[DocumentRegisterEntry] = []
-        for grid in raw_grids:
+        for grid in _read_tabular_grids(path):
             parsed.extend(self._parse_grid(grid, str(path)))
         self.add_entries(parsed)
         return parsed
@@ -360,42 +321,6 @@ class DocumentRegisterIndex:
                     continue
         return count
 
-    @staticmethod
-    def _read_csv_grid(path: Path) -> list[list[str]]:
-        content = None
-        for encoding in ("utf-8-sig", "utf-8", "latin-1"):
-            try:
-                content = path.read_text(encoding=encoding)
-                break
-            except UnicodeDecodeError:
-                continue
-        if not content:
-            return []
-        lines = [line for line in content.splitlines() if line.strip()]
-        if not lines:
-            return []
-        delimiter = ";" if lines[0].count(";") > lines[0].count(",") else ","
-        return [[_clean_cell(c) for c in row] for row in csv.reader(lines, delimiter=delimiter)]
-
-    @staticmethod
-    def _read_excel_grids(path: Path) -> list[list[list[str]]]:
-        import openpyxl
-
-        wb = openpyxl.load_workbook(path, data_only=True, read_only=True)
-        grids: list[list[list[str]]] = []
-        try:
-            for sheet_name in wb.sheetnames:
-                rows = [
-                    cleaned
-                    for row in wb[sheet_name].iter_rows(values_only=True)
-                    if any(cleaned := [_clean_cell(c) for c in row])
-                ]
-                if rows:
-                    grids.append(rows)
-            return grids
-        finally:
-            wb.close()
-
     @classmethod
     def _parse_grid(cls, grid: list[list[str]], source_path: str) -> list[DocumentRegisterEntry]:
         if len(grid) < 2:
@@ -410,41 +335,39 @@ class DocumentRegisterIndex:
             | cls.DISCIPLINE_COLS
             | cls.CATEGORY_COLS
         )
-        header_row_idx = 0
-        best_matches = 0
+        header_idx, best_matches = 0, 0
         for idx, row in enumerate(grid[:15]):
             matches = len({_normalize_token(c) for c in row if c} & all_known)
             if matches > best_matches:
-                best_matches = matches
-                header_row_idx = idx
+                best_matches, header_idx = matches, idx
         if best_matches == 0:
             return []
 
-        header_row = [_normalize_token(c) for c in grid[header_row_idx]]
+        header_row = [_normalize_token(c) for c in grid[header_idx]]
         entries: list[DocumentRegisterEntry] = []
-        for row in grid[header_row_idx + 1 :]:
+        for row in grid[header_idx + 1 :]:
             row_map = {
-                header_row[col_idx]: cell_val
-                for col_idx, cell_val in enumerate(row)
-                if col_idx < len(header_row) and header_row[col_idx] and cell_val
+                header_row[i]: val
+                for i, val in enumerate(row)
+                if i < len(header_row) and header_row[i] and val
             }
             if not row_map:
                 continue
-            file_name = cls._pick(row_map, cls.FILENAME_COLS)
-            doc_code = cls._pick(row_map, cls.DOC_CODE_COLS)
-            title = cls._pick(row_map, cls.TITLE_COLS)
+            file_name = _pick(row_map, cls.FILENAME_COLS)
+            doc_code = _pick(row_map, cls.DOC_CODE_COLS)
+            title = _pick(row_map, cls.TITLE_COLS)
             if not (file_name or doc_code or title):
                 continue
-            raw_cat = cls._pick(row_map, cls.CATEGORY_COLS)
+            raw_cat = _pick(row_map, cls.CATEGORY_COLS)
             entries.append(
                 DocumentRegisterEntry(
                     doc_code=doc_code,
                     file_name=file_name,
                     title=title,
-                    building=cls._pick(row_map, cls.BUILDING_COLS),
-                    phase=cls._pick(row_map, cls.PHASE_COLS),
-                    revision=cls._pick(row_map, cls.REVISION_COLS),
-                    discipline=cls._pick(row_map, cls.DISCIPLINE_COLS),
+                    building=_pick(row_map, cls.BUILDING_COLS),
+                    phase=_pick(row_map, cls.PHASE_COLS),
+                    revision=_pick(row_map, cls.REVISION_COLS),
+                    discipline=_pick(row_map, cls.DISCIPLINE_COLS),
                     doc_category=cls._infer_category(
                         " ".join(filter(None, [raw_cat, title, file_name]))
                     ),
@@ -454,23 +377,13 @@ class DocumentRegisterIndex:
         return entries
 
     @staticmethod
-    def _pick(row_map: dict[str, str], keys: set[str]) -> str | None:
-        for k in keys:
-            if row_map.get(k):
-                return row_map[k]
-        return None
-
-    @staticmethod
     def _infer_category(text: str) -> DocCategory | None:
         if not text:
             return None
         for val in DocCategory:
             if val.value.lower() == text.strip().lower():
                 return val
-        for pattern, category in PRIMARY_DOC_CATEGORY_RULES:
-            if pattern.search(text):
-                return category
-        for pattern, category in SECONDARY_DOC_CATEGORY_RULES:
+        for pattern, category in DOC_CATEGORY_RULES:
             if pattern.search(text):
                 return category
         return None

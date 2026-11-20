@@ -37,12 +37,22 @@ def test_normalize_project_phase_and_buildings() -> None:
 
     assert split_buildings("UNKNOWN_BUILDING") == []
     assert split_buildings("Blok Peil") == []
-    assert split_buildings("Blok P - Blok L - Spoed - Blok L") == ["Blok P", "Blok L", "Spoed"]
+    assert split_buildings("Blok P - Blok L - West Wing - Blok L") == [
+        "Blok P",
+        "Blok L",
+        "West Wing",
+    ]
     assert normalize_building("Blok P - Blok L") == "Blok P - Blok L"
     assert normalize_building("blok l") == "Blok L"
-    assert split_buildings("spoed") == ["Spoed"]
-    assert infer_building("Renovatie L-blok en MT-blok") == "Blok L - Blok MT"
-    assert infer_building("Verbouwing OP-zalen 8 en 9 en operatiezaal 4") == "Operatiekwartier"
+    assert infer_building("Renovatie L-blok en Vleugel Noord") == "Blok L - Vleugel Noord"
+    assert infer_building("Campus Oost en Gebouw 2") == "Gebouw 2 - Campus Oost"
+    assert (
+        infer_building(
+            "Renovatie zone-alpha",
+            extra_aliases={"zone-alpha": "Zone Alpha"},
+        )
+        == "Zone Alpha"
+    )
 
 
 def test_document_metadata_strips_sentinels_and_syncs_buildings() -> None:

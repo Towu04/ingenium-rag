@@ -11,26 +11,9 @@ from etl.extractors.common import build_markdown_table, clean_cell_text, finaliz
 from etl.metadata import MetadataMatcher
 
 _NUMERIC_CELL_RE = re.compile(r"^[+-]?\d+(?:[.,]\d+)?%?$")
-_TEMPLATE_PLACEHOLDER_RE = re.compile(
-    r"^(?:wb\+?\s*perceel\s*volgnummer|0(?:\.0+)?)$",
-    re.IGNORECASE,
-)
-
-
-def _is_unused_wb_template_sheet(
-    sheet_name: str, non_empty_rows: list[tuple[int, list[str]]]
-) -> bool:
-    """Return True if a worksheet is an unfilled Ingenium WB template tab (e.g. `x17`..`x100`)."""
-    flat_text = " ".join(c for _, r in non_empty_rows[:12] for c in r if c).lower()
-    if "wb+ perceel volgnummer" not in flat_text:
-        return False
-    if re.match(r"^x\d+$", sheet_name.strip(), re.IGNORECASE):
-        return True
-    for _, r in non_empty_rows[:12]:
-        non_empty = [c for c in r if c]
-        if non_empty and non_empty[0].lower().startswith("onderwerp:") and len(non_empty) == 1:
-            return True
-    return False
+_PLACEHOLDER_SHEET_RE = re.compile(r"^(?:x\d+|template\d*|sjabloon\d*)$", re.IGNORECASE)
+_EMPTY_OR_ZERO_RE = re.compile(r"^(?:0+(?:[.,]0+)?|-|n/?a)$", re.IGNORECASE)
+_SUBTOTAL_LABEL_RE = re.compile(r"^(?:sub)?totaal\b", re.IGNORECASE)
 
 
 def _is_key_value_metadata_row(row_vals: list[str]) -> bool:
@@ -38,14 +21,28 @@ def _is_key_value_metadata_row(row_vals: list[str]) -> bool:
     return len(non_empty) == 2 and non_empty[0].endswith(":")
 
 
-def _is_template_placeholder_row(row_vals: list[str]) -> bool:
+def _is_placeholder_row(row_vals: list[str]) -> bool:
     non_empty = [c for c in row_vals if c]
-    return not non_empty or all(_TEMPLATE_PLACEHOLDER_RE.match(c) for c in non_empty)
+    if not non_empty:
+        return True
+    if all(_EMPTY_OR_ZERO_RE.match(c) for c in non_empty):
+        return True
+    return (
+        len(non_empty) == 2
+        and bool(_SUBTOTAL_LABEL_RE.match(non_empty[0]))
+        and bool(_EMPTY_OR_ZERO_RE.match(non_empty[1]))
+    )
+
+
+def _is_unused_template_sheet(sheet_name: str, data_rows: list[list[str]]) -> bool:
+    """Skip placeholder-named template tabs (e.g. `x17`, `template`) with no populated data rows."""
+    if not _PLACEHOLDER_SHEET_RE.match(sheet_name.strip()):
+        return False
+    return not any(not _is_placeholder_row(r) for r in data_rows)
 
 
 def _detect_table_header_index(non_empty_rows: list[tuple[int, list[str]]]) -> int:
-    best_idx = 0
-    best_score = -1
+    best_idx, best_score = 0, -1
     for idx, (_, row_vals) in enumerate(non_empty_rows[:15]):
         non_empty = [c for c in row_vals if c]
         if len(non_empty) < 2 or _is_key_value_metadata_row(row_vals):
@@ -53,8 +50,7 @@ def _detect_table_header_index(non_empty_rows: list[tuple[int, list[str]]]) -> i
         text_labels = [c for c in non_empty if not _NUMERIC_CELL_RE.match(c)]
         score = len(text_labels) * 10 + len(non_empty)
         if score > best_score:
-            best_score = score
-            best_idx = idx
+            best_score, best_idx = score, idx
     return best_idx
 
 
@@ -80,40 +76,35 @@ class XlsxExtractor:
         raw_sections: list[ParsedSection] = []
         try:
             for sheet_name in wb.sheetnames:
-                ws = wb[sheet_name]
                 non_empty_rows: list[tuple[int, list[str]]] = []
-                for row_idx, row in enumerate(ws.iter_rows(values_only=True), start=1):
+                for row_idx, row in enumerate(wb[sheet_name].iter_rows(values_only=True), start=1):
                     cleaned = [clean_cell_text(c) for c in row]
                     while cleaned and not cleaned[-1]:
                         cleaned.pop()
                     if any(cleaned):
                         non_empty_rows.append((row_idx, cleaned))
 
-                if not non_empty_rows or _is_unused_wb_template_sheet(sheet_name, non_empty_rows):
+                if not non_empty_rows:
                     continue
 
                 table_start_idx = _detect_table_header_index(non_empty_rows)
-                preamble_lines: list[str] = []
-                for _, row_vals in non_empty_rows[:table_start_idx]:
-                    non_empty = [c for c in row_vals if c]
-                    if not non_empty:
-                        continue
-                    if len(non_empty) == 1:
-                        preamble_lines.append(f"**{non_empty[0]}**")
-                    elif _is_key_value_metadata_row(row_vals):
-                        preamble_lines.append(f"- **{non_empty[0]}** {non_empty[1]}")
-                    else:
-                        preamble_lines.append(" | ".join(non_empty))
-
                 table_rows = non_empty_rows[table_start_idx:]
                 if not table_rows:
                     continue
 
-                header_row_num = table_rows[0][0]
-                end_row_num = table_rows[-1][0]
-                filtered_data_rows = [
-                    r for _, r in table_rows[1:] if not _is_template_placeholder_row(r)
-                ]
+                raw_data_rows = [r for _, r in table_rows[1:]]
+                if _is_unused_template_sheet(sheet_name, raw_data_rows):
+                    continue
+
+                preamble_lines: list[str] = []
+                for _, row_vals in non_empty_rows[:table_start_idx]:
+                    non_empty = [c for c in row_vals if c]
+                    if len(non_empty) == 1:
+                        preamble_lines.append(f"**{non_empty[0]}**")
+                    elif _is_key_value_metadata_row(row_vals):
+                        preamble_lines.append(f"- **{non_empty[0]}** {non_empty[1]}")
+                    elif non_empty:
+                        preamble_lines.append(" | ".join(non_empty))
 
                 if preamble_lines:
                     raw_sections.append(
@@ -126,6 +117,7 @@ class XlsxExtractor:
                         )
                     )
 
+                filtered_data_rows = [r for r in raw_data_rows if not _is_placeholder_row(r)]
                 all_kept = [table_rows[0][1]] + filtered_data_rows
                 max_cols = max(len(r) for r in all_kept)
                 header_cells = list(table_rows[0][1])
@@ -138,7 +130,7 @@ class XlsxExtractor:
                         ParsedSection(
                             text=md_table,
                             page_numbers=[],
-                            section_header=f"{sheet_name} (Rows {header_row_num}-{end_row_num})",
+                            section_header=f"{sheet_name} (Rows {table_rows[0][0]}-{table_rows[-1][0]})",
                             block_type="table",
                             sheet_name=sheet_name,
                         )
@@ -149,7 +141,6 @@ class XlsxExtractor:
         sections, _ = finalize_sections(
             raw_sections, coalesce_prose=True, drop_noisy_callouts=drop_noisy_callouts
         )
-
         doc_id, content_hash, metadata = self.metadata_matcher.build_document_metadata(
             file_path=path,
             relative_file_path=rel_path,

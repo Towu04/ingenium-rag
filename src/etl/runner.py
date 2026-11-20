@@ -212,6 +212,70 @@ class ETLRunner:
         self.docx_extractor = DocxExtractor(metadata_matcher=self.metadata_matcher)
         self.xlsx_extractor = XlsxExtractor(metadata_matcher=self.metadata_matcher)
 
+    def _append_inventory_item(
+        self,
+        summary: InventorySummary,
+        *,
+        rel_path: Path,
+        file_name: str,
+        size_bytes: int,
+        sharepoint_url: str | None = None,
+    ) -> None:
+        ext = rel_path.suffix.lower() or "(no_ext)"
+        summary.total_files += 1
+        summary.extension_counts[ext] = summary.extension_counts.get(ext, 0) + 1
+        summary.items.append(
+            InventoryItem(
+                relative_path=rel_path.as_posix(),
+                file_name=file_name,
+                extension=ext,
+                size_bytes=size_bytes,
+                supported_for_extraction=ext in SUPPORTED_EXTRACTION_EXTENSIONS,
+                matched_metadata=self.metadata_matcher.match(
+                    rel_path, sharepoint_url=sharepoint_url
+                ),
+            )
+        )
+
+    def _persist_extracted_doc(
+        self,
+        parsed_doc: ParsedDoc,
+        rel_posix: str,
+        result: ETLRunResult,
+        *,
+        json_path: Path | None = None,
+        quick_xor_hash: str | None = None,
+    ) -> Path:
+        if self.quality_logger.evaluate_and_log(parsed_doc) is not None:
+            result.limitations_logged += 1
+        md_path, out_json = self._write_outputs(parsed_doc, json_path=json_path)
+        self.manifest.record_success(
+            rel_posix, parsed_doc, md_path, out_json, quick_xor_hash=quick_xor_hash
+        )
+        self.manifest.save()
+        result.processed_files += 1
+        result.documents.append(parsed_doc)
+        return out_json
+
+    def _record_failure(
+        self,
+        rel_path: Path,
+        exc: Exception,
+        result: ETLRunResult,
+        *,
+        sharepoint_url: str | None = None,
+    ) -> None:
+        result.failed_files += 1
+        matched = self.metadata_matcher.match(rel_path, sharepoint_url=sharepoint_url)
+        self.quality_logger.log_corrupted_file(
+            rel_path,
+            str(exc),
+            project=matched.project,
+            building=matched.building,
+            phase=matched.phase,
+        )
+        result.limitations_logged += 1
+
     def scan_inventory(self, raw_dir: str | Path) -> InventorySummary:
         """Scan a local folder tree and preview resolved metadata without running OCR."""
         root = Path(raw_dir)
@@ -223,19 +287,11 @@ class ETLRunner:
         for file_path in sorted(root.rglob("*")):
             if not file_path.is_file() or file_path.name.startswith("."):
                 continue
-            rel_path = file_path.relative_to(root)
-            ext = file_path.suffix.lower() or "(no_ext)"
-            summary.total_files += 1
-            summary.extension_counts[ext] = summary.extension_counts.get(ext, 0) + 1
-            summary.items.append(
-                InventoryItem(
-                    relative_path=rel_path.as_posix(),
-                    file_name=file_path.name,
-                    extension=ext,
-                    size_bytes=file_path.stat().st_size,
-                    supported_for_extraction=ext in SUPPORTED_EXTRACTION_EXTENSIONS,
-                    matched_metadata=self.metadata_matcher.match(rel_path),
-                )
+            self._append_inventory_item(
+                summary,
+                rel_path=file_path.relative_to(root),
+                file_name=file_path.name,
+                size_bytes=file_path.stat().st_size,
             )
         return summary
 
@@ -263,19 +319,12 @@ class ETLRunner:
 
         summary = InventorySummary()
         for item in remote_items:
-            ext = item.extension or "(no_ext)"
-            summary.total_files += 1
-            summary.extension_counts[ext] = summary.extension_counts.get(ext, 0) + 1
-            matched = self.metadata_matcher.match(item.relative_path, sharepoint_url=item.web_url)
-            summary.items.append(
-                InventoryItem(
-                    relative_path=Path(item.relative_path).as_posix(),
-                    file_name=item.name,
-                    extension=ext,
-                    size_bytes=item.size_bytes,
-                    supported_for_extraction=ext in SUPPORTED_EXTRACTION_EXTENSIONS,
-                    matched_metadata=matched,
-                )
+            self._append_inventory_item(
+                summary,
+                rel_path=Path(item.relative_path),
+                file_name=item.name,
+                size_bytes=item.size_bytes,
+                sharepoint_url=item.web_url,
             )
         return summary
 
@@ -316,16 +365,7 @@ class ETLRunner:
                 logger.debug("[%d/%d] Extracting: %s", idx, total, rel_posix)
                 parsed_doc = self._dispatch(file_path, rel_path)
                 parsed_doc.content_hash = file_hash
-
-                if self.quality_logger.evaluate_and_log(parsed_doc) is not None:
-                    result.limitations_logged += 1
-
-                md_path, json_path = self._write_outputs(parsed_doc)
-                self.manifest.record_success(rel_posix, parsed_doc, md_path, json_path)
-                self.manifest.save()
-
-                result.processed_files += 1
-                result.documents.append(parsed_doc)
+                json_path = self._persist_extracted_doc(parsed_doc, rel_posix, result)
                 logger.debug(
                     "[%d/%d] DONE: %s -> %s (%d sections)",
                     idx,
@@ -335,17 +375,8 @@ class ETLRunner:
                     len(parsed_doc.sections),
                 )
             except Exception as exc:
-                result.failed_files += 1
                 logger.error("[%d/%d] ERROR extracting %s: %s", idx, total, rel_posix, exc)
-                matched = self.metadata_matcher.match(rel_path)
-                self.quality_logger.log_corrupted_file(
-                    rel_path,
-                    str(exc),
-                    project=matched.project,
-                    building=matched.building,
-                    phase=matched.phase,
-                )
-                result.limitations_logged += 1
+                self._record_failure(rel_path, exc, result)
 
         logger.info(
             "Local ETL complete: processed=%d skipped=%d failed=%d limitations=%d",
@@ -474,16 +505,13 @@ class ETLRunner:
             if seeded_doc.metadata.sharepoint_url:
                 parsed_doc.metadata.sharepoint_url = seeded_doc.metadata.sharepoint_url
 
-            if self.quality_logger.evaluate_and_log(parsed_doc) is not None:
-                result.limitations_logged += 1
-
-            md_path, json_path = self._write_outputs(parsed_doc, json_path=seeded_json)
-            self.manifest.record_success(
-                rel_posix, parsed_doc, md_path, json_path, quick_xor_hash=item.quick_xor_hash
+            json_path = self._persist_extracted_doc(
+                parsed_doc,
+                rel_posix,
+                result,
+                json_path=seeded_json,
+                quick_xor_hash=item.quick_xor_hash,
             )
-            self.manifest.save()
-            result.processed_files += 1
-            result.documents.append(parsed_doc)
             logger.debug(
                 "[%s: %d/%d] DONE: %s -> %s", pass_label, idx, total, item.name, json_path.name
             )
@@ -491,17 +519,8 @@ class ETLRunner:
         except Exception as exc:
             if seeded_json is not None and seeded_json.exists():
                 seeded_json.unlink(missing_ok=True)
-            result.failed_files += 1
             logger.error("[%s: %d/%d] ERROR on %s: %s", pass_label, idx, total, item.name, exc)
-            matched = self.metadata_matcher.match(rel_path, sharepoint_url=item.web_url)
-            self.quality_logger.log_corrupted_file(
-                rel_path,
-                str(exc),
-                project=matched.project,
-                building=matched.building,
-                phase=matched.phase,
-            )
-            result.limitations_logged += 1
+            self._record_failure(rel_path, exc, result, sharepoint_url=item.web_url)
         finally:
             if local_path is not None:
                 sp.cleanup_local_file(local_path)

@@ -15,6 +15,7 @@ from scripts._cli import (
     build_parser,
     err_console,
     out_console,
+    print_kv_table,
     run_cli,
     suppress_hf_noise_early,
 )
@@ -252,15 +253,16 @@ def _main() -> None:
             )
             return
 
-        tbl = Table(title=f"ETL Summary ({elapsed:.1f}s)", header_style="bold cyan")
-        tbl.add_column("Metric", style="cyan")
-        tbl.add_column("Count", justify="right", style="green")
-        tbl.add_row("Discovered", str(res.discovered_files))
-        tbl.add_row("Processed", str(res.processed_files))
-        tbl.add_row("Skipped (unchanged)", str(res.skipped_unchanged_files))
-        tbl.add_row("Failed", str(res.failed_files))
-        tbl.add_row("Limitations logged", str(res.limitations_logged))
-        out_console.print(tbl)
+        print_kv_table(
+            f"ETL Summary ({elapsed:.1f}s)",
+            [
+                ("Discovered", res.discovered_files),
+                ("Processed", res.processed_files),
+                ("Skipped (unchanged)", res.skipped_unchanged_files),
+                ("Failed", res.failed_files),
+                ("Limitations logged", res.limitations_logged),
+            ],
+        )
         return
 
     from pipeline import IndexingPipeline
@@ -317,22 +319,21 @@ def _main() -> None:
         )
         return
 
-    summary_tbl = Table(title=f"Ingestion Complete ({elapsed:.1f}s)", header_style="bold cyan")
-    summary_tbl.add_column("Metric", style="cyan")
-    summary_tbl.add_column("Value", justify="right", style="green")
-    summary_tbl.add_row("Documents seen", str(stats.total_docs))
-    summary_tbl.add_row("Indexed", str(stats.indexed_docs))
-    summary_tbl.add_row("Skipped (unchanged)", str(stats.skipped_unchanged))
-    summary_tbl.add_row("Skipped (empty)", str(stats.skipped_empty))
-    summary_tbl.add_row("Failed", str(stats.failed_docs))
-    summary_tbl.add_row(
-        "New parent / child chunks", f"{stats.total_parents} / {stats.total_children}"
+    print_kv_table(
+        f"Ingestion Complete ({elapsed:.1f}s)",
+        [
+            ("Documents seen", stats.total_docs),
+            ("Indexed", stats.indexed_docs),
+            ("Skipped (unchanged)", stats.skipped_unchanged),
+            ("Skipped (empty)", stats.skipped_empty),
+            ("Failed", stats.failed_docs),
+            ("New parent / child chunks", f"{stats.total_parents} / {stats.total_children}"),
+            (
+                "Qdrant totals (docs / parents / children)",
+                f"{counts['documents']} / {counts['parent_chunks']} / {counts['child_chunks']}",
+            ),
+        ],
     )
-    summary_tbl.add_row(
-        "Qdrant totals (docs / parents / children)",
-        f"{counts['documents']} / {counts['parent_chunks']} / {counts['child_chunks']}",
-    )
-    out_console.print(summary_tbl)
 
 
 def main() -> None:

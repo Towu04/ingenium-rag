@@ -1,6 +1,7 @@
 """Metadata filter extraction & canonicalization from user queries (imports `domain` only)."""
 
 import re
+from collections.abc import Iterable
 
 from domain import (
     infer_building,
@@ -14,8 +15,9 @@ from domain import (
 _EXPLICIT_FIELD_RE: dict[str, re.Pattern[str]] = {
     "project": re.compile(r"\bproject\s*[:=]\s*([A-Za-z0-9._-]+)", re.IGNORECASE),
     "building": re.compile(
-        r"\b(?:building|blok)\s*[:=]\s*(?:(Blok\s+[A-Za-z0-9]+|Vleugel\s+[A-Za-z0-9]+|"
-        r"Gebouw\s+[A-Za-z0-9]+|Technische\s+Ruimte|Intensieve\s+Zorgen)|([A-Za-z0-9_-]+))",
+        r'\b(?:building|blok|gebouw)\s*[:=]\s*(?:"([^"]+)"|'
+        r"(Blok\s+[A-Za-z0-9]+|Vleugel\s+[A-Za-z0-9]+|Gebouw\s+[A-Za-z0-9]+|Campus\s+[A-Za-z0-9]+)|"
+        r"([A-Za-z0-9_-]+))",
         re.IGNORECASE,
     ),
     "phase": re.compile(
@@ -26,7 +28,22 @@ _EXPLICIT_FIELD_RE: dict[str, re.Pattern[str]] = {
 }
 
 
-def extract_metadata_filters(query: str) -> dict[str, str]:
+def _match_known_building(query: str, known_buildings: Iterable[str] | None) -> str | None:
+    if not known_buildings:
+        return None
+    for bldg in sorted(
+        {b.strip() for b in known_buildings if b and b.strip()}, key=len, reverse=True
+    ):
+        if re.search(rf"(?<!\w){re.escape(bldg)}(?!\w)", query, re.IGNORECASE):
+            return bldg
+    return None
+
+
+def extract_metadata_filters(
+    query: str,
+    *,
+    known_buildings: Iterable[str] | None = None,
+) -> dict[str, str]:
     """Extract canonical `project`, `building`, and `phase` filters from a query string."""
     filters: dict[str, str] = {}
 
@@ -46,20 +63,19 @@ def extract_metadata_filters(query: str) -> dict[str, str]:
             filters[field] = norm
 
     if "project" not in filters:
-        proj = infer_project_id_from_path(query)
-        if proj:
+        if proj := infer_project_id_from_path(query):
             filters["project"] = proj
 
     if "building" not in filters:
-        bldg = infer_building(query)
-        if bldg:
+        if bldg := infer_building(query):
             parts = split_buildings(bldg)
             if parts:
                 filters["building"] = parts[0]
+        elif dynamic_bldg := _match_known_building(query, known_buildings):
+            filters["building"] = dynamic_bldg
 
     if "phase" not in filters:
-        ph = infer_phase(query, allow_abbreviations=False)
-        if ph:
+        if ph := infer_phase(query, allow_abbreviations=False):
             filters["phase"] = ph
 
     return filters
