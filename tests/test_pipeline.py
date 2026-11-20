@@ -222,3 +222,43 @@ def test_fastapi_health_and_query_endpoint(tmp_path: Path) -> None:
             assert body["citations"][0]["document_id"] == "fire-001"
         finally:
             app.dependency_overrides.clear()
+
+
+def test_indexing_pipeline_lazy_embedder_and_length_sorted_batching(
+    tmp_path: Path, monkeypatch
+) -> None:
+    import pipeline as pipeline_module
+
+    class _RecordingEmbedder(_FakeEmbedder):
+        def __init__(self) -> None:
+            self.calls: list[list[int]] = []
+
+        def embed_children(self, children: Sequence[ChildChunk]) -> EmbeddedChildBatch:
+            self.calls.append([len(c.embedding_text or c.text) for c in children])
+            return super().embed_children(children)
+
+    processed_dir = _write_parsed_doc_fixtures(tmp_path / "batch_processed")
+    rec_embedder = _RecordingEmbedder()
+    chunker = ParentChildChunker(parent_size=200, child_size=80, child_overlap=10)
+
+    with LocalHybridRepository(path=":memory:") as repo:
+        indexer = IndexingPipeline(
+            repository=repo,
+            embedder=rec_embedder,
+            chunker=chunker,
+            embed_batch_buffer_size=256,
+        )
+        stats1 = indexer.ingest_processed_dir(processed_dir, use_manifest=False)
+        assert stats1.indexed_docs == 2
+        # Both docs batched into a single length-sorted embed_children call
+        assert len(rec_embedder.calls) == 1
+        assert rec_embedder.calls[0] == sorted(rec_embedder.calls[0])
+
+        # Lazy embedder guard: when all docs are unchanged, BGEM3Embedder must never be instantiated
+        def _fail_if_loaded(*args, **kwargs):
+            raise AssertionError("BGEM3Embedder should not be loaded when all docs are unchanged")
+
+        monkeypatch.setattr(pipeline_module, "BGEM3Embedder", _fail_if_loaded)
+        lazy_indexer = IndexingPipeline(repository=repo, chunker=chunker)
+        stats2 = lazy_indexer.ingest_processed_dir(processed_dir, use_manifest=False)
+        assert (stats2.indexed_docs, stats2.skipped_unchanged) == (0, 2)

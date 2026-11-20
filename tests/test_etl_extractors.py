@@ -152,3 +152,57 @@ def test_pdf_scanned_flags_needs_ocr_and_diagram_quarantines_noisy_callouts(tmp_
     unfiltered = PdfExtractor().extract(noisy_pdf, drop_noisy_callouts=False)
     assert len(unfiltered.sections) == 1
     assert score_callout_readability("- LBK-01 Luchtgroep\n- Debiet 12500 m3/h") == 1.0
+
+
+def test_docx_deduplicates_horizontally_merged_cells_and_infers_cover_building(
+    tmp_path: Path,
+) -> None:
+    docx_path = tmp_path / "Verslag_Algemeen.docx"
+    doc = docx.Document()
+    doc.add_heading("1. Projectomschrijving", level=1)
+    doc.add_paragraph("AZ Sint-Jan Brugge — Renovatie L-blok en OP-zalen 8 en 9.")
+
+    table = doc.add_table(rows=4, cols=3)
+    # Row 0: full-width merged title banner
+    banner_cell = table.rows[0].cells[0].merge(table.rows[0].cells[2])
+    banner_cell.text = "Luchtgroepen overzicht"
+    # Row 1: column headers
+    for idx, val in enumerate(["Unit", "Zone", "Debiet"]):
+        table.rows[1].cells[idx].text = val
+    # Row 2: normal row
+    for idx, val in enumerate(["LBK-01", "Blok L", "12500"]):
+        table.rows[2].cells[idx].text = val
+    # Row 3: horizontally merged col 0+1
+    merged_sub = table.rows[3].cells[0].merge(table.rows[3].cells[1])
+    merged_sub.text = "Totaal"
+    table.rows[3].cells[2].text = "12500"
+    doc.save(str(docx_path))
+
+    parsed = DocxExtractor().extract(docx_path, relative_path="General/05_Uitvoering/Verslag.docx")
+    assert parsed.metadata.buildings == ["Blok L", "Operatiekwartier"]
+    assert "cover_page_building" in parsed.metadata.extra["resolution_sources"]
+
+    tables = [s for s in parsed.sections if s.block_type == "table"]
+    assert len(tables) == 1
+    assert "Luchtgroepen overzicht" in (tables[0].section_header or "")
+    lines = tables[0].text.splitlines()
+    assert lines[0] == "| Unit | Zone | Debiet |"
+    assert "| Totaal |  | 12500 |" in lines
+    assert all("Totaal | Totaal" not in line for line in lines)
+
+
+def test_pdf_digital_cover_page_building_fallback(tmp_path: Path) -> None:
+    pdf_path = tmp_path / "Technisch_Verslag.pdf"
+    doc = fitz.open()
+    p1 = doc.new_page(width=595, height=842)
+    p1.insert_text(
+        (50, 70),
+        "AZ Sint-Jan Brugge\n1. Scope\nAanpassing klimatisatie in MT-blok en Spoed.",
+        fontsize=11,
+    )
+    doc.save(str(pdf_path))
+    doc.close()
+
+    parsed = PdfExtractor().extract(pdf_path, relative_path="General/05_Uitvoering/Verslag.pdf")
+    assert parsed.metadata.buildings == ["Blok MT", "Spoed"]
+    assert "cover_page_building" in parsed.metadata.extra["resolution_sources"]

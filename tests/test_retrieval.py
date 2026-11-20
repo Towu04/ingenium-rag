@@ -53,6 +53,37 @@ def test_rerank_single_multiple_and_empty(reranker: BGEM3Reranker) -> None:
     top2 = reranker.rerank("brandwerende deur", candidates, top_k=2)
     assert [r.parent_chunk.id for r in top2] == ["p1", "p2"]
 
+    # min_score cutoff drops irrelevant score=0.0 candidate even when top_k=5
+    filtered = reranker.rerank("brandwerende deur", candidates, top_k=5)
+    assert [r.parent_chunk.id for r in filtered] == ["p1", "p2"]
+    assert len(reranker.rerank("brandwerende deur", candidates, top_k=5, min_score=0.0)) == 3
+
+
+def test_reranker_enables_fp16_on_mps_and_formats_file_tag(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(reranker_module, "FlagReranker", _FakeFlagReranker)
+    mps_reranker = BGEM3Reranker(device="mps")
+    assert mps_reranker._reranker.init_kwargs["use_fp16"] is True
+
+    parent = ParentChunk(
+        id="p-meta",
+        document_id="d",
+        parent_index=0,
+        text="Spec tekst",
+        section_header="3.1 Ventilatie",
+        metadata=DocumentMetadata(
+            source_path="General/05_Uitvoering/Bestek_HVAC_BlokL.pdf",
+            project="06038.004",
+            building="Blok A - Blok B - Blok L - Spoed",
+        ),
+    )
+    formatted = BGEM3Reranker._format_passage(
+        SearchResult(parent_chunk=parent, matched_child_id="p-meta:c0", score=0.5)
+    )
+    assert "File: Bestek_HVAC_BlokL" in formatted
+    assert "Building:" not in formatted
+
 
 def test_query_filter_extracts_natural_and_explicit_filters() -> None:
     f1 = extract_metadata_filters(

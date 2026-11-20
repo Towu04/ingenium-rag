@@ -17,7 +17,6 @@ from rich.console import Console
 from rich.table import Table
 
 from config import get_settings
-from embedding import BGEM3Embedder
 from etl import ETLRunner, SharePointConnector
 from pipeline import IndexingPipeline
 from storage import LocalHybridRepository
@@ -198,8 +197,7 @@ def main() -> None:
         return
 
     with LocalHybridRepository(path=str(args.qdrant_path)) as repo:
-        embedder = BGEM3Embedder(model_name=settings.embedding_model, device=args.device)
-        pipeline = IndexingPipeline(repository=repo, embedder=embedder)
+        pipeline = IndexingPipeline(repository=repo, device=args.device)
 
         if args.etl_dir is not None:
             stats = pipeline.ingest_processed_dir(args.etl_dir, force=args.force)

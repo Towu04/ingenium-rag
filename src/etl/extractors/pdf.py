@@ -189,11 +189,22 @@ class PdfExtractor:
             sharepoint_url=sharepoint_url,
         )
 
-        # Enrich unresolved building/phase from drawing title block
+        # Enrich unresolved building/phase from drawing title block or Page-1 cover text
         if metadata.building is None and title_meta.get("building"):
             bldgs = split_buildings(title_meta["building"])
             metadata.buildings = bldgs
             metadata.building = " - ".join(bldgs) if bldgs else None
+        if metadata.building is None and sections:
+            page1_text = "\n".join(s.text for s in sections if 1 in s.page_numbers)[:1200]
+            if not page1_text:
+                page1_text = "\n".join(s.text for s in sections)[:1200]
+            if inferred_bldg := infer_building(page1_text):
+                bldgs = split_buildings(inferred_bldg)
+                metadata.buildings = bldgs
+                metadata.building = " - ".join(bldgs) if bldgs else None
+                sources = list(metadata.extra.get("resolution_sources", []))
+                sources.append("cover_page_building")
+                metadata.extra["resolution_sources"] = sources
         if metadata.phase is None and title_meta.get("phase"):
             metadata.phase = title_meta["phase"]
         if is_hvac_diagram and metadata.extra.get("doc_category") == DocCategory.UNKNOWN.value:

@@ -155,7 +155,7 @@ class LocalHybridRepository:
         self,
         encoded_query: EncodedQuery,
         top_k_parents: int = 15,
-        child_candidate_limit: int = 40,
+        child_candidate_limit: int = 80,
         project: str | None = None,
         building: str | None = None,
         phase: str | None = None,

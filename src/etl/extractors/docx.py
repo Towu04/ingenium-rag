@@ -10,7 +10,13 @@ from docx.oxml.text.paragraph import CT_P
 from docx.table import Table
 from docx.text.paragraph import Paragraph
 
-from domain import ExtractionMethod, ParsedDoc, ParsedSection
+from domain import (
+    ExtractionMethod,
+    ParsedDoc,
+    ParsedSection,
+    infer_building,
+    split_buildings,
+)
 from etl.extractors.common import (
     ENGINEERING_HEADING_RE,
     build_markdown_table,
@@ -119,20 +125,40 @@ class DocxExtractor:
 
             elif isinstance(item, Table):
                 flush_text()
-                raw_rows = [
-                    cells
-                    for row in item.rows
-                    if any(cells := [clean_cell_text(cell.text) for cell in row.cells])
-                ]
+                raw_rows: list[list[str]] = []
+                banner_text: str | None = None
+                for row in item.rows:
+                    seen_tc: set[int] = set()
+                    dedup_cells: list[str] = []
+                    for cell in row.cells:
+                        tc_id = id(cell._tc)
+                        if tc_id in seen_tc:
+                            dedup_cells.append("")
+                        else:
+                            seen_tc.add(tc_id)
+                            dedup_cells.append(clean_cell_text(cell.text))
+                    if not any(dedup_cells):
+                        continue
+                    if not raw_rows and len(seen_tc) == 1 and len(row.cells) > 1:
+                        banner_text = dedup_cells[0]
+                        continue
+                    raw_rows.append(dedup_cells)
                 if not raw_rows:
+                    if banner_text:
+                        pending_paragraphs.append(banner_text)
                     continue
                 md_table, _ = build_markdown_table(raw_rows[0], raw_rows[1:])
                 if md_table:
+                    table_header = active_heading
+                    if banner_text:
+                        table_header = (
+                            f"{active_heading} > {banner_text}" if active_heading else banner_text
+                        )
                     raw_sections.append(
                         ParsedSection(
                             text=md_table,
                             page_numbers=[],
-                            section_header=active_heading,
+                            section_header=table_header,
                             block_type="table",
                         )
                     )
@@ -149,6 +175,16 @@ class DocxExtractor:
             extraction_confidence=1.0 if sections else 0.2,
             sharepoint_url=sharepoint_url,
         )
+        if metadata.building is None and sections:
+            cover_text = "\n".join(s.text for s in sections)[:1200]
+            if inferred_bldg := infer_building(cover_text):
+                bldgs = split_buildings(inferred_bldg)
+                metadata.buildings = bldgs
+                metadata.building = " - ".join(bldgs) if bldgs else None
+                sources = list(metadata.extra.get("resolution_sources", []))
+                sources.append("cover_page_building")
+                metadata.extra["resolution_sources"] = sources
+
         return ParsedDoc(
             document_id=doc_id,
             content_hash=content_hash,

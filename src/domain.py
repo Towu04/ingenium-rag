@@ -163,6 +163,14 @@ _STRUCTURAL_BUILDING_PATTERNS: list[tuple[re.Pattern[str], str]] = [
         "Blok {1}",
     ),
     (
+        # Inverted Dutch form: "L-blok", "MT-blok", "A-blok" -> "Blok L", "Blok MT"
+        re.compile(
+            r"(?:^|[_\-\s/\\])([A-Z]{1,2}\d{0,2})-blok(?=$|[_\-\s/\\.,;?!\)])",
+            re.IGNORECASE,
+        ),
+        "Blok {0}",
+    ),
+    (
         re.compile(
             r"(?:^|[_\-\s/\\])(Vleugel)[_\-\s]+" + _BUILDING_CODE + r"(?=$|[_\-\s/\\.,;?!\)])",
             re.IGNORECASE,
@@ -201,7 +209,10 @@ _STRUCTURAL_BUILDING_PATTERNS: list[tuple[re.Pattern[str], str]] = [
 
 _HOSPITAL_ZONE_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (
-        re.compile(r"(?:^|[_\-\s/\\])operatiekwartier(?=$|[_\-\s/\\.,;?!])", re.IGNORECASE),
+        re.compile(
+            r"(?:^|[_\-\s/\\])(?:operatiekwartier|operatieza(?:al|len)|(?:op|ok)[_\-\s]*za(?:al|len)|op\s*\d+(?:\s*(?:en|&|-)\s*\d+)+)(?=$|[_\-\s/\\.,;?!\)])",
+            re.IGNORECASE,
+        ),
         "Operatiekwartier",
     ),
     (
@@ -309,7 +320,7 @@ def normalize_phase(value: str | None) -> str | None:
 
 
 def split_buildings(value: str | None) -> list[str]:
-    """Split a single or composite building string into clean, deduplicated building tags."""
+    """Split a single or composite building string into clean, canonicalized building tags."""
     cleaned = strip_unknown_sentinel(value)
     if cleaned is None:
         return []
@@ -323,9 +334,14 @@ def split_buildings(value: str | None) -> list[str]:
         lowered = item.lower()
         if lowered in _BOGUS_BUILDING_LABELS or item.upper() in UNKNOWN_SENTINELS:
             continue
-        if lowered not in seen:
-            seen.add(lowered)
-            result.append(item)
+        # Canonicalize casing for known patterns (e.g. "blok l" -> "Blok L", "spoed" -> "Spoed")
+        canonical = infer_building(item)
+        candidates = canonical.split(" - ") if canonical else [item]
+        for cand in candidates:
+            cand_key = cand.lower()
+            if cand_key not in seen:
+                seen.add(cand_key)
+                result.append(cand)
     return result
 
 
@@ -396,6 +412,11 @@ def infer_building(text: str) -> str | None:
                 formatted = f"Niv {raw_groups[0]}"
             elif template == "Verdieping {1}":
                 formatted = f"Verdieping {raw_groups[1]}"
+            elif template == "Blok {0}":
+                label = raw_groups[0].strip().upper()
+                if label in _BUILDING_STOPWORDS:
+                    continue
+                formatted = f"Blok {label}"
             else:
                 prefix = raw_groups[0].replace("_", " ").replace("-", " ").strip().title()
                 label = raw_groups[1].replace("_", " ").replace("-", " ").strip()

@@ -39,6 +39,10 @@ def test_normalize_project_phase_and_buildings() -> None:
     assert split_buildings("Blok Peil") == []
     assert split_buildings("Blok P - Blok L - Spoed - Blok L") == ["Blok P", "Blok L", "Spoed"]
     assert normalize_building("Blok P - Blok L") == "Blok P - Blok L"
+    assert normalize_building("blok l") == "Blok L"
+    assert split_buildings("spoed") == ["Spoed"]
+    assert infer_building("Renovatie L-blok en MT-blok") == "Blok L - Blok MT"
+    assert infer_building("Verbouwing OP-zalen 8 en 9 en operatiezaal 4") == "Operatiekwartier"
 
 
 def test_document_metadata_strips_sentinels_and_syncs_buildings() -> None:

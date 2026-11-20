@@ -11,9 +11,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
+import numpy as np
+
 from chunking import ParentChildChunker
 from config import Settings, get_settings
-from domain import Answer, ChildChunk, EmbeddedChildBatch, ParsedDoc, SearchResult
+from domain import Answer, ChildChunk, EmbeddedChildBatch, ParentChunk, ParsedDoc, SearchResult
 from embedding import BGEM3Embedder
 from etl import ETLRunner, SharePointConnector, load_processed_docs
 from generation.generator import (
@@ -59,26 +61,46 @@ class IndexingPipeline:
         repository: LocalHybridRepository,
         embedder: ChildEmbedder | None = None,
         chunker: ParentChildChunker | None = None,
+        *,
+        device: str | None = None,
+        embed_batch_buffer_size: int | None = None,
     ) -> None:
-        settings = get_settings()
+        self._settings = get_settings()
         self.repository = repository
-        self.embedder: ChildEmbedder = embedder or BGEM3Embedder(
-            model_name=settings.embedding_model,
-            device=settings.device,
-            batch_size=settings.embedding_batch_size,
-            max_length=settings.embedding_max_length,
+        self._device = device
+        self._embedder: ChildEmbedder | None = embedder
+        self._chunker: ParentChildChunker | None = chunker
+        self.embed_batch_buffer_size = (
+            embed_batch_buffer_size
+            if embed_batch_buffer_size is not None
+            else self._settings.embed_batch_buffer_size
         )
-        if chunker is not None:
-            self.chunker = chunker
-        else:
-            self.chunker = ParentChildChunker(
-                model_name=settings.embedding_model,
-                parent_size=settings.parent_size,
-                parent_overlap=settings.parent_overlap,
-                child_size=settings.child_size,
-                child_overlap=settings.child_overlap,
-                tokenizer=getattr(self.embedder, "tokenizer", None),
+
+    @property
+    def embedder(self) -> ChildEmbedder:
+        """Lazily load `BGEM3Embedder` only when at least one chunk actually needs embedding."""
+        if self._embedder is None:
+            self._embedder = BGEM3Embedder(
+                model_name=self._settings.embedding_model,
+                device=self._device or self._settings.device,
+                batch_size=self._settings.embedding_batch_size,
+                max_length=self._settings.embedding_max_length,
             )
+        return self._embedder
+
+    @property
+    def chunker(self) -> ParentChildChunker:
+        """Lazily initialize `ParentChildChunker` without forcing embedder weight loading."""
+        if self._chunker is None:
+            self._chunker = ParentChildChunker(
+                model_name=self._settings.embedding_model,
+                parent_size=self._settings.parent_size,
+                parent_overlap=self._settings.parent_overlap,
+                child_size=self._settings.child_size,
+                child_overlap=self._settings.child_overlap,
+                tokenizer=getattr(self._embedder, "tokenizer", None),
+            )
+        return self._chunker
 
     def index_documents(
         self,
@@ -86,8 +108,69 @@ class IndexingPipeline:
         *,
         force: bool = False,
     ) -> IndexingStats:
-        """Index `ParsedDoc`s into Qdrant, skipping unchanged docs via `content_hash`."""
+        """Index `ParsedDoc`s into Qdrant using length-sorted cross-document batch embedding."""
         stats = IndexingStats()
+        buffer: list[tuple[ParsedDoc, list[ParentChunk], list[ChildChunk]]] = []
+        buffered_children = 0
+
+        def flush_buffer() -> None:
+            nonlocal buffered_children
+            if not buffer:
+                return
+
+            flat_children: list[ChildChunk] = []
+            slices: list[tuple[int, int]] = []
+            for _, _, doc_children in buffer:
+                start = len(flat_children)
+                flat_children.extend(doc_children)
+                slices.append((start, len(flat_children)))
+
+            try:
+                order = sorted(
+                    range(len(flat_children)),
+                    key=lambda i: len(flat_children[i].embedding_text or flat_children[i].text),
+                )
+                sorted_children = [flat_children[i] for i in order]
+                sorted_batch = self.embedder.embed_children(sorted_children)
+
+                dense_out = np.empty_like(sorted_batch.dense_vecs)
+                sparse_out: list[dict[int, float]] = [{} for _ in range(len(flat_children))]
+                for sorted_pos, orig_pos in enumerate(order):
+                    dense_out[orig_pos] = sorted_batch.dense_vecs[sorted_pos]
+                    sparse_out[orig_pos] = sorted_batch.sparse_weights[sorted_pos]
+            except Exception:
+                stats.failed_docs += len(buffer)
+                logger.exception("Batch embedding failed for %d buffered document(s).", len(buffer))
+                buffer.clear()
+                buffered_children = 0
+                return
+
+            for (doc, parents, doc_children), (start, end) in zip(buffer, slices):
+                try:
+                    doc_batch = EmbeddedChildBatch(
+                        dense_vecs=dense_out[start:end],
+                        sparse_weights=sparse_out[start:end],
+                    )
+                    self.repository.upsert_document_bundle(doc, parents, doc_children, doc_batch)
+                    stats.indexed_docs += 1
+                    stats.total_parents += len(parents)
+                    stats.total_children += len(doc_children)
+                    logger.info(
+                        "Indexed '%s' (%s): %d parents, %d children.",
+                        doc.metadata.source_path,
+                        doc.document_id,
+                        len(parents),
+                        len(doc_children),
+                    )
+                except Exception:
+                    stats.failed_docs += 1
+                    logger.exception(
+                        "Failed to upsert '%s' (%s).", doc.metadata.source_path, doc.document_id
+                    )
+
+            buffer.clear()
+            buffered_children = 0
+
         for doc in documents:
             stats.total_docs += 1
             try:
@@ -110,24 +193,17 @@ class IndexingPipeline:
                     )
                     continue
 
-                embedded = self.embedder.embed_children(children)
-                self.repository.upsert_document_bundle(doc, parents, children, embedded)
-
-                stats.indexed_docs += 1
-                stats.total_parents += len(parents)
-                stats.total_children += len(children)
-                logger.info(
-                    "Indexed '%s' (%s): %d parents, %d children.",
-                    doc.metadata.source_path,
-                    doc.document_id,
-                    len(parents),
-                    len(children),
-                )
+                buffer.append((doc, parents, children))
+                buffered_children += len(children)
+                if buffered_children >= self.embed_batch_buffer_size:
+                    flush_buffer()
             except Exception:
                 stats.failed_docs += 1
                 logger.exception(
-                    "Failed to index '%s' (%s).", doc.metadata.source_path, doc.document_id
+                    "Failed to prepare '%s' (%s).", doc.metadata.source_path, doc.document_id
                 )
+
+        flush_buffer()
         return stats
 
     def ingest_processed_dir(
@@ -211,7 +287,7 @@ class RAGPipeline:
         reranker: RerankerProtocol | None = None,
         generator: GroundedGenerator | None = None,
         retrieve_k: int = 15,
-        child_candidate_limit: int = 40,
+        child_candidate_limit: int = 80,
         rerank_k: int = 5,
     ) -> None:
         settings = get_settings()
@@ -221,6 +297,7 @@ class RAGPipeline:
             device=settings.device,
             batch_size=settings.reranker_batch_size,
             max_length=settings.reranker_max_length,
+            min_score=settings.reranker_min_score,
         )
         self.generator = generator or GroundedGenerator()
         self.retrieve_k = retrieve_k
@@ -315,6 +392,7 @@ def build_rag_pipeline(
         device=device or cfg.device,
         batch_size=cfg.reranker_batch_size,
         max_length=cfg.reranker_max_length,
+        min_score=cfg.reranker_min_score,
     )
     pipeline = RAGPipeline(
         searcher=Searcher(embedder=embedder, repository=repo),

@@ -19,7 +19,7 @@ _CREDENTIAL_KEY_ALIASES: dict[str, str] = {
     "CLIENT_SECRET": "AZURE_CLIENT_SECRET",
 }
 
-SUPPORTED_EXTRACTION_EXTENSIONS: frozenset[str] = frozenset({".pdf", ".docx", ".xlsx", ".xls"})
+SUPPORTED_EXTRACTION_EXTENSIONS: frozenset[str] = frozenset({".pdf", ".docx", ".xlsx"})
 GRAPH_API_BASE_URL: str = "https://graph.microsoft.com/v1.0"
 GRAPH_DEFAULT_SCOPE: str = "https://graph.microsoft.com/.default"
 
@@ -97,15 +97,17 @@ class Settings(BaseSettings):
     # --- Embedding & Cross-Encoder Reranking ---
     embedding_model: str = "BAAI/bge-m3"
     embedding_batch_size: int = 32
-    embedding_max_length: int = 1024
+    embedding_max_length: int = 512
+    embed_batch_buffer_size: int = 256
     reranker_model: str = "BAAI/bge-reranker-v2-m3"
     reranker_batch_size: int = 16
     reranker_max_length: int = 2048
+    reranker_min_score: float = 0.05
     device: str | None = None
 
     # --- Retrieval ---
     retrieve_k: int = 15
-    child_candidate_limit: int = 40
+    child_candidate_limit: int = 80
     rerank_k: int = 5
 
     # --- Local LLM (OpenAI-compatible server e.g. Ollama / vLLM). Unset -> ExtractiveStubLLM. ---

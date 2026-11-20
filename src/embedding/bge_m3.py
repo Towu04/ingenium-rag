@@ -23,14 +23,14 @@ class BGEM3Embedder:
         model_name: str = "BAAI/bge-m3",
         device: str | None = None,
         batch_size: int = 32,
-        max_length: int = 1024,
+        max_length: int = 512,
     ) -> None:
         self.device = detect_device(device)
         self.batch_size = batch_size
         self.max_length = max_length
         self._model: Any = BGEM3FlagModel(
             model_name,
-            use_fp16=(self.device == "cuda"),
+            use_fp16=(self.device in {"cuda", "mps"}),
             devices=self.device,
         )
 

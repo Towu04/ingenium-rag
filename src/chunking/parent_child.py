@@ -1,7 +1,9 @@
 """Token-accurate, table-aware Parent-Child chunker aligned with BAAI/bge-m3."""
 
 import re
+from collections.abc import Sequence
 from functools import lru_cache
+from pathlib import Path
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from transformers import AutoTokenizer, PreTrainedTokenizerBase
@@ -68,6 +70,105 @@ class ParentChildChunker:
     def _token_len(self, text: str) -> int:
         return len(self.tokenizer.encode(text, add_special_tokens=False))
 
+    def _is_short_heading_or_intro(self, text: str, token_len: int) -> bool:
+        """Return True if a prose section is a detached short heading or lead-in line."""
+        if token_len > min(40, max(10, self.parent_size // 3)):
+            return False
+        return text.startswith("#") or text.endswith(":") or ("\n" not in text)
+
+    def _pack_sections(self, raw_sections: Sequence[ParsedSection]) -> list[ParsedSection]:
+        """Attach orphan headings/intros to following content and pack consecutive short prose."""
+        cleaned: list[ParsedSection] = []
+        for sec in raw_sections:
+            text = sec.text.replace("\r\n", "\n").strip()
+            if not text:
+                continue
+            cleaned.append(
+                ParsedSection(
+                    text=text,
+                    page_numbers=list(sec.page_numbers),
+                    section_header=sec.section_header,
+                    block_type=sec.block_type,
+                    sheet_name=sec.sheet_name,
+                )
+            )
+        if len(cleaned) <= 1:
+            return cleaned
+
+        # Pass 1: Attach detached short headings/intros to the immediately following prose or table.
+        attached: list[ParsedSection] = []
+        i = 0
+        while i < len(cleaned):
+            curr = cleaned[i]
+            curr_is_prose = curr.block_type == "text" and not _is_markdown_table(curr.text)
+            if (
+                curr_is_prose
+                and i + 1 < len(cleaned)
+                and self._is_short_heading_or_intro(curr.text, self._token_len(curr.text))
+            ):
+                nxt = cleaned[i + 1]
+                nxt_is_table = nxt.block_type == "table" or _is_markdown_table(nxt.text)
+                merged_pages = sorted(set(curr.page_numbers) | set(nxt.page_numbers))
+                if nxt_is_table:
+                    intro_label = re.sub(r"^#+\s*", "", curr.text).strip().rstrip(":")
+                    if not nxt.section_header:
+                        header = intro_label or curr.section_header
+                    elif intro_label and intro_label.lower() not in nxt.section_header.lower():
+                        header = f"{nxt.section_header} — {intro_label}"
+                    else:
+                        header = nxt.section_header
+                    cleaned[i + 1] = ParsedSection(
+                        text=nxt.text,
+                        page_numbers=merged_pages,
+                        section_header=header,
+                        block_type="table",
+                        sheet_name=nxt.sheet_name or curr.sheet_name,
+                    )
+                    i += 1
+                    continue
+                if nxt.block_type == "text":
+                    cleaned[i + 1] = ParsedSection(
+                        text=f"{curr.text}\n\n{nxt.text}",
+                        page_numbers=merged_pages,
+                        section_header=curr.section_header or nxt.section_header,
+                        block_type="text",
+                        sheet_name=curr.sheet_name or nxt.sheet_name,
+                    )
+                    i += 1
+                    continue
+            attached.append(curr)
+            i += 1
+
+        # Pass 2: Pack consecutive short prose sections while staying within parent_size.
+        min_pack_tokens = min(150, self.parent_size // 2)
+        packed: list[ParsedSection] = []
+        last_tokens = 0
+        for sec in attached:
+            is_prose = sec.block_type == "text" and not _is_markdown_table(sec.text)
+            sec_tokens = self._token_len(sec.text) if is_prose else self.parent_size + 1
+            if packed and is_prose:
+                prev = packed[-1]
+                prev_is_prose = prev.block_type == "text" and not _is_markdown_table(prev.text)
+                if (
+                    prev_is_prose
+                    and (last_tokens < min_pack_tokens or sec_tokens < min_pack_tokens)
+                    and (last_tokens + sec_tokens + 2) <= self.parent_size
+                ):
+                    merged_text = f"{prev.text}\n\n{sec.text}"
+                    packed[-1] = ParsedSection(
+                        text=merged_text,
+                        page_numbers=sorted(set(prev.page_numbers) | set(sec.page_numbers)),
+                        section_header=prev.section_header or sec.section_header,
+                        block_type="text",
+                        sheet_name=prev.sheet_name or sec.sheet_name,
+                    )
+                    last_tokens = self._token_len(merged_text)
+                    continue
+            packed.append(sec)
+            last_tokens = sec_tokens
+
+        return packed
+
     def _split_markdown_table(
         self,
         table_text: str,
@@ -101,9 +202,24 @@ class ParentChildChunker:
                 current_tokens += row_tokens
                 idx += 1
 
-            chunks.append(header_block + "\n" + "\n".join(current_rows))
-            if idx < total_rows and overlap_rows > 0 and len(current_rows) > overlap_rows:
-                idx = max(start_idx + 1, idx - overlap_rows)
+            if len(current_rows) == 1 and current_tokens > max_tokens:
+                row_budget = max(20, max_tokens - header_tokens - 2)
+                row_overlap = min(self.child_overlap, row_budget // 4) if overlap_rows > 0 else 0
+                row_splitter = RecursiveCharacterTextSplitter.from_huggingface_tokenizer(
+                    self.tokenizer,
+                    chunk_size=row_budget,
+                    chunk_overlap=row_overlap,
+                    keep_separator=False,
+                    separators=[" | ", "; ", ". ", " ", ""],
+                )
+                for sub_row in row_splitter.split_text(current_rows[0]):
+                    sub_clean = sub_row.strip()
+                    if sub_clean:
+                        chunks.append(f"{header_block}\n{sub_clean}")
+            else:
+                chunks.append(header_block + "\n" + "\n".join(current_rows))
+                if idx < total_rows and overlap_rows > 0 and len(current_rows) > overlap_rows:
+                    idx = max(start_idx + 1, idx - overlap_rows)
 
         return chunks
 
@@ -111,7 +227,8 @@ class ParentChildChunker:
         parents: list[ParentChunk] = []
         children: list[ChildChunk] = []
 
-        sections = document.sections or [ParsedSection(text=document.markdown)]
+        raw_sections = document.sections or [ParsedSection(text=document.markdown)]
+        sections = self._pack_sections(raw_sections)
         parent_idx = 0
 
         for section in sections:
@@ -192,9 +309,12 @@ class ParentChildChunker:
     def _build_embedding_text(text: str, document: ParsedDoc, section_header: str | None) -> str:
         """Prefix child text with normalized metadata tags for dense + sparse BGE-M3 encoding."""
         meta = document.metadata
+        file_stem = Path(meta.source_path).stem if meta.source_path else None
+        include_building = bool(meta.building) and len(meta.buildings) <= 3
         tags = [
+            f"File: {file_stem}" if file_stem else None,
             f"Project: {meta.project}" if meta.project else None,
-            f"Building: {meta.building}" if meta.building else None,
+            f"Building: {meta.building}" if include_building else None,
             f"Phase: {meta.phase}" if meta.phase else None,
             f"Section: {section_header}" if section_header else None,
         ]
