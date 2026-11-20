@@ -2,7 +2,8 @@
 
 import pytest
 
-from processing.chunker import ParentChildChunker, _load_tokenizer
+from processing.chunker import ParentChildChunker
+from processing.chunker import load_tokenizer as _load_tokenizer
 from domain import DocumentMetadata, ParsedDoc, ParsedSection
 
 
@@ -333,3 +334,44 @@ def test_windows_crlf_normalization_and_markdown_header_retention(
     assert "\r" not in parents[1].text
     assert parents[0].text.startswith("## Hoofdstuk 1")
     assert parents[1].text.startswith("## Hoofdstuk 2")
+
+
+def test_markdown_table_splitting_repeats_headers_in_every_parent_and_child(
+    base_metadata: DocumentMetadata,
+) -> None:
+    """Large Markdown tables must keep their header + separator lines on every parent and child chunk."""
+    header = "| Unit ID | Building | Airflow (m3/h) | Pressure Drop (Pa) |"
+    sep = "| :--- | :--- | :--- | :--- |"
+    rows = [
+        f"| LBK-{i:02d} | Blok Noord | {10000 + i * 250} | {450 + i * 10} |"
+        for i in range(1, 25)
+    ]
+    table_md = "\n".join([header, sep, *rows])
+
+    doc = ParsedDoc(
+        document_id="doc-table",
+        content_hash="hash-tbl",
+        markdown=table_md,
+        sections=[
+            ParsedSection(
+                text=table_md,
+                page_numbers=[4],
+                section_header="Toestellenlijst Luchtgroepen",
+            )
+        ],
+        metadata=base_metadata,
+    )
+
+    chunker = ParentChildChunker(parent_size=220, parent_overlap=0, child_size=90, child_overlap=15)
+    parents, children = chunker.chunk(doc)
+
+    assert len(parents) >= 2
+    assert len(children) >= 4
+    for p in parents:
+        p_lines = p.text.splitlines()
+        assert p_lines[0] == header
+        assert p_lines[1] == sep
+    for c in children:
+        c_lines = c.text.splitlines()
+        assert c_lines[0] == header
+        assert c_lines[1] == sep

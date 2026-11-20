@@ -76,6 +76,7 @@ class DocxExtractor(BaseExtractor):
         self,
         file_path: Union[str, Path],
         relative_path: Optional[Union[str, Path]] = None,
+        sharepoint_url: Optional[str] = None,
     ) -> ExtractedDocument:
         path = Path(file_path)
         rel_path = Path(relative_path) if relative_path is not None else Path(path.name)
@@ -174,6 +175,7 @@ class DocxExtractor(BaseExtractor):
             is_hvac_diagram=False,
             extraction_confidence=1.0 if blocks else 0.2,
             quality_warnings=[],
+            sharepoint_url=sharepoint_url,
         )
 
         return ExtractedDocument(

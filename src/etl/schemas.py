@@ -8,12 +8,27 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 def _utc_now() -> datetime:
     """Return current UTC datetime."""
     return datetime.now(timezone.utc)
+
+
+# Legacy placeholder strings written by older ETL runs. Unresolved metadata is now `None`,
+# but persisted JSON / manifests may still contain these values, so they are coerced on load.
+LEGACY_UNKNOWN_SENTINELS = frozenset({"UNKNOWN_PROJECT", "UNKNOWN_BUILDING", "UNKNOWN_PHASE"})
+
+
+def coerce_unknown_to_none(value: Any) -> Any:
+    """Map legacy `UNKNOWN_*` sentinels and blank strings to `None`."""
+    if isinstance(value, str):
+        stripped = value.strip()
+        if not stripped or stripped.upper() in LEGACY_UNKNOWN_SENTINELS:
+            return None
+        return stripped
+    return value
 
 
 class DocCategory(str, Enum):
@@ -56,26 +71,41 @@ class DocumentMetadata(BaseModel):
         description="Microsoft Graph DriveItem eTag/cTag for remote change detection",
     )
 
-    # Core Domain Metadata required by Ingenium
-    project_id: str = Field(default="UNKNOWN_PROJECT")
+    # Core Domain Metadata required by Ingenium (None = could not be resolved)
+    project_id: Optional[str] = Field(default=None)
     project_name: str = Field(default="AZ Sint-Jan Brugge")
-    building: str = Field(
-        default="UNKNOWN_BUILDING",
-        description="Building/Wing/Block/Floor identifier",
+    building: Optional[str] = Field(
+        default=None,
+        description="Building/Wing/Block/Floor identifier; multiple values joined with ' - '",
     )
-    phase: str = Field(
-        default="UNKNOWN_PHASE",
+    phase: Optional[str] = Field(
+        default=None,
         description="Project phase, e.g., Voorontwerp, Aanbesteding, Uitvoering, As-Built",
     )
     doc_category: DocCategory = Field(default=DocCategory.UNKNOWN)
+    revision: Optional[str] = None
+    doc_code: Optional[str] = None
+    resolution_sources: List[str] = Field(
+        default_factory=list,
+        description="Which matcher layers resolved the metadata (empty for legacy JSON outputs)",
+    )
 
     # Audit & Quality Metadata
     extraction_method: ExtractionMethod = Field(default=ExtractionMethod.PYMUPDF_DIGITAL)
     is_scanned: bool = False
     is_hvac_diagram: bool = False
+    needs_ocr: bool = Field(
+        default=False,
+        description="True when (part of) the file is a raster scan whose text could not be extracted",
+    )
     extraction_confidence: float = Field(default=1.0, ge=0.0, le=1.0)
     quality_warnings: List[str] = Field(default_factory=list)
     processed_at: datetime = Field(default_factory=_utc_now)
+
+    @field_validator("project_id", "building", "phase", mode="before")
+    @classmethod
+    def _coerce_sentinels(cls, value: Any) -> Any:
+        return coerce_unknown_to_none(value)
 
 
 class ContentBlock(BaseModel):
@@ -150,11 +180,11 @@ class DocumentRegisterEntry(BaseModel):
 class MatchedMetadata(BaseModel):
     """Resolved domain metadata produced by MetadataMatcher before or during extraction."""
 
-    project_id: str = Field(default="UNKNOWN_PROJECT")
+    project_id: Optional[str] = None
     project_name: str = Field(default="AZ Sint-Jan Brugge")
     sharepoint_url: Optional[str] = None
-    building: str = Field(default="UNKNOWN_BUILDING")
-    phase: str = Field(default="UNKNOWN_PHASE")
+    building: Optional[str] = None
+    phase: Optional[str] = None
     doc_category: DocCategory = Field(default=DocCategory.UNKNOWN)
     revision: Optional[str] = None
     doc_code: Optional[str] = None

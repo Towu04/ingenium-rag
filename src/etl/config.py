@@ -84,12 +84,12 @@ GRAPH_API_BASE_URL: str = "https://graph.microsoft.com/v1.0"
 GRAPH_DEFAULT_SCOPE: str = "https://graph.microsoft.com/.default"
 
 # ---------------------------------------------------------------------------
-# Default Domain Metadata Values
+# Default Domain Metadata Values (None = unresolved; never emit placeholder strings)
 # ---------------------------------------------------------------------------
-DEFAULT_PROJECT_ID: str = "UNKNOWN_PROJECT"
+DEFAULT_PROJECT_ID: Optional[str] = None
 DEFAULT_PROJECT_NAME: str = "AZ Sint-Jan Brugge"
-DEFAULT_BUILDING: str = "UNKNOWN_BUILDING"
-DEFAULT_PHASE: str = "UNKNOWN_PHASE"
+DEFAULT_BUILDING: Optional[str] = None
+DEFAULT_PHASE: Optional[str] = None
 
 # ---------------------------------------------------------------------------
 # Supported Extensions
@@ -125,47 +125,50 @@ PROJECT_ID_PATTERNS: List[Pattern[str]] = [
         r"(?:^|[_\-\s/\\])((?:PRJ|PROJ|ING)[_\-]\d{2,4}(?:[_\-]\d{1,4})?)(?=$|[_\-\s/\\.])",
         re.IGNORECASE,
     ),
-    # Matches typical Belgian consultancy project numbers like 21.045, 2022-104, 19_088 at folder start
-    re.compile(r"^(?:0*\d{1,2}[_\-])?(\d{2,4}[._\-]\d{3,4})(?=$|[_\-\s/\\.])"),
+    # Ingenium dossier numbers: `06038.004`, `6038.004`, `06038-004`, `06038_004`.
+    # Deliberately rejects supplier order numbers (`17-341-1883`), drawing/document codes
+    # (`1003-004`, `9180.A318.01`) and external references (`042193.21.002`).
+    re.compile(r"(?<![\d.])(0\d{4}[._\-]\d{3}|\d{4,5}\.\d{3})(?![\d]|[._\-]\d)"),
 ]
+
+# Ingenium SharePoint sites are created per dossier, e.g. `/sites/06038004-INT/...`.
+SHAREPOINT_SITE_SLUG_RE: Pattern[str] = re.compile(r"/sites/([^/?#]+)", re.IGNORECASE)
+SHAREPOINT_SITE_PROJECT_RE: Pattern[str] = re.compile(
+    r"^(\d{4,5})[._\-]?(\d{3})(?:$|[-_][A-Za-z0-9]+$)"
+)
 
 # ---------------------------------------------------------------------------
 # Phase Detection Rules (Layer 3)
 # ---------------------------------------------------------------------------
-PHASE_RULES: List[Tuple[Pattern[str], str]] = [
+# Each rule: (full-name pattern, abbreviation pattern, canonical label).
+# Two-letter abbreviations (VO/DO/AO/UO/AB) are only trusted in folder/file names: inside
+# drawing text they collide with BMS/electrical codes (DO = digital output, AO = analog output).
+_PB = r"(?:^|[_\-\s/\\0-9])"  # left boundary
+_PA = r"(?:$|[_\-\s/\\.,;?!])"  # right boundary
+PHASE_RULES: List[Tuple[Pattern[str], Pattern[str], str]] = [
     (
-        re.compile(
-            r"(?:^|[_\-\s/\\0-9])(?:VO|voorontwerp|preliminary(?:\s*design)?)(?:$|[_\-\s/\\.])",
-            re.IGNORECASE,
-        ),
+        re.compile(_PB + r"(?:voorontwerp|preliminary(?:\s*design)?)" + _PA, re.IGNORECASE),
+        re.compile(_PB + r"VO" + _PA, re.IGNORECASE),
         "Voorontwerp (Preliminary Design)",
     ),
     (
-        re.compile(
-            r"(?:^|[_\-\s/\\0-9])(?:DO|definitief[_\-\s]*ontwerp|final[_\-\s]*design)(?:$|[_\-\s/\\.])",
-            re.IGNORECASE,
-        ),
+        re.compile(_PB + r"(?:definitief[_\-\s]*ontwerp|final[_\-\s]*design)" + _PA, re.IGNORECASE),
+        re.compile(_PB + r"DO" + _PA, re.IGNORECASE),
         "Definitief Ontwerp (Final Design)",
     ),
     (
-        re.compile(
-            r"(?:^|[_\-\s/\\0-9])(?:AO|aanbesteding|bestek(?:fase)?|tender)(?:$|[_\-\s/\\.])",
-            re.IGNORECASE,
-        ),
+        re.compile(_PB + r"(?:aanbesteding|bestek(?:fase)?|tender)" + _PA, re.IGNORECASE),
+        re.compile(_PB + r"AO" + _PA, re.IGNORECASE),
         "Aanbesteding (Tender / Specifications)",
     ),
     (
-        re.compile(
-            r"(?:^|[_\-\s/\\0-9])(?:UO|uitvoering(?:sdossier)?|execution)(?:$|[_\-\s/\\.])",
-            re.IGNORECASE,
-        ),
+        re.compile(_PB + r"(?:uitvoering(?:sdossier)?|execution)" + _PA, re.IGNORECASE),
+        re.compile(_PB + r"UO" + _PA, re.IGNORECASE),
         "Uitvoering (Execution)",
     ),
     (
-        re.compile(
-            r"(?:^|[_\-\s/\\0-9])(?:AB|as[_\-\s]*built|oplevering(?:sdossier)?)(?:$|[_\-\s/\\.])",
-            re.IGNORECASE,
-        ),
+        re.compile(_PB + r"(?:as[_\-\s]*built|oplevering(?:sdossier)?)" + _PA, re.IGNORECASE),
+        re.compile(_PB + r"AB" + _PA, re.IGNORECASE),
         "As-Built",
     ),
 ]
@@ -173,25 +176,30 @@ PHASE_RULES: List[Tuple[Pattern[str], str]] = [
 # ---------------------------------------------------------------------------
 # Building / Wing / Floor / Zone Detection Rules (Layer 3)
 # ---------------------------------------------------------------------------
+# Block/wing/building codes are short (A, B2, L, 12) or compass names. Longer words that follow
+# "Blok" in drawing title blocks (e.g. "BLOK | PEIL", "Blok nr") are not building identifiers.
+_BUILDING_CODE = r"(Noord|Zuid|Oost|West|[A-Z]{1,2}\d{0,2}|\d{1,3})"
+BUILDING_LABEL_STOPWORDS = frozenset({"NR", "NO", "DE", "EN", "IN", "OP", "TE", "VAN", "PE"})
+
 # Structural identifiers (Blok, Vleugel, Gebouw, Campus, Verdieping, Niv)
 STRUCTURAL_BUILDING_PATTERNS: List[Tuple[Pattern[str], str]] = [
     (
         re.compile(
-            r"(?:^|[_\-\s/\\])(Blok)[_\-\s]+([A-Z0-9]{1,4})(?=$|[_\-\s/\\.])",
+            r"(?:^|[_\-\s/\\])(Blok)[_\-\s]+" + _BUILDING_CODE + r"(?=$|[_\-\s/\\.,;)])",
             re.IGNORECASE,
         ),
         "Blok {1}",
     ),
     (
         re.compile(
-            r"(?:^|[_\-\s/\\])(Vleugel)[_\-\s]+(Noord|Zuid|Oost|West|[A-Z0-9]{1,4})(?=$|[_\-\s/\\.])",
+            r"(?:^|[_\-\s/\\])(Vleugel)[_\-\s]+" + _BUILDING_CODE + r"(?=$|[_\-\s/\\.,;)])",
             re.IGNORECASE,
         ),
         "Vleugel {1}",
     ),
     (
         re.compile(
-            r"(?:^|[_\-\s/\\])(Gebouw)[_\-\s]+([A-Z0-9]{1,4})(?=$|[_\-\s/\\.])",
+            r"(?:^|[_\-\s/\\])(Gebouw)[_\-\s]+([A-Z]\d{0,2}|\d{1,3})(?=$|[_\-\s/\\.,;)])",
             re.IGNORECASE,
         ),
         "Gebouw {1}",

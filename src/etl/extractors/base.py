@@ -64,8 +64,8 @@ def build_markdown_table(
 def build_doc_header_comment(metadata: DocumentMetadata) -> str:
     """Build the top-level document provenance HTML comment required by Section 6.D."""
     return (
-        f"<!-- DOC: {metadata.file_name} | PROJECT: {metadata.project_id} | "
-        f"BUILDING: {metadata.building} | PHASE: {metadata.phase} -->"
+        f"<!-- DOC: {metadata.file_name} | PROJECT: {metadata.project_id or 'N/A'} | "
+        f"BUILDING: {metadata.building or 'N/A'} | PHASE: {metadata.phase or 'N/A'} -->"
     )
 
 

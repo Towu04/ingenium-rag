@@ -8,10 +8,12 @@ Resolution priority (highest accuracy to fallback):
 
 import hashlib
 from pathlib import Path
+import re
 from typing import List, Optional, Union
 
 from etl.catalog import DocumentRegisterIndex, ProjectCatalog
 from etl.config import (
+    BUILDING_LABEL_STOPWORDS,
     DEFAULT_BUILDING,
     DEFAULT_PHASE,
     DEFAULT_PROJECT_ID,
@@ -21,6 +23,8 @@ from etl.config import (
     PRIMARY_DOC_CATEGORY_RULES,
     PROJECT_ID_PATTERNS,
     SECONDARY_DOC_CATEGORY_RULES,
+    SHAREPOINT_SITE_PROJECT_RE,
+    SHAREPOINT_SITE_SLUG_RE,
     STRUCTURAL_BUILDING_PATTERNS,
 )
 from etl.schemas import (
@@ -37,12 +41,52 @@ def compute_doc_id(relative_file_path: Union[str, Path]) -> str:
     return hashlib.sha256(rel_posix.encode("utf-8")).hexdigest()[:16]
 
 
-def infer_phase(text: str) -> Optional[str]:
-    """Infer canonical engineering project phase from folder path, filename, or register string."""
+def canonicalize_project_id(raw_project_id: Optional[str]) -> Optional[str]:
+    """Normalize Ingenium numeric dossier codes (e.g. `6038.004`, `06038-004` -> `06038.004`)."""
+    if not raw_project_id:
+        return None
+    cleaned = raw_project_id.strip()
+    if not cleaned:
+        return None
+    m = re.match(r"^(\d{4,5})[._\-](\d{3})$", cleaned)
+    if m:
+        prefix = m.group(1).zfill(5)
+        return f"{prefix}.{m.group(2)}"
+    return cleaned.upper()
+
+
+def infer_project_id_from_sharepoint_url(sharepoint_url: Optional[str]) -> Optional[str]:
+    """Extract canonical project ID from an Ingenium SharePoint site URL (e.g. `/sites/06038004-INT/...`)."""
+    if not sharepoint_url:
+        return None
+    slug_match = SHAREPOINT_SITE_SLUG_RE.search(sharepoint_url)
+    if not slug_match:
+        return None
+    slug = slug_match.group(1)
+    proj_match = SHAREPOINT_SITE_PROJECT_RE.match(slug)
+    if proj_match:
+        return f"{proj_match.group(1).zfill(5)}.{proj_match.group(2)}"
+    # Also allow PRJ-style site slugs if used
+    for pattern in PROJECT_ID_PATTERNS:
+        m = pattern.search(slug)
+        if m:
+            return canonicalize_project_id(m.group(1))
+    return None
+
+
+def infer_phase(text: str, *, allow_abbreviations: bool = True) -> Optional[str]:
+    """Infer canonical engineering project phase from folder path, filename, or register string.
+
+    Set `allow_abbreviations=False` when scanning free-form document/diagram text so electrical
+    or BMS labels (`DO` = Digital Output, `AO` = Analog Output, `AB` = phase code) do not
+    produce false-positive project phases.
+    """
     if not text or not text.strip():
         return None
-    for pattern, canonical_phase in PHASE_RULES:
-        if pattern.search(text):
+    for full_pattern, abbr_pattern, canonical_phase in PHASE_RULES:
+        if full_pattern.search(text):
+            return canonical_phase
+        if allow_abbreviations and abbr_pattern.search(text):
             return canonical_phase
     return None
 
@@ -70,6 +114,8 @@ def infer_building(text: str) -> Optional[str]:
             else:
                 prefix = raw_groups[0].replace("_", " ").replace("-", " ").strip().title()
                 label = raw_groups[1].replace("_", " ").replace("-", " ").strip()
+                if label.upper() in BUILDING_LABEL_STOPWORDS:
+                    continue
                 # Uppercase single-letter/alphanumeric block codes (e.g., 'Blok b' -> 'Blok B')
                 if len(label) <= 3 or any(ch.isdigit() for ch in label):
                     label = label.upper()
@@ -126,7 +172,7 @@ def infer_project_id_from_path(relative_path: Union[str, Path]) -> Optional[str]
         for pattern in PROJECT_ID_PATTERNS:
             match = pattern.search(part)
             if match:
-                return match.group(1).upper()
+                return canonicalize_project_id(match.group(1))
     return None
 
 
@@ -141,17 +187,21 @@ class MetadataMatcher:
         self.catalog = catalog or ProjectCatalog()
         self.register_index = register_index or DocumentRegisterIndex()
 
-    def match(self, relative_file_path: Union[str, Path]) -> MatchedMetadata:
+    def match(
+        self,
+        relative_file_path: Union[str, Path],
+        sharepoint_url: Optional[str] = None,
+    ) -> MatchedMetadata:
         """Resolve project, building, phase, and doc_category using Layers 1 -> 2 -> 3."""
         rel_path = Path(relative_file_path)
         rel_posix = rel_path.as_posix()
         parent_posix = rel_path.parent.as_posix() if rel_path.parent != Path(".") else ""
 
-        project_id = DEFAULT_PROJECT_ID
+        project_id: Optional[str] = DEFAULT_PROJECT_ID
         project_name = DEFAULT_PROJECT_NAME
-        sharepoint_url: Optional[str] = None
-        building = DEFAULT_BUILDING
-        phase = DEFAULT_PHASE
+        resolved_sp_url: Optional[str] = sharepoint_url
+        building: Optional[str] = DEFAULT_BUILDING
+        phase: Optional[str] = DEFAULT_PHASE
         doc_category = DocCategory.UNKNOWN
         revision: Optional[str] = None
         doc_code: Optional[str] = None
@@ -164,6 +214,13 @@ class MetadataMatcher:
         if inferred_proj_id:
             project_id = inferred_proj_id
             sources.append("layer3_regex_project_id")
+
+        # SharePoint site URL (e.g. `/sites/06038004-INT/...`) is more authoritative than
+        # filename heuristics because supplier datasheets often carry external order numbers.
+        sp_proj_id = infer_project_id_from_sharepoint_url(sharepoint_url)
+        if sp_proj_id:
+            project_id = sp_proj_id
+            sources.append("layer2_5_sharepoint_site_project_id")
 
         # Prefer phase inferred from folder structure over filename (so a 'Bestek' file
         # inside an 'Uitvoering' folder inherits 'Uitvoering', while a 'Bestek' file in
@@ -192,12 +249,12 @@ class MetadataMatcher:
         # -------------------------------------------------------------------
         catalog_entry = self.catalog.match_path(rel_path)
         if catalog_entry is not None:
-            project_id = catalog_entry.project_id
+            project_id = canonicalize_project_id(catalog_entry.project_id)
             project_name = catalog_entry.project_name or DEFAULT_PROJECT_NAME
-            sharepoint_url = catalog_entry.sharepoint_url
-            if building == DEFAULT_BUILDING and catalog_entry.building:
+            resolved_sp_url = resolved_sp_url or catalog_entry.sharepoint_url
+            if building is None and catalog_entry.building:
                 building = infer_building(catalog_entry.building) or catalog_entry.building
-            if phase == DEFAULT_PHASE and catalog_entry.phase:
+            if phase is None and catalog_entry.phase:
                 phase = infer_phase(catalog_entry.phase) or catalog_entry.phase
             sources.append("layer2_catalog")
 
@@ -222,7 +279,7 @@ class MetadataMatcher:
         return MatchedMetadata(
             project_id=project_id,
             project_name=project_name,
-            sharepoint_url=sharepoint_url,
+            sharepoint_url=resolved_sp_url,
             building=building,
             phase=phase,
             doc_category=doc_category,
@@ -239,6 +296,7 @@ class MetadataMatcher:
         file_hash_sha256: Optional[str] = None,
         is_scanned: bool = False,
         is_hvac_diagram: bool = False,
+        needs_ocr: bool = False,
         extraction_confidence: float = 1.0,
         quality_warnings: Optional[List[str]] = None,
         sharepoint_item_id: Optional[str] = None,
@@ -259,7 +317,7 @@ class MetadataMatcher:
                 file_hash_sha256 = hashlib.sha256(rel_path.as_posix().encode("utf-8")).hexdigest()
 
         doc_id = compute_doc_id(rel_path)
-        matched = self.match(rel_path)
+        matched = self.match(rel_path, sharepoint_url=sharepoint_url)
 
         return DocumentMetadata(
             doc_id=doc_id,
@@ -275,9 +333,13 @@ class MetadataMatcher:
             building=matched.building,
             phase=matched.phase,
             doc_category=matched.doc_category,
+            revision=matched.revision,
+            doc_code=matched.doc_code,
+            resolution_sources=matched.resolution_sources,
             extraction_method=extraction_method,
             is_scanned=is_scanned,
             is_hvac_diagram=is_hvac_diagram,
+            needs_ocr=needs_ocr,
             extraction_confidence=extraction_confidence,
             quality_warnings=list(quality_warnings or []),
         )

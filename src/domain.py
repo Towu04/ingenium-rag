@@ -7,7 +7,9 @@ processing (parsing & chunking), storage, retrieval, and generation layers.
 from datetime import datetime, timezone
 from typing import Any
 from pathlib import Path
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from processing.normalization import split_buildings
 
 
 def utc_now() -> datetime:
@@ -95,7 +97,11 @@ class DocumentMetadata(BaseModel):
     )
     building: str | None = Field(
         default=None,
-        description="Target building or hospital wing.",
+        description="Target building or hospital wing (composite values joined with ' - ').",
+    )
+    buildings: list[str] = Field(
+        default_factory=list,
+        description="Normalized multi-value building/zone list used for Qdrant array filtering.",
     )
     phase: str | None = Field(
         default=None,
@@ -105,6 +111,14 @@ class DocumentMetadata(BaseModel):
         default_factory=dict,
         description="Additional unstructured or parser-specific metadata key-value pairs.",
     )
+
+    @model_validator(mode="after")
+    def _sync_building_fields(self) -> "DocumentMetadata":
+        if self.building and not self.buildings:
+            self.buildings = split_buildings(self.building)
+        elif self.buildings and not self.building:
+            self.building = " - ".join(self.buildings)
+        return self
 
 
 class ParsedSection(BaseModel):

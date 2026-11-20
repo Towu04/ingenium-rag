@@ -8,6 +8,7 @@ Implements the two-step strategy defined in Section 6.A of `plan.md`:
 """
 
 from dataclasses import dataclass
+import logging
 from pathlib import Path
 import re
 from typing import List, Optional, Tuple, Union
@@ -34,6 +35,14 @@ from etl.schemas import (
     DocCategory,
     ExtractedDocument,
     ExtractionMethod,
+)
+
+logger = logging.getLogger(__name__)
+
+# Standalone page numbers or running footers like "zijde 1 / 3", "pagina 2 van 8", "web: www.trane.com zijde 1 / 3"
+_PAGE_FOOTER_RE = re.compile(
+    r"^(?:\d{1,3}|(?:web:\s*\S+\s+)?(?:zijde|pagina|page|blz\.?)\s*\d+\s*(?:/|van|of)\s*\d+)$",
+    re.IGNORECASE,
 )
 
 # Regex for typical Belgian HVAC diagram callouts (e.g. LBK-01, AHU-02, 12500 m3/h, 12.500 m³/h)
@@ -135,6 +144,7 @@ class PdfExtractor(BaseExtractor):
         self,
         file_path: Union[str, Path],
         relative_path: Optional[Union[str, Path]] = None,
+        sharepoint_url: Optional[str] = None,
     ) -> ExtractedDocument:
         path = Path(file_path)
         rel_path = Path(relative_path) if relative_path is not None else Path(path.name)
@@ -147,7 +157,8 @@ class PdfExtractor(BaseExtractor):
         is_scanned = total_pages > 0 and (scanned_pages / total_pages) >= 0.5
         is_hvac_diagram = total_pages > 0 and (
             (diagram_pages / total_pages) >= 0.5
-            or self.metadata_matcher.match(rel_path).doc_category == DocCategory.DRAWING_DIAGRAM
+            or self.metadata_matcher.match(rel_path, sharepoint_url=sharepoint_url).doc_category
+            == DocCategory.DRAWING_DIAGRAM
         )
 
         # Choose extraction method reflecting actual PyMuPDF parser mode
@@ -158,9 +169,13 @@ class PdfExtractor(BaseExtractor):
         else:
             extraction_method = ExtractionMethod.PYMUPDF_DIGITAL
 
-        blocks, warnings, confidence, title_block_meta = self._extract_pages_with_pymupdf(
-            path, inspections, is_scanned=is_scanned, is_hvac_diagram=is_hvac_diagram
+        blocks, warnings, confidence, title_block_meta, needs_ocr = (
+            self._extract_pages_with_pymupdf(
+                path, inspections, is_scanned=is_scanned, is_hvac_diagram=is_hvac_diagram
+            )
         )
+        if is_scanned and not blocks:
+            needs_ocr = True
 
         metadata = self.metadata_matcher.build_document_metadata(
             file_path=path,
@@ -168,8 +183,10 @@ class PdfExtractor(BaseExtractor):
             extraction_method=extraction_method,
             is_scanned=is_scanned,
             is_hvac_diagram=is_hvac_diagram,
+            needs_ocr=needs_ocr,
             extraction_confidence=confidence,
             quality_warnings=warnings,
+            sharepoint_url=sharepoint_url,
         )
 
         # Enrich building / phase from drawing title block if not resolved by path/catalog/register
@@ -191,7 +208,7 @@ class PdfExtractor(BaseExtractor):
         inspections: List[PageInspection],
         is_scanned: bool,
         is_hvac_diagram: bool,
-    ) -> Tuple[List[ContentBlock], List[str], float, dict]:
+    ) -> Tuple[List[ContentBlock], List[str], float, dict, bool]:
         doc = fitz.open(str(pdf_path))
         blocks: List[ContentBlock] = []
         warnings: List[str] = []
@@ -200,6 +217,7 @@ class PdfExtractor(BaseExtractor):
         title_block_meta: dict = {}
 
         low_text_pages = 0
+        needs_ocr = False
 
         try:
             for idx, page in enumerate(doc):
@@ -265,11 +283,12 @@ class PdfExtractor(BaseExtractor):
 
                 # 3. If scanned page with no selectable text, attempt local OCR fallback
                 if inspection.is_scanned_page and not text_items and not page_table_items:
-                    ocr_text = self._try_local_page_ocr(page)
+                    ocr_text = self._try_local_page_ocr(page, pdf_path.name, page_num)
                     if ocr_text:
                         text_items.append((0.0, ocr_text))
                     else:
                         low_text_pages += 1
+                        needs_ocr = True
                         warnings.append(
                             f"Page {page_num}: Scanned raster page with < {MIN_DIGITAL_TEXT_CHARS_PER_PAGE} "
                             "selectable chars and no local Tesseract OCR output."
@@ -283,7 +302,9 @@ class PdfExtractor(BaseExtractor):
                         if bldg:
                             title_block_meta["building"] = bldg
                     if "phase" not in title_block_meta:
-                        ph = infer_phase(full_page_text)
+                        # Disallow 2-letter abbreviations (`DO`/`AO`/`AB`) in drawing text to prevent
+                        # BMS Digital/Analog Output labels from masquerading as project phases.
+                        ph = infer_phase(full_page_text, allow_abbreviations=False)
                         if ph:
                             title_block_meta["phase"] = ph
 
@@ -384,7 +405,7 @@ class PdfExtractor(BaseExtractor):
                         paragraph_lines: List[str] = []
                         for raw_line in str(payload).splitlines():
                             line = raw_line.strip()
-                            if not line:
+                            if not line or _PAGE_FOOTER_RE.match(line):
                                 continue
                             heading_match = self._detect_pdf_line_heading(line)
                             if heading_match is not None:
@@ -419,7 +440,7 @@ class PdfExtractor(BaseExtractor):
             readable_ratio = max(0.0, 1.0 - (low_text_pages / total_pages))
             confidence = round(0.5 + 0.5 * readable_ratio, 3)
 
-        return blocks, warnings, confidence, title_block_meta
+        return blocks, warnings, confidence, title_block_meta, needs_ocr
 
     @staticmethod
     def _detect_pdf_line_heading(line: str) -> Optional[Tuple[int, str]]:
@@ -432,6 +453,11 @@ class PdfExtractor(BaseExtractor):
             return None
         num_str = m.group(2)
         title_str = m.group(3).strip()
+        # Reject postal codes (e.g. "8000 Brugge"), calendar years (e.g. "2024 Verslag"),
+        # and large reference numbers as top-level chapter numbers.
+        top_num = int(num_str.split(".")[0])
+        if "." not in num_str and top_num >= 100:
+            return None
         # Avoid matching table data or measurements like "12.5 m3/h"
         if re.match(r"^(?:m[³3]/h|kW|Pa|mm|cm|kg|EUR|€)\b", title_str, re.IGNORECASE):
             return None
@@ -439,10 +465,16 @@ class PdfExtractor(BaseExtractor):
         return level, f"{num_str} {title_str}" if "." in num_str else f"{num_str}. {title_str}"
 
     @staticmethod
-    def _try_local_page_ocr(page: fitz.Page) -> str:
+    def _try_local_page_ocr(page: fitz.Page, file_name: str = "", page_num: int = 0) -> str:
         """Attempt local Tesseract OCR via PyMuPDF if Tesseract is installed on the host."""
         try:
             tp = page.get_textpage_ocr(flags=0, full=False)
             return (page.get_text("text", textpage=tp) or "").strip()
-        except Exception:
+        except Exception as exc:
+            logger.warning(
+                "Local OCR unavailable/failed for '%s' page %d: %s",
+                file_name,
+                page_num,
+                exc,
+            )
             return ""

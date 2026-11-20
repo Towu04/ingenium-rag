@@ -1,10 +1,14 @@
-"""Token-accurate Parent-Child chunker aligned with BAAI/bge-m3."""
+"""Token-accurate, table-aware Parent-Child chunker aligned with BAAI/bge-m3."""
 
 from functools import lru_cache
+import re
+
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from transformers import AutoTokenizer, PreTrainedTokenizerBase
 
 from domain import ChildChunk, ParentChunk, ParsedDoc, ParsedSection
+
+_MD_TABLE_SEP_RE = re.compile(r"^\|\s*:?-{2,}:?\s*(?:\|\s*:?-{2,}:?\s*)+\|?$")
 
 
 @lru_cache(maxsize=2)
@@ -13,6 +17,14 @@ def load_tokenizer(model_name: str = "BAAI/bge-m3") -> PreTrainedTokenizerBase:
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     tokenizer.model_max_length = 1_000_000
     return tokenizer
+
+
+def _is_markdown_table(text: str) -> bool:
+    """Return True if `text` is a Markdown table block (header row + separator row)."""
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    if len(lines) < 2:
+        return False
+    return lines[0].startswith("|") and bool(_MD_TABLE_SEP_RE.match(lines[1]))
 
 
 class ParentChildChunker:
@@ -54,12 +66,56 @@ class ParentChildChunker:
             separators=["\n\n", "\n", ". ", " ", ""],
         )
 
+    def _token_len(self, text: str) -> int:
+        return len(self.tokenizer.encode(text, add_special_tokens=False))
+
+    def _split_markdown_table(
+        self,
+        table_text: str,
+        max_tokens: int,
+        overlap_rows: int = 0,
+    ) -> list[str]:
+        """Split a Markdown table by row boundaries while repeating the 2-line header in every chunk."""
+        lines = [line.strip() for line in table_text.splitlines() if line.strip()]
+        if len(lines) <= 2:
+            return [table_text]
+
+        header_block = f"{lines[0]}\n{lines[1]}"
+        body_rows = lines[2:]
+        if self._token_len(table_text) <= max_tokens:
+            return [table_text]
+
+        header_tokens = self._token_len(header_block)
+        chunks: list[str] = []
+        idx = 0
+        total_rows = len(body_rows)
+
+        while idx < total_rows:
+            current_rows: list[str] = []
+            current_tokens = header_tokens
+            start_idx = idx
+
+            while idx < total_rows:
+                row = body_rows[idx]
+                row_tokens = self._token_len(row) + 1  # +1 for newline
+                if current_rows and (current_tokens + row_tokens) > max_tokens:
+                    break
+                current_rows.append(row)
+                current_tokens += row_tokens
+                idx += 1
+
+            chunks.append(header_block + "\n" + "\n".join(current_rows))
+
+            if idx < total_rows and overlap_rows > 0 and len(current_rows) > overlap_rows:
+                idx = max(start_idx + 1, idx - overlap_rows)
+
+        return chunks
+
     def chunk(self, document: ParsedDoc) -> tuple[list[ParentChunk], list[ChildChunk]]:
         parents: list[ParentChunk] = []
         children: list[ChildChunk] = []
 
         sections = document.sections or [ParsedSection(text=document.markdown)]
-        doc_metadata = document.metadata.model_copy(deep=True)
         parent_idx = 0
 
         for section in sections:
@@ -67,9 +123,15 @@ class ParentChildChunker:
             if not raw_text:
                 continue
 
-            # Prepend newline if starting with '#' so '\n# ' separators match line 1
-            clean_section_text = f"\n{raw_text}" if raw_text.startswith("#") else raw_text
-            parent_texts = self._parent_splitter.split_text(clean_section_text)
+            is_table = _is_markdown_table(raw_text)
+            if is_table:
+                parent_texts = self._split_markdown_table(
+                    raw_text, max_tokens=self.parent_size, overlap_rows=0
+                )
+            else:
+                # Prepend newline if starting with '#' so '\n# ' separators match line 1
+                clean_section_text = f"\n{raw_text}" if raw_text.startswith("#") else raw_text
+                parent_texts = self._parent_splitter.split_text(clean_section_text)
 
             for p_text in parent_texts:
                 p_text = p_text.strip()
@@ -77,7 +139,14 @@ class ParentChildChunker:
                     continue
 
                 parent_id = f"{document.document_id}:p{parent_idx}"
-                child_texts = self._child_splitter.split_text(p_text)
+                if is_table:
+                    child_texts = self._split_markdown_table(
+                        p_text,
+                        max_tokens=self.child_size,
+                        overlap_rows=1 if self.child_overlap > 0 else 0,
+                    )
+                else:
+                    child_texts = self._child_splitter.split_text(p_text)
                 current_child_ids: list[str] = []
 
                 for child_idx, c_text in enumerate(child_texts):
@@ -100,7 +169,7 @@ class ParentChildChunker:
                             ),
                             page_numbers=list(section.page_numbers),
                             section_header=section.section_header,
-                            metadata=doc_metadata,
+                            metadata=document.metadata.model_copy(deep=True),
                         )
                     )
 
@@ -116,7 +185,7 @@ class ParentChildChunker:
                         page_numbers=list(section.page_numbers),
                         section_header=section.section_header,
                         child_ids=current_child_ids,
-                        metadata=doc_metadata,
+                        metadata=document.metadata.model_copy(deep=True),
                     )
                 )
                 parent_idx += 1

@@ -116,7 +116,13 @@ class LocalHybridRepository:
                             "parent_id": c.parent_id,
                             "document_id": c.document_id,
                             "project": c.metadata.project,
-                            "building": c.metadata.building,
+                            # Store as list[str] when present so Qdrant MatchValue("Blok L")
+                            # matches both single-building and multi-building documents.
+                            "building": (
+                                c.metadata.buildings
+                                if c.metadata.buildings
+                                else ([c.metadata.building] if c.metadata.building else None)
+                            ),
                             "phase": c.metadata.phase,
                         },
                     )

@@ -6,13 +6,50 @@ where text extraction is unreliable into a structured JSONL report for client ha
 
 from datetime import datetime, timezone
 import json
+import logging
 from pathlib import Path
+import re
 from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field
 
 from etl.config import LIMITATIONS_REPORT_PATH, LOW_CONFIDENCE_THRESHOLD
 from etl.schemas import ExtractedDocument
+
+logger = logging.getLogger(__name__)
+
+# Matches meaningful technical tokens (equipment codes like LBK-01, IG3.25, words >=3 letters,
+# or measurements like 1500 m3/h, 230V, 1000Pa)
+_MEANINGFUL_TOKEN_RE = re.compile(
+    r"(?:[A-Za-zÀ-ÖØ-öø-ÿ]{3,}|[A-Za-z]{1,4}[-_.]?\d{1,4}[A-Za-z]?|\d+(?:[.,]\d+)?\s*(?:m[³3]/h|kW|VA|Pa|V|A|Hz|mm|°C|dB))",
+    re.IGNORECASE,
+)
+
+
+def score_callout_readability(text: str) -> float:
+    """Score readability of a `diagram_callout` block in [0.0, 1.0].
+
+    Legacy-OCR'd electrical/HVAC schematics produce dozens of 1-2 character glyph fragments
+    (`- f`, `- ~n`, `- I`, `- 1`). This scorer computes the fraction of non-empty lines that
+    contain at least one meaningful word/tag/measurement and have a sane alphanumeric ratio.
+    """
+    lines = [
+        re.sub(r"^\s*[-*•]\s*", "", raw).strip()
+        for raw in text.splitlines()
+    ]
+    lines = [line for line in lines if line]
+    if not lines:
+        return 0.0
+
+    readable = 0
+    for line in lines:
+        alnum = sum(ch.isalnum() for ch in line)
+        if len(line) < 3 or (alnum / len(line)) < 0.55:
+            continue
+        if _MEANINGFUL_TOKEN_RE.search(line):
+            readable += 1
+
+    return round(readable / len(lines), 3)
 
 
 def _utc_now_iso() -> str:
@@ -26,20 +63,21 @@ class LimitationRecord(BaseModel):
     doc_id: str
     file_name: str
     relative_folder_path: str
-    project_id: str
-    building: str
-    phase: str
+    project_id: Optional[str] = None
+    building: Optional[str] = None
+    phase: Optional[str] = None
     doc_category: str
     extraction_method: str
     is_scanned: bool = False
     is_hvac_diagram: bool = False
+    needs_ocr: bool = False
     extraction_confidence: float
     total_blocks: int = 0
     total_char_count: int = 0
     quality_warnings: List[str] = Field(default_factory=list)
     limitation_type: str = Field(
         ...,
-        description="e.g., 'low_confidence_scan', 'complex_hvac_diagram', 'empty_or_corrupted'",
+        description="e.g., 'scanned_pdf_needs_ocr', 'low_confidence_scan', 'complex_hvac_diagram', 'empty_or_corrupted'",
     )
     recommended_action: str
 
@@ -63,11 +101,25 @@ class QualityLogger:
 
         if len(doc.blocks) == 0 or total_chars == 0:
             meta.extraction_confidence = min(meta.extraction_confidence, 0.2)
+            if meta.is_scanned:
+                meta.needs_ocr = True
 
-        if meta.extraction_confidence >= self.confidence_threshold:
+        if meta.extraction_confidence >= self.confidence_threshold and not meta.needs_ocr:
             return None
 
-        if len(doc.blocks) == 0 or total_chars == 0:
+        if (len(doc.blocks) == 0 or total_chars == 0) and meta.is_scanned:
+            limitation_type = "scanned_pdf_needs_ocr"
+            recommended_action = (
+                "Scanned PDF produced 0 extracted text blocks; run Docling/Tesseract or external "
+                "high-DPI OCR before re-ingestion."
+            )
+            msg = "Scanned PDF with 0 extracted text blocks (needs_ocr=True)."
+            logger.warning(
+                "Scanned PDF '%s' (doc_id=%s) yielded 0 text blocks; flagged needs_ocr=True.",
+                meta.file_name,
+                meta.doc_id,
+            )
+        elif len(doc.blocks) == 0 or total_chars == 0:
             limitation_type = "empty_or_unreadable_document"
             recommended_action = (
                 "Verify source file integrity or run external high-DPI OCR before re-ingestion."
@@ -80,7 +132,7 @@ class QualityLogger:
                 "cross-reference with equipment schedule (Toestellenlijst) or native CAD (.dwg)."
             )
             msg = "Oversized/vector HVAC diagram with sparse text callouts."
-        elif meta.is_scanned:
+        elif meta.is_scanned or meta.needs_ocr:
             limitation_type = "low_confidence_scan"
             recommended_action = (
                 "Scanned archival PDF with low OCR confidence; "
@@ -107,6 +159,7 @@ class QualityLogger:
             extraction_method=meta.extraction_method.value,
             is_scanned=meta.is_scanned,
             is_hvac_diagram=meta.is_hvac_diagram,
+            needs_ocr=meta.needs_ocr,
             extraction_confidence=round(meta.extraction_confidence, 3),
             total_blocks=len(doc.blocks),
             total_char_count=total_chars,
@@ -121,9 +174,9 @@ class QualityLogger:
         self,
         relative_path: Union[str, Path],
         error_message: str,
-        project_id: str = "UNKNOWN_PROJECT",
-        building: str = "UNKNOWN_BUILDING",
-        phase: str = "UNKNOWN_PHASE",
+        project_id: Optional[str] = None,
+        building: Optional[str] = None,
+        phase: Optional[str] = None,
     ) -> LimitationRecord:
         """Log a corrupted or unreadable file that raised an exception during extraction."""
         rel = Path(relative_path)

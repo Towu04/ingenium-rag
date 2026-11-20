@@ -87,9 +87,9 @@ def inventory_cmd(
         m = item.matched_metadata
         meta_table.add_row(
             item.relative_path,
-            m.project_id,
-            m.building,
-            m.phase,
+            m.project_id or "-",
+            m.building or "-",
+            m.phase or "-",
             m.doc_category.value,
         )
     console.print(meta_table)
@@ -210,9 +210,9 @@ def report_cmd(
         doc_table.add_row(
             entry.doc_id,
             entry.file_name,
-            entry.project_id,
-            entry.building,
-            entry.phase,
+            entry.project_id or "-",
+            entry.building or "-",
+            entry.phase or "-",
             entry.doc_category,
             str(entry.page_count),
             str(entry.table_count),

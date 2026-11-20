@@ -307,3 +307,68 @@ def test_excel_document_register_with_header_offset(tmp_path: Path) -> None:
     assert meta.doc_category == DocCategory.SCHEDULE_TABLE
     assert meta.file_extension == ".xlsx"
 
+
+# ===========================================================================
+# Regression Tests for Real-Corpus ETL Metadata Fixes
+# ===========================================================================
+
+
+def test_unknown_sentinels_coerced_to_none_and_defaults_are_none() -> None:
+    """Unresolved metadata defaults to None; legacy UNKNOWN_* sentinels are coerced to None."""
+    matcher = MetadataMatcher()
+    matched = matcher.match("General/00_Info/zaal4.pdf")
+    assert matched.project_id is None
+    assert matched.building is None
+    assert matched.phase is None
+
+    legacy_meta = DocumentMetadata.model_validate({
+        "doc_id": "abc",
+        "file_name": "zaal4.pdf",
+        "file_extension": ".pdf",
+        "file_hash_sha256": "deadbeef",
+        "relative_folder_path": "General/00_Info",
+        "project_id": "UNKNOWN_PROJECT",
+        "building": "UNKNOWN_BUILDING",
+        "phase": "UNKNOWN_PHASE",
+    })
+    assert legacy_meta.project_id is None
+    assert legacy_meta.building is None
+    assert legacy_meta.phase is None
+
+
+def test_sharepoint_url_extracts_project_id_and_rejects_supplier_codes() -> None:
+    """SharePoint site slug resolves project_id even when filename has supplier order numbers."""
+    matcher = MetadataMatcher()
+    sp_url = (
+        "https://ingeniumnv.sharepoint.com/sites/06038004-INT/Shared%20Documents/"
+        "General/00_Info/17-341-1883%20-%20Data%20sheets.pdf"
+    )
+    matched = matcher.match("General/00_Info/17-341-1883 - Data sheets.pdf", sharepoint_url=sp_url)
+    assert matched.project_id == "06038.004"
+    assert "layer2_5_sharepoint_site_project_id" in matched.resolution_sources
+
+    # Without SharePoint URL, supplier order number & doc code must NOT be mistaken for project_id
+    assert matcher.match("General/00_Info/17-341-1883 - Data sheets.pdf").project_id is None
+    assert matcher.match("General/00_Info/1003-004 lijst IGEG's _001.pdf").project_id is None
+
+    # Ingenium 5-digit and 4-digit dossier codes canonicalize consistently to 06038.004
+    assert matcher.match("General/06038.004_E_OVERZICHT.xlsx").project_id == "06038.004"
+    assert matcher.match("General/6038.004 Facturatie.pdf").project_id == "06038.004"
+
+
+def test_diagram_text_false_positives_prevented() -> None:
+    """Diagram body text should not trigger 'Blok Peil' or BMS 'DO'/'AB' phase false positives."""
+    assert infer_building("BLOK\nPEIL\nPLAN NR") is None
+    assert infer_building("BLOK NR 12") is None
+    assert infer_building("BLOK K\nBLOK L") == "Blok K - Blok L"
+
+    # Abbreviations allowed in paths, disallowed in free-form drawing text
+    assert infer_phase("PRJ_101/02_DO/Schema.pdf", allow_abbreviations=True) == (
+        "Definitief Ontwerp (Final Design)"
+    )
+    assert infer_phase("MODULE 101 - DO! - AI2 - AB", allow_abbreviations=False) is None
+    assert infer_phase("Definitief Ontwerp", allow_abbreviations=False) == (
+        "Definitief Ontwerp (Final Design)"
+    )
+
+

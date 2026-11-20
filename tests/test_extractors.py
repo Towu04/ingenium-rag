@@ -290,3 +290,82 @@ def test_xlsx_extractor_does_not_reparse_document_register(tmp_path: Path) -> No
     assert len(matcher.register_index.entries) == 0
     assert extracted.metadata.doc_category == DocCategory.DOCUMENT_REGISTER
     assert len(extracted.blocks) == 1
+
+
+def test_pdf_extractor_rejects_postal_code_heading_and_flags_needs_ocr(tmp_path: Path) -> None:
+    """Belgian postal codes (e.g. '8000 Brugge') must not become section headings."""
+    pdf_path = tmp_path / "Brandpreventieverslag.pdf"
+    doc = fitz.open()
+    p1 = doc.new_page(width=595, height=842)
+    p1.insert_text(
+        (50, 70),
+        "Stadsbestuur Brugge\n8000 Brugge\n"
+        "1. Organisatie van de brandpreventie\n"
+        "De deuren tussen het compartiment en het trappenhuis hebben EI1 30.\n"
+        "zijde 1 / 2",
+        fontsize=11,
+    )
+    doc.save(str(pdf_path))
+    doc.close()
+
+    extracted = PdfExtractor(metadata_matcher=MetadataMatcher()).extract(pdf_path)
+    headings = [b.section_heading for b in extracted.blocks]
+    assert "8000. Brugge" not in headings
+    assert any(h == "1. Organisatie van de brandpreventie" for h in headings)
+    assert all("zijde 1 / 2" not in b.markdown_content for b in extracted.blocks)
+
+    # Scanned PDF with 0 blocks must set needs_ocr=True and log scanned_pdf_needs_ocr
+    scanned_pdf = tmp_path / "Scanned_Empty.pdf"
+    sdoc = fitz.open()
+    spage = sdoc.new_page(width=595, height=842)
+    pix = fitz.Pixmap(fitz.csRGB, fitz.IRect(0, 0, 100, 100), False)
+    pix.clear_with(240)
+    spage.insert_image(fitz.Rect(20, 20, 575, 820), pixmap=pix)
+    sdoc.save(str(scanned_pdf))
+    sdoc.close()
+
+    scanned = PdfExtractor(metadata_matcher=MetadataMatcher()).extract(scanned_pdf)
+    assert scanned.metadata.is_scanned is True
+    assert scanned.metadata.needs_ocr is True
+
+    ql = QualityLogger(report_path=tmp_path / "limitations.jsonl")
+    rec = ql.evaluate_and_log(scanned)
+    assert rec is not None
+    assert rec.limitation_type == "scanned_pdf_needs_ocr"
+    assert rec.needs_ocr is True
+
+
+def test_xlsx_extractor_separates_key_value_preamble_and_skips_template_rows(
+    tmp_path: Path,
+) -> None:
+    """Key-value header rows become a text preamble; real multi-column header becomes table_headers."""
+    xlsx_path = tmp_path / "06038.004_E_OVERZICHT_WIJZIGINGSBERICHTEN.xlsx"
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    assert ws is not None
+    ws.title = "Samenvatting"
+    ws.append(["Overzicht wijzigingsberichten"])
+    ws.append(["Projectnummer:", "6038004"])
+    ws.append(["Projectnaam:", "AZ St. Jan Brugge - Renovatie OP-zalen 8 en 9"])
+    ws.append(["Naam wijzigingsbericht", "Beschrijving", "Bedrag", "Advies ING"])
+    ws.append(["WB E1", "Branddetectie werf", "855.59", "Goedgekeurd"])
+    ws.append(["WB+ perceel volgnummer", "0", "0", ""])
+    wb.save(xlsx_path)
+
+    extracted = XlsxExtractor(metadata_matcher=MetadataMatcher()).extract(xlsx_path)
+    assert extracted.metadata.project_id == "06038.004"
+
+    preamble_blocks = [b for b in extracted.blocks if b.block_type == "text"]
+    table_blocks = [b for b in extracted.blocks if b.block_type == "table"]
+    assert len(preamble_blocks) == 1
+    assert "Projectnummer:" in preamble_blocks[0].markdown_content
+    assert len(table_blocks) == 1
+    assert table_blocks[0].table_headers == [
+        "Naam wijzigingsbericht",
+        "Beschrijving",
+        "Bedrag",
+        "Advies ING",
+    ]
+    assert "WB E1" in table_blocks[0].markdown_content
+    assert "WB+ perceel volgnummer" not in table_blocks[0].markdown_content
+

@@ -1,6 +1,5 @@
 """Behavioral unit tests for LocalHybridRepository using in-memory Qdrant."""
 
-from datetime import datetime, timezone
 import numpy as np
 import pytest
 
@@ -44,7 +43,6 @@ def make_bundle(
         content_hash=content_hash,
         markdown="# Sample Doc",
         metadata=meta,
-        parsed_at=datetime.now(timezone.utc),
     )
 
     parents: list[ParentChunk] = []
@@ -226,6 +224,28 @@ class TestHybridSearchAndFiltering:
 
         empty_results = repo.search_parents(query, project="Alpha", building="B2")
         assert empty_results == []
+
+    def test_search_matches_individual_building_in_multi_building_document(
+        self, repo: LocalHybridRepository
+    ) -> None:
+        repo.upsert_document_bundle(
+            *make_bundle(
+                doc_id="doc-multi",
+                project="06038.004",
+                building="Blok P - Blok L - Spoed",
+                phase="Uitvoering",
+                dominant_dim_offset=0,
+            )
+        )
+        query = EncodedQuery(dense_vec=make_dense_vec(0), sparse_weights={100: 1.0})
+
+        assert [r.parent_chunk.document_id for r in repo.search_parents(query, building="Blok L")] == [
+            "doc-multi"
+        ]
+        assert [r.parent_chunk.document_id for r in repo.search_parents(query, building="Spoed")] == [
+            "doc-multi"
+        ]
+        assert repo.search_parents(query, building="Blok A") == []
 
     def test_search_on_empty_repository_returns_empty_list(
         self, repo: LocalHybridRepository

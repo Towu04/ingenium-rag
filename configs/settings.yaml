@@ -4,10 +4,15 @@ chunking:
   overlap: 40
 embedding:
   model: BAAI/bge-m3
+reranker:
+  model: BAAI/bge-reranker-v2-m3
+  max_length: 2048
 retrieval:
-  top_k: 10
+  retrieve_k: 15
+  child_candidate_limit: 40
   rerank_k: 5
   rrf_k: 60
 paths:
-  raw: data/raw
+  raw: data/raw_sharepoint
   processed: data/processed
+  qdrant: data/qdrant_poc

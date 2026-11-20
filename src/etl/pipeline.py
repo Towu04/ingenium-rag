@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from etl.catalog import DocumentRegisterIndex, ProjectCatalog, is_document_register_file
 from etl.config import (
@@ -19,7 +19,12 @@ from etl.config import (
 from etl.extractors import DocxExtractor, PdfExtractor, XlsxExtractor
 from etl.metadata_matcher import MetadataMatcher
 from etl.quality import QualityLogger
-from etl.schemas import DocumentMetadata, ExtractedDocument, MatchedMetadata
+from etl.schemas import (
+    DocumentMetadata,
+    ExtractedDocument,
+    MatchedMetadata,
+    coerce_unknown_to_none,
+)
 from etl.sharepoint_access import RemoteDriveItem, SharePointConnector, compute_file_sha256
 
 
@@ -30,9 +35,9 @@ class ManifestEntry(BaseModel):
     doc_id: str
     sha256: str
     file_name: str
-    project_id: str
-    building: str
-    phase: str
+    project_id: Optional[str] = None
+    building: Optional[str] = None
+    phase: Optional[str] = None
     doc_category: str
     markdown_path: str
     json_path: str
@@ -42,12 +47,18 @@ class ManifestEntry(BaseModel):
     extraction_confidence: float = 1.0
     is_scanned: bool = False
     is_hvac_diagram: bool = False
+    needs_ocr: bool = False
     sharepoint_item_id: Optional[str] = None
     sharepoint_etag: Optional[str] = None
     quick_xor_hash: Optional[str] = None
     processed_at: str = Field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat()
     )
+
+    @field_validator("project_id", "building", "phase", mode="before")
+    @classmethod
+    def _coerce_sentinels(cls, value: Any) -> Any:
+        return coerce_unknown_to_none(value)
 
 
 class ManifestState(BaseModel):
@@ -86,7 +97,14 @@ class ManifestManager:
         )
 
     def _outputs_exist(self, entry: ManifestEntry) -> bool:
-        return Path(entry.markdown_path).exists() and Path(entry.json_path).exists()
+        if Path(entry.markdown_path).exists() and Path(entry.json_path).exists():
+            return True
+        # Portable fallback: resolve `<doc_id>.md` / `<doc_id>.json` relative to manifest's folder
+        # so manifests generated on Windows still work on macOS/Linux.
+        base_dir = self.manifest_path.parent
+        return (base_dir / "markdown" / f"{entry.doc_id}.md").exists() and (
+            base_dir / "json" / f"{entry.doc_id}.json"
+        ).exists()
 
     def is_up_to_date(self, relative_path: str, file_sha256: str) -> bool:
         """Return True if the file's SHA-256 matches the manifest and output files exist."""
@@ -151,6 +169,7 @@ class ManifestManager:
             extraction_confidence=doc.metadata.extraction_confidence,
             is_scanned=doc.metadata.is_scanned,
             is_hvac_diagram=doc.metadata.is_hvac_diagram,
+            needs_ocr=doc.metadata.needs_ocr,
             sharepoint_item_id=doc.metadata.sharepoint_item_id,
             sharepoint_etag=doc.metadata.sharepoint_etag,
             quick_xor_hash=quick_xor_hash,
@@ -282,7 +301,10 @@ class ETLPipeline:
             summary.total_files += 1
             summary.extension_counts[ext] = summary.extension_counts.get(ext, 0) + 1
 
-            matched = self.metadata_matcher.match(item.relative_path)
+            matched = self.metadata_matcher.match(
+                item.relative_path,
+                sharepoint_url=item.web_url,
+            )
             if item.web_url and not matched.sharepoint_url:
                 matched.sharepoint_url = item.web_url
 
@@ -565,7 +587,11 @@ class ETLPipeline:
         else:
             seeded_meta = DocumentMetadata.model_validate(raw_seeded)
 
-        extracted_doc = self._dispatch_extractor(local_path, rel_path)
+        extracted_doc = self._dispatch_extractor(
+            local_path,
+            rel_path,
+            sharepoint_url=seeded_meta.sharepoint_url or remote_item.web_url,
+        )
 
         # Preserve SharePoint provenance seeded in Step A while merging 3-layer resolved metadata
         extracted_doc.metadata.doc_id = seeded_meta.doc_id
@@ -596,15 +622,24 @@ class ETLPipeline:
         result.extracted_documents.append(extracted_doc)
 
     def _dispatch_extractor(
-        self, file_path: Path, rel_path: Path
+        self,
+        file_path: Path,
+        rel_path: Path,
+        sharepoint_url: Optional[str] = None,
     ) -> ExtractedDocument:
         ext = file_path.suffix.lower()
         if ext == ".pdf":
-            return self.pdf_extractor.extract(file_path, relative_path=rel_path)
+            return self.pdf_extractor.extract(
+                file_path, relative_path=rel_path, sharepoint_url=sharepoint_url
+            )
         if ext == ".docx":
-            return self.docx_extractor.extract(file_path, relative_path=rel_path)
+            return self.docx_extractor.extract(
+                file_path, relative_path=rel_path, sharepoint_url=sharepoint_url
+            )
         if ext in {".xlsx", ".xls"}:
-            return self.xlsx_extractor.extract(file_path, relative_path=rel_path)
+            return self.xlsx_extractor.extract(
+                file_path, relative_path=rel_path, sharepoint_url=sharepoint_url
+            )
         raise ValueError(f"Unsupported file extension for extraction: {ext}")
 
     def _write_outputs(

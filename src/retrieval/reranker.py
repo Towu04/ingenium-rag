@@ -21,7 +21,7 @@ class BGEM3Reranker:
         model_name: str = "BAAI/bge-reranker-v2-m3",
         device: str | None = None,
         batch_size: int = 16,
-        max_length: int = 1024,
+        max_length: int = 2048,
     ) -> None:
         self.device = device or _detect_best_device()
         self.batch_size = batch_size
@@ -34,6 +34,20 @@ class BGEM3Reranker:
             devices=self.device,
         )
 
+    @staticmethod
+    def _format_passage(item: SearchResult) -> str:
+        """Prefix parent text with compact provenance tags so the cross-encoder sees document context."""
+        parent = item.parent_chunk
+        meta = parent.metadata
+        tags = [
+            f"Project: {meta.project}" if meta.project else None,
+            f"Building: {meta.building}" if meta.building else None,
+            f"Phase: {meta.phase}" if meta.phase else None,
+            f"Section: {parent.section_header}" if parent.section_header else None,
+        ]
+        active = [t for t in tags if t]
+        return f"[{' | '.join(active)}]\n{parent.text}" if active else parent.text
+
     def rerank(
         self,
         query: str,
@@ -44,7 +58,7 @@ class BGEM3Reranker:
         if not candidates:
             return []
 
-        pairs = [[query, item.parent_chunk.text] for item in candidates]
+        pairs = [[query, self._format_passage(item)] for item in candidates]
         scores = self._reranker.compute_score(
             pairs,
             batch_size=self.batch_size,

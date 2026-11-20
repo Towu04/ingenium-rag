@@ -1,53 +1,84 @@
+"""Evaluation runner executing a Q&A JSON/CSV dataset against `RAGPipeline`."""
+
+import argparse
+import csv
+import json
+from pathlib import Path
+from typing import Any
+
 from evaluation.metrics import citation_precision
-
-# testing RAG 
-
-# necessary libraries
-import ragas
-import pandas as pd 
+from pipelines.rag_pipeline import RAGPipeline
 
 
-# run file that has RAG code 
-# assume file is called rag.py and is in same dir 
-# assume rag is called run_rag
-from rag.py import run_rag 
+def load_eval_rows(dataset_path: Path) -> list[dict[str, Any]]:
+    if dataset_path.suffix.lower() == ".json":
+        data = json.loads(dataset_path.read_text(encoding="utf-8"))
+        if not isinstance(data, list):
+            raise ValueError("Evaluation JSON must contain a list of question objects.")
+        return data
+    if dataset_path.suffix.lower() == ".csv":
+        with dataset_path.open(encoding="utf-8") as fh:
+            return list(csv.DictReader(fh))
+    raise ValueError(f"Unsupported evaluation dataset format: {dataset_path.suffix}")
 
 
-# step 1: load evaluation data 
+def run_evaluation(
+    pipeline: RAGPipeline,
+    rows: list[dict[str, Any]],
+    *,
+    top_k: int = 5,
+) -> list[dict[str, Any]]:
+    """Run each evaluation row through `pipeline` and compute citation precision when labels exist."""
+    outputs: list[dict[str, Any]] = []
+    for row in rows:
+        question = str(row["question"])
+        answer = pipeline.run(
+            question,
+            top_k=top_k,
+            project=row.get("project") or None,
+            building=row.get("building") or None,
+            phase=row.get("phase") or None,
+        )
+        actual_sources = {c.source_path for c in answer.citations}
+        expected_raw = row.get("expected_sources") or []
+        if isinstance(expected_raw, str):
+            expected_sources = {s.strip() for s in expected_raw.split(";") if s.strip()}
+        else:
+            expected_sources = {str(s) for s in expected_raw}
 
-# not yet known what format. csv? json? 
-
-# if csv: load via pandas   
-eval_dat = pd.read_csv("path_to_eval_file.csv")  
-
-# if json: load via pandas
-eval_dat = pd.read_json("path_to_eval_file.json", orient="records")
-
-
-# step 2: run the RAG 
-
-# prepare object to store RAG output 
-test_output = []
-
-# for each question run the RAG and store the output 
-for index, row in eval_dat.iterrows():
-
-    # isolate the question
-    # this requires the column name to be "question". if it's something else then replace it
-    question = row["question"]
-
-    # run the RAG 
-    # assume the model is called run_rag. if not replace it with actual function name  
-    rag_output = run_rag(question)  
-    # save the question, output, and what data was used to generate the output to the test_output object    
-    test_output.append({"question_asked": question, 
-                        "output_received": rag_output})    
+        outputs.append(
+            {
+                "question": question,
+                "answer": answer.text,
+                "citations": [c.model_dump(mode="json") for c in answer.citations],
+                "retrieved_parent_ids": [r.parent_chunk.id for r in answer.retrieved_results],
+                "citation_precision": (
+                    citation_precision(expected_sources, actual_sources)
+                    if expected_sources
+                    else None
+                ),
+            }
+        )
+    return outputs
 
 
-# step 3: save this output to a file. let's do csv for now, ask if team prefers json 
-# let's call the output file "rag_test_output.csv" for now.
-output_df = pd.DataFrame(test_output)
-output_df.to_csv("rag_test_output.csv", index = False)
+def main() -> None:
+    from api.app import build_default_pipeline
+
+    parser = argparse.ArgumentParser(description="Run Ingenium RAG evaluation dataset.")
+    parser.add_argument("--dataset", type=Path, required=True, help="Path to eval .json or .csv")
+    parser.add_argument("--output", type=Path, default=Path("data/eval_results.json"))
+    parser.add_argument("--top-k", type=int, default=5)
+    args = parser.parse_args()
+
+    pipeline = build_default_pipeline()
+    rows = load_eval_rows(args.dataset)
+    results = run_evaluation(pipeline, rows, top_k=args.top_k)
+
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(json.dumps(results, indent=2, ensure_ascii=False), encoding="utf-8")
+    print(f"Evaluated {len(results)} question(s) -> {args.output}")
 
 
-# step 4: evaluate this output. proposal for now: use ragas 
+if __name__ == "__main__":
+    main()
