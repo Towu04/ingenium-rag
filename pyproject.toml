@@ -46,6 +46,7 @@ all = ["ingenium-rag[etl,rag,api,dev]"]
 [project.scripts]
 ingenium-ingest = "scripts.ingest:main"
 ingenium-query = "scripts.query:main"
+ingenium-inspect = "scripts.inspect_rag:main"
 ingenium-eval = "scripts.eval:main"
 
 [tool.hatch.build.targets.wheel]

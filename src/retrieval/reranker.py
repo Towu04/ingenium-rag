@@ -1,5 +1,7 @@
 """Cross-Encoder reranker (`BAAI/bge-reranker-v2-m3`) for post-retrieval precision filtering."""
 
+import logging
+import math
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -8,6 +10,8 @@ from FlagEmbedding import FlagReranker
 
 from config import detect_device
 from domain import SearchResult
+
+logger = logging.getLogger(__name__)
 
 
 class BGEM3Reranker:
@@ -19,7 +23,7 @@ class BGEM3Reranker:
         device: str | None = None,
         batch_size: int = 16,
         max_length: int = 2048,
-        min_score: float = 0.05,
+        min_score: float = 0.0,
     ) -> None:
         self.device = detect_device(device)
         self.batch_size = batch_size
@@ -69,14 +73,38 @@ class BGEM3Reranker:
         if isinstance(scores, (float, int, np.floating)):
             scores = [float(scores)]
 
+        score_floats = [float(s) for s in scores]
+        finite_scores = [s for s in score_floats if math.isfinite(s)]
+        non_finite = len(score_floats) - len(finite_scores)
+        if non_finite:
+            logger.warning(
+                "BGEM3Reranker produced %d non-finite score(s) on device=%s; dropping them.",
+                non_finite,
+                self.device,
+            )
+
         reranked = [
             SearchResult(
                 parent_chunk=item.parent_chunk,
                 matched_child_id=item.matched_child_id,
-                score=float(score),
+                matched_child_text=item.matched_child_text,
+                retrieval_score=(
+                    item.retrieval_score if item.retrieval_score is not None else item.score
+                ),
+                score=score,
             )
-            for item, score in zip(candidates, scores)
-            if float(score) >= threshold
+            for item, score in zip(candidates, score_floats)
+            if math.isfinite(score) and score >= threshold
         ]
+        if not reranked:
+            max_s = max(finite_scores) if finite_scores else float("nan")
+            logger.warning(
+                "BGEM3Reranker dropped all %d candidate(s) below min_score=%.4f (max_score=%.4f).",
+                len(candidates),
+                threshold,
+                max_s,
+            )
+            return []
+
         reranked.sort(key=lambda r: r.score, reverse=True)
         return reranked[:top_k]

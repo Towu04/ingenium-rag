@@ -6,6 +6,7 @@ isolated and testable in complete independence.
 """
 
 import logging
+import time
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -15,7 +16,15 @@ import numpy as np
 
 from chunking import ParentChildChunker
 from config import Settings, get_settings
-from domain import Answer, ChildChunk, EmbeddedChildBatch, ParentChunk, ParsedDoc, SearchResult
+from domain import (
+    Answer,
+    ChildChunk,
+    EmbeddedChildBatch,
+    ParentChunk,
+    ParsedDoc,
+    RetrievalTrace,
+    SearchResult,
+)
 from embedding import BGEM3Embedder
 from etl import ETLRunner, SharePointConnector, load_processed_docs
 from generation.generator import (
@@ -109,6 +118,7 @@ class IndexingPipeline:
         force: bool = False,
     ) -> IndexingStats:
         """Index `ParsedDoc`s into Qdrant using length-sorted cross-document batch embedding."""
+        t_start = time.perf_counter()
         stats = IndexingStats()
         buffer: list[tuple[ParsedDoc, list[ParentChunk], list[ChildChunk]]] = []
         buffered_children = 0
@@ -126,6 +136,7 @@ class IndexingPipeline:
                 slices.append((start, len(flat_children)))
 
             try:
+                t_embed = time.perf_counter()
                 order = sorted(
                     range(len(flat_children)),
                     key=lambda i: len(flat_children[i].embedding_text or flat_children[i].text),
@@ -138,6 +149,12 @@ class IndexingPipeline:
                 for sorted_pos, orig_pos in enumerate(order):
                     dense_out[orig_pos] = sorted_batch.dense_vecs[sorted_pos]
                     sparse_out[orig_pos] = sorted_batch.sparse_weights[sorted_pos]
+                logger.info(
+                    "Embedded %d child chunk(s) across %d doc(s) in %.1fs.",
+                    len(flat_children),
+                    len(buffer),
+                    time.perf_counter() - t_embed,
+                )
             except Exception:
                 stats.failed_docs += len(buffer)
                 logger.exception("Batch embedding failed for %d buffered document(s).", len(buffer))
@@ -155,7 +172,7 @@ class IndexingPipeline:
                     stats.indexed_docs += 1
                     stats.total_parents += len(parents)
                     stats.total_children += len(doc_children)
-                    logger.info(
+                    logger.debug(
                         "Indexed '%s' (%s): %d parents, %d children.",
                         doc.metadata.source_path,
                         doc.document_id,
@@ -204,6 +221,17 @@ class IndexingPipeline:
                 )
 
         flush_buffer()
+        logger.info(
+            "Indexing complete in %.1fs: %d indexed, %d unchanged, %d empty, %d failed "
+            "(%d parents, %d children).",
+            time.perf_counter() - t_start,
+            stats.indexed_docs,
+            stats.skipped_unchanged,
+            stats.skipped_empty,
+            stats.failed_docs,
+            stats.total_parents,
+            stats.total_children,
+        )
         return stats
 
     def ingest_processed_dir(
@@ -304,6 +332,79 @@ class RAGPipeline:
         self.child_candidate_limit = child_candidate_limit
         self.rerank_k = rerank_k
 
+    def retrieve_with_trace(
+        self,
+        query: str,
+        *,
+        top_k: int | None = None,
+        retrieve_k: int | None = None,
+        project: str | None = None,
+        building: str | None = None,
+        phase: str | None = None,
+        auto_filter: bool = False,
+        min_score: float | None = None,
+    ) -> RetrievalTrace:
+        """Run hybrid search + reranking and return a full `RetrievalTrace` for inspection/debugging."""
+        explicit = {
+            k: v
+            for k, v in (("project", project), ("building", building), ("phase", phase))
+            if v is not None
+        }
+        inferred = extract_metadata_filters(query) if auto_filter else {}
+        eff_project = project if project is not None else inferred.get("project")
+        eff_building = building if building is not None else inferred.get("building")
+        eff_phase = phase if phase is not None else inferred.get("phase")
+        applied = {
+            k: v
+            for k, v in (
+                ("project", eff_project),
+                ("building", eff_building),
+                ("phase", eff_phase),
+            )
+            if v is not None
+        }
+        used_only_inferred = auto_filter and not explicit
+
+        k_final = top_k if top_k is not None else self.rerank_k
+        k_retrieve = max(retrieve_k if retrieve_k is not None else self.retrieve_k, k_final)
+
+        candidates, child_hits, fell_back = self.searcher.search_with_stats(
+            query,
+            top_k_parents=k_retrieve,
+            child_candidate_limit=self.child_candidate_limit,
+            project=eff_project,
+            building=eff_building,
+            phase=eff_phase,
+            fallback_unfiltered=used_only_inferred,
+        )
+
+        eff_min_score = (
+            min_score if min_score is not None else float(getattr(self.reranker, "min_score", 0.0))
+        )
+        if not candidates:
+            all_kept: list[SearchResult] = []
+        elif min_score is not None:
+            all_kept = self.reranker.rerank(
+                query, candidates, top_k=len(candidates), min_score=min_score
+            )
+        else:
+            all_kept = self.reranker.rerank(query, candidates, top_k=len(candidates))
+
+        final_results = all_kept[:k_final]
+        return RetrievalTrace(
+            query=query,
+            explicit_filters=explicit,
+            auto_filters=dict(inferred),
+            applied_filters=applied,
+            fallback_unfiltered=fell_back,
+            hybrid_child_hits=child_hits,
+            deduplicated_parents=len(candidates),
+            reranked_kept=len(all_kept),
+            reranked_dropped=max(0, len(candidates) - len(all_kept)),
+            min_score=eff_min_score,
+            results=final_results,
+        )
+
     def retrieve(
         self,
         query: str,
@@ -314,27 +415,19 @@ class RAGPipeline:
         building: str | None = None,
         phase: str | None = None,
         auto_filter: bool = False,
+        min_score: float | None = None,
     ) -> list[SearchResult]:
         """Run hybrid search + cross-encoder reranking without LLM generation."""
-        inferred = extract_metadata_filters(query) if auto_filter else {}
-        eff_project = project if project is not None else inferred.get("project")
-        eff_building = building if building is not None else inferred.get("building")
-        eff_phase = phase if phase is not None else inferred.get("phase")
-        used_only_inferred = auto_filter and project is None and building is None and phase is None
-
-        k_final = top_k if top_k is not None else self.rerank_k
-        k_retrieve = max(retrieve_k if retrieve_k is not None else self.retrieve_k, k_final)
-
-        candidates = self.searcher.search(
+        return self.retrieve_with_trace(
             query,
-            top_k_parents=k_retrieve,
-            child_candidate_limit=self.child_candidate_limit,
-            project=eff_project,
-            building=eff_building,
-            phase=eff_phase,
-            fallback_unfiltered=used_only_inferred,
-        )
-        return self.reranker.rerank(query, candidates, top_k=k_final)
+            top_k=top_k,
+            retrieve_k=retrieve_k,
+            project=project,
+            building=building,
+            phase=phase,
+            auto_filter=auto_filter,
+            min_score=min_score,
+        ).results
 
     def run(
         self,
@@ -346,6 +439,7 @@ class RAGPipeline:
         building: str | None = None,
         phase: str | None = None,
         auto_filter: bool = False,
+        min_score: float | None = None,
     ) -> Answer:
         """Execute retrieval, reranking, and citation-grounded generation."""
         reranked = self.retrieve(
@@ -356,6 +450,7 @@ class RAGPipeline:
             building=building,
             phase=phase,
             auto_filter=auto_filter,
+            min_score=min_score,
         )
         return self.generator.generate(query, reranked)
 

@@ -313,7 +313,7 @@ class ETLRunner:
                 continue
 
             try:
-                logger.info("[%d/%d] Extracting: %s", idx, total, rel_posix)
+                logger.debug("[%d/%d] Extracting: %s", idx, total, rel_posix)
                 parsed_doc = self._dispatch(file_path, rel_path)
                 parsed_doc.content_hash = file_hash
 
@@ -326,7 +326,7 @@ class ETLRunner:
 
                 result.processed_files += 1
                 result.documents.append(parsed_doc)
-                logger.info(
+                logger.debug(
                     "[%d/%d] DONE: %s -> %s (%d sections)",
                     idx,
                     total,
@@ -448,7 +448,9 @@ class ETLRunner:
                 logger.debug("[%s: %d/%d] SKIP unchanged: %s", pass_label, idx, total, item.name)
                 return
 
-            logger.info("[%s: %d/%d] Streaming & extracting: %s", pass_label, idx, total, rel_posix)
+            logger.debug(
+                "[%s: %d/%d] Streaming & extracting: %s", pass_label, idx, total, rel_posix
+            )
             local_path, seeded_json, file_hash = sp.download_and_seed(
                 item, json_out_dir=self.json_out_dir
             )
@@ -482,7 +484,7 @@ class ETLRunner:
             self.manifest.save()
             result.processed_files += 1
             result.documents.append(parsed_doc)
-            logger.info(
+            logger.debug(
                 "[%s: %d/%d] DONE: %s -> %s", pass_label, idx, total, item.name, json_path.name
             )
 

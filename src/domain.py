@@ -579,6 +579,24 @@ class SearchResult(BaseModel):
     parent_chunk: ParentChunk
     matched_child_id: str
     score: float
+    matched_child_text: str | None = None
+    retrieval_score: float | None = None
+
+
+class RetrievalTrace(BaseModel):
+    """Diagnostic trace of a query through metadata filtering, hybrid search, and reranking."""
+
+    query: str
+    explicit_filters: dict[str, str] = Field(default_factory=dict)
+    auto_filters: dict[str, str] = Field(default_factory=dict)
+    applied_filters: dict[str, str] = Field(default_factory=dict)
+    fallback_unfiltered: bool = False
+    hybrid_child_hits: int = 0
+    deduplicated_parents: int = 0
+    reranked_kept: int = 0
+    reranked_dropped: int = 0
+    min_score: float = 0.0
+    results: list[SearchResult] = Field(default_factory=list)
 
 
 class Citation(BaseModel):

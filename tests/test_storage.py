@@ -171,3 +171,25 @@ class TestHybridSearchAndFiltering:
             "doc-multi"
         ]
         assert repo.search_parents(q, project="Alpha", building="Blok L") == []
+
+    def test_stores_child_text_and_supports_inspection_iterators(
+        self, repo: LocalHybridRepository
+    ) -> None:
+        doc, parents, children, batch = make_bundle(
+            doc_id="doc-insp", num_parents=1, children_per_parent=2, dominant_dim_offset=3
+        )
+        repo.upsert_document_bundle(doc, parents, children, batch)
+
+        q = EncodedQuery(dense_vec=make_dense_vec(3), sparse_weights={103: 1.0})
+        results, child_hits = repo.search_parents_with_stats(q)
+        assert child_hits == 2
+        assert len(results) == 1
+        assert results[0].matched_child_text is not None
+        assert results[0].matched_child_text.startswith("Child text ")
+        assert results[0].retrieval_score == results[0].score
+
+        doc_parents, doc_children = repo.get_document_chunks("doc-insp")
+        assert len(doc_parents) == 1
+        assert len(doc_children) == 2
+        assert all("text" in ch for ch in doc_children)
+        assert len(list(repo.iter_documents())) == 1

@@ -4,7 +4,9 @@ Single source of truth for all stages (`etl`, `chunking`, `embedding`, `storage`
 `retrieval`, `generation`, `api`). Imports only standard library and `pydantic-settings`.
 """
 
+import logging
 import os
+import sys
 from functools import lru_cache
 from pathlib import Path
 
@@ -102,7 +104,7 @@ class Settings(BaseSettings):
     reranker_model: str = "BAAI/bge-reranker-v2-m3"
     reranker_batch_size: int = 16
     reranker_max_length: int = 2048
-    reranker_min_score: float = 0.05
+    reranker_min_score: float = 0.0
     device: str | None = None
 
     # --- Retrieval ---
@@ -151,3 +153,57 @@ def detect_device(preferred: str | None = None) -> str:
     if torch.backends.mps.is_available():
         return "mps"
     return "cpu"
+
+
+_NOISY_THIRD_PARTY_LOGGERS: tuple[str, ...] = (
+    "transformers",
+    "huggingface_hub",
+    "FlagEmbedding",
+    "torch",
+    "httpx",
+    "httpcore",
+    "urllib3",
+    "qdrant_client",
+    "sentence_transformers",
+    "filelock",
+    "msal",
+    "datasets",
+)
+
+
+def configure_logging(
+    *,
+    verbose: bool = False,
+    quiet: bool = False,
+    json_mode: bool = False,
+    default_level: int = logging.WARNING,
+    disable_progress: bool | None = None,
+) -> None:
+    """Configure consistent stderr-only logging and silence third-party chatter unless verbose."""
+    if verbose:
+        level = logging.DEBUG
+    elif quiet or json_mode:
+        level = logging.ERROR
+    else:
+        level = default_level
+
+    handler = logging.StreamHandler(sys.stderr)
+    handler.setFormatter(
+        logging.Formatter("%(asctime)s %(levelname)-7s %(name)s: %(message)s", datefmt="%H:%M:%S")
+    )
+    logging.basicConfig(level=level, handlers=[handler], force=True)
+
+    third_party_level = logging.INFO if verbose else logging.ERROR
+    for name in _NOISY_THIRD_PARTY_LOGGERS:
+        logging.getLogger(name).setLevel(third_party_level)
+
+    should_disable_progress = (
+        disable_progress
+        if disable_progress is not None
+        else (not verbose and (quiet or json_mode or default_level >= logging.WARNING))
+    )
+    if should_disable_progress:
+        os.environ.setdefault("TQDM_DISABLE", "1")
+        os.environ.setdefault("HF_HUB_DISABLE_PROGRESS_BARS", "1")
+        os.environ.setdefault("TRANSFORMERS_VERBOSITY", "error")
+        os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")

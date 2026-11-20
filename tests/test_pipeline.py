@@ -67,6 +67,10 @@ class _FakeReranker:
             SearchResult(
                 parent_chunk=item.parent_chunk,
                 matched_child_id=item.matched_child_id,
+                matched_child_text=item.matched_child_text,
+                retrieval_score=(
+                    item.retrieval_score if item.retrieval_score is not None else item.score
+                ),
                 score=float(len(q_tokens & set(item.parent_chunk.text.lower().split())))
                 + item.score,
             )
@@ -262,3 +266,33 @@ def test_indexing_pipeline_lazy_embedder_and_length_sorted_batching(
         lazy_indexer = IndexingPipeline(repository=repo, chunker=chunker)
         stats2 = lazy_indexer.ingest_processed_dir(processed_dir, use_manifest=False)
         assert (stats2.indexed_docs, stats2.skipped_unchanged) == (0, 2)
+
+
+def test_retrieve_with_trace_reports_filters_funnel_and_child_text(tmp_path: Path) -> None:
+    processed_dir = _write_parsed_doc_fixtures(tmp_path / "trace_processed")
+    embedder = _FakeEmbedder()
+    chunker = ParentChildChunker(parent_size=200, child_size=80, child_overlap=10)
+
+    with LocalHybridRepository(path=":memory:") as repo:
+        IndexingPipeline(repository=repo, embedder=embedder, chunker=chunker).ingest_processed_dir(
+            processed_dir, use_manifest=False
+        )
+        rag = RAGPipeline(
+            searcher=Searcher(embedder=embedder, repository=repo),
+            reranker=_FakeReranker(),
+            generator=GroundedGenerator(llm=ExtractiveStubLLM()),
+            retrieve_k=10,
+            rerank_k=3,
+        )
+        trace = rag.retrieve_with_trace(
+            "Welke brandwerende deur EI1 30 in Blok L?",
+            auto_filter=True,
+        )
+        assert trace.auto_filters.get("building") == "Blok L"
+        assert trace.applied_filters.get("building") == "Blok L"
+        assert trace.hybrid_child_hits >= 1
+        assert trace.deduplicated_parents >= 1
+        assert trace.reranked_kept == len(trace.results)
+        assert trace.reranked_dropped == 0
+        assert trace.results[0].matched_child_text is not None
+        assert "EI1 30" in trace.results[0].matched_child_text

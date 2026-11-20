@@ -32,10 +32,21 @@ BUILDING       ?=
 PHASE          ?=
 RETRIEVAL_ONLY ?=
 NO_RERANK      ?=
+DEBUG          ?=
+JSON           ?=
+VERBOSE        ?=
+QUIET          ?=
+MIN_SCORE      ?=
+DOC_ID         ?=
+OUT            ?= data/exports
+QUESTIONS      ?=
 DATASET        ?=
 
+CLI_FLAGS := $(if $(VERBOSE),--verbose,) $(if $(QUIET),--quiet,) $(if $(JSON),--json,)
+
 .PHONY: help install download-models test test-cov lint format check \
-        ingest ingest-dry-run report query eval api clean reset-db
+        ingest ingest-dry-run report query inspect export-chunks batch-query \
+        eval api clean reset-db
 
 # =============================================================================
 # Help & Setup
@@ -100,7 +111,7 @@ ingest: ## Run ingestion pipeline (MODE=etl|raw|sharepoint, PREFIX=..., LIMIT=N,
 			echo "Error: Invalid MODE='$(MODE)'. Expected: etl, raw, or sharepoint."; exit 1 ;; \
 	esac; \
 	if [ -n "$(FORCE)" ]; then set -- "$$@" --force; fi; \
-	$(PY_ENV) $(PYTHON) scripts/ingest.py "$$@"
+	$(PY_ENV) $(PYTHON) scripts/ingest.py "$$@" $(CLI_FLAGS)
 
 ingest-dry-run: ## Preview file inventory and metadata without extracting (MODE=raw|sharepoint)
 	@set -- --dry-run; \
@@ -116,27 +127,48 @@ ingest-dry-run: ## Preview file inventory and metadata without extracting (MODE=
 	$(PY_ENV) $(PYTHON) scripts/ingest.py "$$@"
 
 report: ## Print processed documents summary and scanned-PDF/limitations audit report
-	$(PY_ENV) $(PYTHON) scripts/ingest.py --report --processed-dir "$(ETL_DIR)"
+	$(PY_ENV) $(PYTHON) scripts/ingest.py --report --processed-dir "$(ETL_DIR)" $(CLI_FLAGS)
 
-query: ## Run hybrid search + rerank (Q="...", optional PROJECT/BUILDING/PHASE/RETRIEVAL_ONLY/NO_RERANK)
+query: ## Run hybrid search + rerank (Q="...", optional PROJECT/BUILDING/PHASE/DEBUG/JSON/VERBOSE/QUIET/MIN_SCORE/RETRIEVAL_ONLY/NO_RERANK)
 	@if [ -z "$(Q)" ]; then \
-		echo "Usage: make query Q=\"Your question here\" [PROJECT=...] [BUILDING=...] [PHASE=...] [RETRIEVAL_ONLY=1] [NO_RERANK=1]"; \
+		echo "Usage: make query Q=\"Your question here\" [PROJECT=...] [BUILDING=...] [PHASE=...] [DEBUG=1] [JSON=1] [VERBOSE=1] [MIN_SCORE=0.05] [RETRIEVAL_ONLY=1] [NO_RERANK=1]"; \
 		exit 1; \
 	fi
 	@set -- --qdrant-path "$(QDRANT_PATH)"; \
 	if [ -n "$(PROJECT)" ]; then set -- "$$@" --project "$(PROJECT)"; fi; \
 	if [ -n "$(BUILDING)" ]; then set -- "$$@" --building "$(BUILDING)"; fi; \
 	if [ -n "$(PHASE)" ]; then set -- "$$@" --phase "$(PHASE)"; fi; \
+	if [ -n "$(MIN_SCORE)" ]; then set -- "$$@" --min-score "$(MIN_SCORE)"; fi; \
 	if [ -n "$(RETRIEVAL_ONLY)" ]; then set -- "$$@" --retrieval-only; fi; \
 	if [ -n "$(NO_RERANK)" ]; then set -- "$$@" --no-rerank; fi; \
-	$(PY_ENV) $(PYTHON) scripts/query.py "$$@" "$(Q)"
+	if [ -n "$(DEBUG)" ]; then set -- "$$@" --debug; fi; \
+	$(PY_ENV) $(PYTHON) scripts/query.py "$$@" $(CLI_FLAGS) "$(Q)"
+
+inspect: ## Print Qdrant DB stats & metadata distributions (optional DOC_ID=<id>, JSON=1)
+	@set -- --qdrant-path "$(QDRANT_PATH)" $(CLI_FLAGS) stats; \
+	if [ -n "$(DOC_ID)" ]; then set -- "$$@" --doc-id "$(DOC_ID)"; fi; \
+	$(PY_ENV) $(PYTHON) scripts/inspect_rag.py "$$@"
+
+export-chunks: ## Export parent & child chunks to JSONL for RAGAS (OUT=data/exports, optional DOC_ID=...)
+	@set -- --qdrant-path "$(QDRANT_PATH)" $(CLI_FLAGS) export --out "$(OUT)"; \
+	if [ -n "$(DOC_ID)" ]; then set -- "$$@" --doc-id "$(DOC_ID)"; fi; \
+	$(PY_ENV) $(PYTHON) scripts/inspect_rag.py "$$@"
+
+batch-query: ## Run batch questions (.txt/.json) and save a retrieval report (QUESTIONS=..., OUT=...)
+	@if [ -z "$(QUESTIONS)" ]; then \
+		echo "Usage: make batch-query QUESTIONS=path/to/questions.txt [OUT=data/exports/batch_report.md]"; \
+		exit 1; \
+	fi
+	@REPORT_OUT="$(if $(filter data/exports,$(OUT)),data/exports/batch_query_report.md,$(OUT))"; \
+	$(PY_ENV) $(PYTHON) scripts/inspect_rag.py --qdrant-path "$(QDRANT_PATH)" $(CLI_FLAGS) batch-query \
+		--questions "$(QUESTIONS)" --out "$$REPORT_OUT"
 
 eval: ## Run evaluation dataset (requires DATASET=path/to/eval.json|csv)
 	@if [ -z "$(DATASET)" ]; then \
 		echo "Usage: make eval DATASET=path/to/eval.json"; \
 		exit 1; \
 	fi
-	$(PY_ENV) $(PYTHON) scripts/eval.py --dataset "$(DATASET)" --qdrant-path "$(QDRANT_PATH)"
+	$(PY_ENV) $(PYTHON) scripts/eval.py --dataset "$(DATASET)" --qdrant-path "$(QDRANT_PATH)" $(CLI_FLAGS)
 
 api: ## Start FastAPI development server on :8000
 	$(PY_ENV) $(PYTHON) -m uvicorn api.app:app --reload --port 8000

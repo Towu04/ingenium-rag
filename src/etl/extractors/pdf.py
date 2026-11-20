@@ -168,7 +168,7 @@ class PdfExtractor:
             drop_noisy_callouts=drop_noisy_callouts,
         )
         if dropped_callouts:
-            logger.info(
+            logger.debug(
                 "Quarantined %d noisy diagram_callout block(s) from '%s'.",
                 dropped_callouts,
                 rel_path.name,

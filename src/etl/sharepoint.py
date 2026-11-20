@@ -285,7 +285,7 @@ class SharePointConnector:
                 if "folder" in raw_item:
                     folder_rel = f"{parent_rel_path}/{name}".strip("/") if parent_rel_path else name
                     if folder_rel.count("/") <= 1:
-                        logger.info(
+                        logger.debug(
                             "Scanning folder: %s (%d files found so far)",
                             folder_rel,
                             len(collected),

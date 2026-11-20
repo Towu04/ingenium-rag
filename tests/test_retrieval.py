@@ -38,7 +38,9 @@ def _result(pid: str, text: str, score: float = 0.5) -> SearchResult:
     return SearchResult(parent_chunk=parent, matched_child_id=f"{pid}:c0", score=score)
 
 
-def test_rerank_single_multiple_and_empty(reranker: BGEM3Reranker) -> None:
+def test_rerank_single_multiple_and_empty(
+    reranker: BGEM3Reranker, caplog: pytest.LogCaptureFixture
+) -> None:
     assert reranker.rerank("q", []) == []
 
     single = reranker.rerank("answer", [_result("p", "the answer")])
@@ -53,10 +55,57 @@ def test_rerank_single_multiple_and_empty(reranker: BGEM3Reranker) -> None:
     top2 = reranker.rerank("brandwerende deur", candidates, top_k=2)
     assert [r.parent_chunk.id for r in top2] == ["p1", "p2"]
 
-    # min_score cutoff drops irrelevant score=0.0 candidate even when top_k=5
-    filtered = reranker.rerank("brandwerende deur", candidates, top_k=5)
+    # Default min_score=0.0 keeps all finite candidates; custom min_score filters low scores
+    assert len(reranker.rerank("brandwerende deur", candidates, top_k=5)) == 3
+    filtered = reranker.rerank("brandwerende deur", candidates, top_k=5, min_score=0.05)
     assert [r.parent_chunk.id for r in filtered] == ["p1", "p2"]
-    assert len(reranker.rerank("brandwerende deur", candidates, top_k=5, min_score=0.0)) == 3
+
+    # Custom min_score dropping all candidates logs a warning
+    with caplog.at_level("WARNING", logger="retrieval.reranker"):
+        dropped_all = reranker.rerank("brandwerende deur", candidates, top_k=5, min_score=10.0)
+    assert dropped_all == []
+    assert "dropped all 3 candidate(s)" in caplog.text
+
+
+def test_reranker_drops_non_finite_scores_and_preserves_child_context(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    class _NaNReranker:
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            pass
+
+        def compute_score(self, pairs: list[list[str]], **kwargs: Any) -> list[float]:
+            return [float("nan"), 0.42, float("inf")]
+
+    monkeypatch.setattr(reranker_module, "FlagReranker", _NaNReranker)
+    rr = BGEM3Reranker(device="cpu")
+    cands = [
+        SearchResult(
+            parent_chunk=_result("p0", "bad").parent_chunk,
+            matched_child_id="p0:c0",
+            matched_child_text="child 0",
+            score=0.9,
+        ),
+        SearchResult(
+            parent_chunk=_result("p1", "good").parent_chunk,
+            matched_child_id="p1:c0",
+            matched_child_text="child 1 text",
+            score=0.33,
+        ),
+        SearchResult(
+            parent_chunk=_result("p2", "inf").parent_chunk,
+            matched_child_id="p2:c0",
+            matched_child_text="child 2",
+            score=0.2,
+        ),
+    ]
+    with caplog.at_level("WARNING", logger="retrieval.reranker"):
+        out = rr.rerank("q", cands, top_k=5)
+    assert [r.parent_chunk.id for r in out] == ["p1"]
+    assert out[0].score == pytest.approx(0.42)
+    assert out[0].retrieval_score == pytest.approx(0.33)
+    assert out[0].matched_child_text == "child 1 text"
+    assert "non-finite score(s)" in caplog.text
 
 
 def test_reranker_enables_fp16_on_mps_and_formats_file_tag(

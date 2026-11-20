@@ -1,7 +1,8 @@
 """Serverless, disk-persistent Hybrid Vector Repository using local Qdrant."""
 
 import uuid
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Iterator, Sequence
+from typing import Any
 
 from qdrant_client import QdrantClient, models
 
@@ -136,6 +137,9 @@ class LocalHybridRepository:
                             "child_id": c.id,
                             "parent_id": c.parent_id,
                             "document_id": c.document_id,
+                            "text": c.text,
+                            "section_header": c.section_header,
+                            "page_numbers": list(c.page_numbers),
                             "project": c.metadata.project,
                             "building": (
                                 c.metadata.buildings
@@ -160,22 +164,119 @@ class LocalHybridRepository:
         building: str | None = None,
         phase: str | None = None,
     ) -> list[SearchResult]:
+        results, _ = self.search_parents_with_stats(
+            encoded_query=encoded_query,
+            top_k_parents=top_k_parents,
+            child_candidate_limit=child_candidate_limit,
+            project=project,
+            building=building,
+            phase=phase,
+        )
+        return results
+
+    def search_parents_with_stats(
+        self,
+        encoded_query: EncodedQuery,
+        top_k_parents: int = 15,
+        child_candidate_limit: int = 80,
+        project: str | None = None,
+        building: str | None = None,
+        phase: str | None = None,
+    ) -> tuple[list[SearchResult], int]:
+        """Run hybrid search and return `(deduplicated_parent_results, raw_child_hit_count)`."""
         query_filter = self._build_filter(project=project, building=building, phase=phase)
         hits = self._query_hybrid_children(encoded_query, query_filter, child_candidate_limit)
         best_by_parent = self._dedupe_by_parent(hits, top_k_parents)
         if not best_by_parent:
-            return []
+            return [], len(hits)
 
         parent_map = self._fetch_parents(best_by_parent.keys())
-        return [
+        results = [
             SearchResult(
                 parent_chunk=parent_map[pid],
                 matched_child_id=child_id,
+                matched_child_text=child_text,
+                retrieval_score=score,
                 score=score,
             )
-            for pid, (child_id, score) in best_by_parent.items()
+            for pid, (child_id, score, child_text) in best_by_parent.items()
             if pid in parent_map
         ]
+        return results, len(hits)
+
+    def iter_documents(self, batch_size: int = 256) -> Iterator[dict[str, Any]]:
+        """Yield document registry payloads (`document_id`, `content_hash`) from `documents`."""
+        offset: Any = None
+        while True:
+            points, offset = self.client.scroll(
+                self.DOCS_COL,
+                limit=batch_size,
+                offset=offset,
+                with_payload=True,
+                with_vectors=False,
+            )
+            for pt in points:
+                if pt.payload:
+                    yield dict(pt.payload)
+            if offset is None:
+                break
+
+    def iter_parents(
+        self,
+        document_id: str | None = None,
+        batch_size: int = 256,
+    ) -> Iterator[ParentChunk]:
+        """Yield `ParentChunk`s from `parent_chunks`, optionally filtered to one `document_id`."""
+        scroll_filter = self._build_filter(document_id=document_id)
+        offset: Any = None
+        while True:
+            points, offset = self.client.scroll(
+                self.PARENTS_COL,
+                scroll_filter=scroll_filter,
+                limit=batch_size,
+                offset=offset,
+                with_payload=True,
+                with_vectors=False,
+            )
+            for pt in points:
+                if pt.payload:
+                    yield ParentChunk.model_validate(pt.payload)
+            if offset is None:
+                break
+
+    def iter_children(
+        self,
+        document_id: str | None = None,
+        batch_size: int = 256,
+    ) -> Iterator[dict[str, Any]]:
+        """Yield child chunk payload dicts from `child_chunks` (without dense/sparse vectors)."""
+        scroll_filter = self._build_filter(document_id=document_id)
+        offset: Any = None
+        while True:
+            points, offset = self.client.scroll(
+                self.CHILDREN_COL,
+                scroll_filter=scroll_filter,
+                limit=batch_size,
+                offset=offset,
+                with_payload=True,
+                with_vectors=False,
+            )
+            for pt in points:
+                if pt.payload:
+                    yield dict(pt.payload)
+            if offset is None:
+                break
+
+    def get_document_chunks(
+        self, document_id: str
+    ) -> tuple[list[ParentChunk], list[dict[str, Any]]]:
+        """Return ordered `(parents, children)` for a single `document_id`."""
+        parents = sorted(self.iter_parents(document_id=document_id), key=lambda p: p.parent_index)
+        children = sorted(
+            self.iter_children(document_id=document_id),
+            key=lambda c: str(c.get("child_id", "")),
+        )
+        return parents, children
 
     @staticmethod
     def _build_filter(**kwargs: str | None) -> models.Filter | None:
@@ -220,14 +321,19 @@ class LocalHybridRepository:
     def _dedupe_by_parent(
         hits: Sequence[models.ScoredPoint],
         top_k_parents: int,
-    ) -> dict[str, tuple[str, float]]:
-        best_by_parent: dict[str, tuple[str, float]] = {}
+    ) -> dict[str, tuple[str, float, str | None]]:
+        best_by_parent: dict[str, tuple[str, float, str | None]] = {}
         for hit in hits:
             if not hit.payload:
                 continue
             p_id = hit.payload["parent_id"]
             if p_id not in best_by_parent:
-                best_by_parent[p_id] = (hit.payload["child_id"], float(hit.score))
+                raw_text = hit.payload.get("text")
+                best_by_parent[p_id] = (
+                    hit.payload["child_id"],
+                    float(hit.score),
+                    str(raw_text) if raw_text is not None else None,
+                )
             if len(best_by_parent) >= top_k_parents:
                 break
         return best_by_parent
