@@ -1,12 +1,7 @@
-"""Document extractors for PDF, DOCX, and XLSX engineering files."""
+"""Document extractors emitting canonical `domain.ParsedDoc` directly."""
 
-from etl.extractors.docx_extractor import DocxExtractor
-from etl.extractors.pdf_extractor import PdfExtractor, inspect_pdf_document
-from etl.extractors.xlsx_extractor import XlsxExtractor
+from etl.extractors.docx import DocxExtractor
+from etl.extractors.pdf import PdfExtractor, inspect_pdf_document
+from etl.extractors.xlsx import XlsxExtractor
 
-__all__ = [
-    "DocxExtractor",
-    "PdfExtractor",
-    "XlsxExtractor",
-    "inspect_pdf_document",
-]
+__all__ = ["DocxExtractor", "PdfExtractor", "XlsxExtractor", "inspect_pdf_document"]

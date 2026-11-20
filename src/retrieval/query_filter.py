@@ -1,40 +1,35 @@
-"""Metadata filter extraction & normalization from user queries."""
+"""Metadata filter extraction & canonicalization from user queries (imports `domain` only)."""
 
 import re
 
-from etl.metadata_matcher import (
+from domain import (
     infer_building,
     infer_phase,
     infer_project_id_from_path,
-)
-from processing.normalization import (
     normalize_phase,
     normalize_project,
     split_buildings,
 )
 
-_EXPLICIT_FIELD_RE = {
+_EXPLICIT_FIELD_RE: dict[str, re.Pattern[str]] = {
     "project": re.compile(r"\bproject\s*[:=]\s*([A-Za-z0-9._-]+)", re.IGNORECASE),
     "building": re.compile(
-        r"\b(?:building|blok)\s*[:=]\s*(?:(Blok\s+[A-Za-z0-9]+|Vleugel\s+[A-Za-z0-9]+|Gebouw\s+[A-Za-z0-9]+|Technische\s+Ruimte|Intensieve\s+Zorgen)|([A-Za-z0-9_-]+))",
+        r"\b(?:building|blok)\s*[:=]\s*(?:(Blok\s+[A-Za-z0-9]+|Vleugel\s+[A-Za-z0-9]+|"
+        r"Gebouw\s+[A-Za-z0-9]+|Technische\s+Ruimte|Intensieve\s+Zorgen)|([A-Za-z0-9_-]+))",
         re.IGNORECASE,
     ),
     "phase": re.compile(
-        r"\b(?:phase|fase)\s*[:=]\s*(Definitief\s+Ontwerp|Preliminary\s+Design|Final\s+Design|As[\s-]Built|[A-Za-z0-9_-]+)",
+        r"\b(?:phase|fase)\s*[:=]\s*(Definitief\s+Ontwerp|Preliminary\s+Design|"
+        r"Final\s+Design|As[\s-]Built|[A-Za-z0-9_-]+)",
         re.IGNORECASE,
     ),
 }
 
 
 def extract_metadata_filters(query: str) -> dict[str, str]:
-    """Extract canonical `project`, `building`, and `phase` filters from a natural-language query.
-
-    Supports both explicit `key:value` overrides (`building:Blok L`) and natural Flemish/English
-    engineering phrasing (`"luchtgroepen in Blok L tijdens uitvoering voor 06038.004"`).
-    """
+    """Extract canonical `project`, `building`, and `phase` filters from a query string."""
     filters: dict[str, str] = {}
 
-    # 1. Explicit key:value syntax takes highest precedence
     for field, pattern in _EXPLICIT_FIELD_RE.items():
         m = pattern.search(query)
         if not m:
@@ -50,13 +45,10 @@ def extract_metadata_filters(query: str) -> dict[str, str]:
         if norm:
             filters[field] = norm
 
-    # 2. Natural-language fallback for fields not explicitly specified
     if "project" not in filters:
         proj = infer_project_id_from_path(query)
         if proj:
-            norm_proj = normalize_project(proj)
-            if norm_proj:
-                filters["project"] = norm_proj
+            filters["project"] = proj
 
     if "building" not in filters:
         bldg = infer_building(query)
@@ -66,11 +58,8 @@ def extract_metadata_filters(query: str) -> dict[str, str]:
                 filters["building"] = parts[0]
 
     if "phase" not in filters:
-        # Disallow 2-letter abbreviations in free-form queries to avoid false matches
         ph = infer_phase(query, allow_abbreviations=False)
         if ph:
-            norm_ph = normalize_phase(ph)
-            if norm_ph:
-                filters["phase"] = norm_ph
+            filters["phase"] = ph
 
     return filters

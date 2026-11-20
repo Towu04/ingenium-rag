@@ -4,29 +4,25 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ingenium-rag"
-version = "0.2.0"
-description = "SharePoint document ingestion and grounded Parent-Child hybrid retrieval for Ingenium."
+version = "0.3.0"
+description = "SharePoint document extraction and Parent-Child Hybrid RAG for Ingenium."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
   "numpy>=1.26",
   "pydantic>=2.8",
   "pydantic-settings>=2.4",
-  "pyyaml>=6.0",
 ]
 
 [project.optional-dependencies]
-# Document extraction & metadata matching (src/etl)
 etl = [
   "pymupdf>=1.24",
   "python-docx>=1.1",
   "openpyxl>=3.1",
   "msal>=1.28",
   "requests>=2.31",
-  "typer>=0.12",
   "rich>=13.0",
 ]
-# Chunking, BGE-M3 hybrid embeddings, reranking and local Qdrant storage
 rag = [
   "FlagEmbedding>=1.2",
   "torch>=2.2",
@@ -48,28 +44,27 @@ dev = [
 all = ["ingenium-rag[etl,rag,api,dev]"]
 
 [project.scripts]
-ingenium-etl = "etl.cli:app"
-ingenium-ingest = "scripts.ingest_folder:main"
-ingenium-query = "scripts.query_cli:main"
+ingenium-ingest = "scripts.ingest:main"
+ingenium-query = "scripts.query:main"
+ingenium-eval = "scripts.eval:main"
 
-# Flat `src/` layout: every top-level package/module under src/ is importable directly
-# (e.g. `import domain`, `from etl.pipeline import ETLPipeline`).
 [tool.hatch.build.targets.wheel]
 packages = [
   "src/api",
+  "src/chunking",
+  "src/embedding",
   "src/etl",
+  "src/evaluation",
   "src/generation",
-  "src/pipelines",
-  "src/processing",
   "src/retrieval",
   "src/storage",
   "scripts",
-  "evaluation",
 ]
 
 [tool.hatch.build.targets.wheel.force-include]
 "src/domain.py" = "domain.py"
 "src/config.py" = "config.py"
+"src/pipeline.py" = "pipeline.py"
 
 [tool.pytest.ini_options]
 pythonpath = ["src", "."]
@@ -87,3 +82,4 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
+ignore = ["E501"]

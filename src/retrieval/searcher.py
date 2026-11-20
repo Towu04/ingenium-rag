@@ -1,30 +1,43 @@
-"""Hybrid Parent-Child searcher wiring `BGEM3Embedder.embed_query` to `LocalHybridRepository.search_parents`."""
+"""Hybrid parent searcher using domain-only protocols (zero concrete storage/embedding imports)."""
 
 import logging
 from typing import Protocol
 
-from domain import SearchResult
-from processing.normalization import normalize_building, normalize_phase, normalize_project
-from storage.embedder import EncodedQuery
-from storage.repository import LocalHybridRepository
+from domain import (
+    EncodedQuery,
+    SearchResult,
+    normalize_building,
+    normalize_phase,
+    normalize_project,
+)
 
 logger = logging.getLogger(__name__)
 
 
-class QueryEmbedder(Protocol):
-    """Minimal query-encoding protocol satisfied by `BGEM3Embedder` and test fakes."""
+class QueryEncoder(Protocol):
+    """Protocol satisfied by `BGEM3Embedder` and lightweight test fakes."""
 
     def embed_query(self, query: str) -> EncodedQuery: ...
 
 
-class Searcher:
-    """Encodes a user query and runs metadata-filtered hybrid RRF parent search in Qdrant."""
+class ParentStore(Protocol):
+    """Protocol satisfied by `LocalHybridRepository` and lightweight test fakes."""
 
-    def __init__(
+    def search_parents(
         self,
-        embedder: QueryEmbedder,
-        repository: LocalHybridRepository,
-    ) -> None:
+        encoded_query: EncodedQuery,
+        top_k_parents: int = 15,
+        child_candidate_limit: int = 40,
+        project: str | None = None,
+        building: str | None = None,
+        phase: str | None = None,
+    ) -> list[SearchResult]: ...
+
+
+class Searcher:
+    """Encodes a user query and executes metadata-filtered hybrid parent retrieval."""
+
+    def __init__(self, embedder: QueryEncoder, repository: ParentStore) -> None:
         self.embedder = embedder
         self.repository = repository
 
@@ -39,6 +52,9 @@ class Searcher:
         phase: str | None = None,
         fallback_unfiltered: bool = False,
     ) -> list[SearchResult]:
+        if not query or not query.strip():
+            return []
+
         encoded = self.embedder.embed_query(query)
         norm_project = normalize_project(project)
         norm_building = normalize_building(building)
@@ -55,8 +71,7 @@ class Searcher:
 
         if not results and fallback_unfiltered and any((norm_project, norm_building, norm_phase)):
             logger.warning(
-                "Filtered search (project=%s, building=%s, phase=%s) returned 0 results; "
-                "retrying unfiltered.",
+                "Filtered search (project=%s, building=%s, phase=%s) returned 0 results; retrying unfiltered.",
                 norm_project,
                 norm_building,
                 norm_phase,

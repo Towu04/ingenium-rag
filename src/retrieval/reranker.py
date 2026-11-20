@@ -1,20 +1,16 @@
-from domain import SearchResult
+"""Cross-Encoder reranker (`BAAI/bge-reranker-v2-m3`) for post-retrieval precision filtering."""
+
+from collections.abc import Sequence
+
 import numpy as np
-from typing import Sequence
-import torch
 from FlagEmbedding import FlagReranker
 
+from config import detect_device
+from domain import SearchResult
 
-def _detect_best_device() -> str:
-    """Selects CUDA, Apple Silicon MPS, or CPU automatically."""
-    if torch.cuda.is_available():
-        return "cuda"
-    if torch.backends.mps.is_available():
-        return "mps"
-    return "cpu"
 
 class BGEM3Reranker:
-    """Cross-Encoder re-ranker (BAAI/bge-reranker-v2-m3) for post-retrieval precision filtering."""
+    """Scores `[query, parent_chunk]` pairs with cross-attention and returns the top-k."""
 
     def __init__(
         self,
@@ -23,14 +19,12 @@ class BGEM3Reranker:
         batch_size: int = 16,
         max_length: int = 2048,
     ) -> None:
-        self.device = device or _detect_best_device()
+        self.device = detect_device(device)
         self.batch_size = batch_size
         self.max_length = max_length
-        use_fp16 = self.device == "cuda"
-
         self._reranker = FlagReranker(
             model_name,
-            use_fp16=use_fp16,
+            use_fp16=(self.device == "cuda"),
             devices=self.device,
         )
 
@@ -54,7 +48,6 @@ class BGEM3Reranker:
         candidates: Sequence[SearchResult],
         top_k: int = 5,
     ) -> list[SearchResult]:
-        """Scores [query, parent_chunk.text] pairs with cross-attention and returns the top_k."""
         if not candidates:
             return []
 
@@ -65,8 +58,6 @@ class BGEM3Reranker:
             max_length=self.max_length,
             normalize=True,
         )
-
-        # FlagReranker returns a single float if len(pairs) == 1
         if isinstance(scores, (float, int, np.floating)):
             scores = [float(scores)]
 
@@ -74,9 +65,9 @@ class BGEM3Reranker:
             SearchResult(
                 parent_chunk=item.parent_chunk,
                 matched_child_id=item.matched_child_id,
-                score=float(rerank_score),
+                score=float(score),
             )
-            for item, rerank_score in zip(candidates, scores)
+            for item, score in zip(candidates, scores)
         ]
         reranked.sort(key=lambda r: r.score, reverse=True)
         return reranked[:top_k]

@@ -1,42 +1,33 @@
-"""Extraction quality evaluator and limitations logger (`limitations_report.jsonl`).
+"""Extraction quality evaluator, OCR-noise callout scorer, and limitations audit logger."""
 
-Automatically records unreadable scans, corrupted files, or complex CAD/HVAC diagrams
-where text extraction is unreliable into a structured JSONL report for client handover.
-"""
-
-from datetime import datetime, timezone
 import json
 import logging
-from pathlib import Path
 import re
-from typing import Any, Dict, List, Optional, Union
+from pathlib import Path
+from typing import Any
 
 from pydantic import BaseModel, Field
 
-from etl.config import LIMITATIONS_REPORT_PATH, LOW_CONFIDENCE_THRESHOLD
-from etl.schemas import ExtractedDocument
+from config import get_settings
+from domain import ParsedDoc, utc_now
 
 logger = logging.getLogger(__name__)
 
-# Matches meaningful technical tokens (equipment codes like LBK-01, IG3.25, words >=3 letters,
-# or measurements like 1500 m3/h, 230V, 1000Pa)
 _MEANINGFUL_TOKEN_RE = re.compile(
-    r"(?:[A-Za-zÀ-ÖØ-öø-ÿ]{3,}|[A-Za-z]{1,4}[-_.]?\d{1,4}[A-Za-z]?|\d+(?:[.,]\d+)?\s*(?:m[³3]/h|kW|VA|Pa|V|A|Hz|mm|°C|dB))",
+    r"(?:[A-Za-zÀ-ÖØ-öø-ÿ]{3,}|[A-Za-z]{1,4}[-_.]?\d{1,4}[A-Za-z]?|"
+    r"\d+(?:[.,]\d+)?\s*(?:m[³3]/h|kW|VA|Pa|V|A|Hz|mm|°C|dB))",
     re.IGNORECASE,
 )
 
 
 def score_callout_readability(text: str) -> float:
-    """Score readability of a `diagram_callout` block in [0.0, 1.0].
+    """Score readability of a `diagram_callout` block in `[0.0, 1.0]`.
 
-    Legacy-OCR'd electrical/HVAC schematics produce dozens of 1-2 character glyph fragments
-    (`- f`, `- ~n`, `- I`, `- 1`). This scorer computes the fraction of non-empty lines that
-    contain at least one meaningful word/tag/measurement and have a sane alphanumeric ratio.
+    Legacy-OCR'd electrical/HVAC schematics often emit dozens of 1-2 character glyph fragments
+    (`- f`, `- ~n`, `- I`). Returns the fraction of non-empty lines containing a valid technical
+    word, equipment tag, or measurement with >=55% alphanumeric characters.
     """
-    lines = [
-        re.sub(r"^\s*[-*•]\s*", "", raw).strip()
-        for raw in text.splitlines()
-    ]
+    lines = [re.sub(r"^\s*[-*•]\s*", "", raw).strip() for raw in text.splitlines()]
     lines = [line for line in lines if line]
     if not lines:
         return 0.0
@@ -48,96 +39,99 @@ def score_callout_readability(text: str) -> float:
             continue
         if _MEANINGFUL_TOKEN_RE.search(line):
             readable += 1
-
     return round(readable / len(lines), 3)
 
 
-def _utc_now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
 class LimitationRecord(BaseModel):
-    """Structured audit log entry written to `data/logs/limitations_report.jsonl`."""
+    """Structured audit log entry persisted to `limitations_report.jsonl`."""
 
-    logged_at: str = Field(default_factory=_utc_now_iso)
+    logged_at: str = Field(default_factory=lambda: utc_now().isoformat())
     doc_id: str
     file_name: str
-    relative_folder_path: str
-    project_id: Optional[str] = None
-    building: Optional[str] = None
-    phase: Optional[str] = None
-    doc_category: str
-    extraction_method: str
+    source_path: str
+    project: str | None = None
+    building: str | None = None
+    phase: str | None = None
+    doc_category: str = "unknown"
+    extraction_method: str = "unknown"
     is_scanned: bool = False
     is_hvac_diagram: bool = False
     needs_ocr: bool = False
-    extraction_confidence: float
-    total_blocks: int = 0
+    extraction_confidence: float = 0.0
+    total_sections: int = 0
     total_char_count: int = 0
-    quality_warnings: List[str] = Field(default_factory=list)
-    limitation_type: str = Field(
-        ...,
-        description="e.g., 'scanned_pdf_needs_ocr', 'low_confidence_scan', 'complex_hvac_diagram', 'empty_or_corrupted'",
-    )
+    quality_warnings: list[str] = Field(default_factory=list)
+    limitation_type: str
     recommended_action: str
 
 
 class QualityLogger:
-    """Evaluates document extraction quality and appends limitations to JSONL audit log."""
+    """Evaluates extracted `ParsedDoc` quality and appends limitations to JSONL."""
 
     def __init__(
         self,
-        report_path: Union[str, Path] = LIMITATIONS_REPORT_PATH,
-        confidence_threshold: float = LOW_CONFIDENCE_THRESHOLD,
+        report_path: str | Path | None = None,
+        confidence_threshold: float | None = None,
     ) -> None:
-        self.report_path = Path(report_path)
-        self.confidence_threshold = confidence_threshold
+        settings = get_settings()
+        self.report_path = (
+            Path(report_path) if report_path is not None else settings.limitations_report_path
+        )
+        self.confidence_threshold = (
+            confidence_threshold
+            if confidence_threshold is not None
+            else settings.low_confidence_threshold
+        )
 
-    def evaluate_and_log(self, doc: ExtractedDocument) -> Optional[LimitationRecord]:
-        """Populate document-level quality warnings and log a LimitationRecord if confidence is below threshold."""
+    def evaluate_and_log(self, doc: ParsedDoc) -> LimitationRecord | None:
+        """Inspect `doc` quality; flag `needs_ocr` and log a `LimitationRecord` when below threshold."""
         meta = doc.metadata
-        total_chars = sum(len(b.markdown_content.strip()) for b in doc.blocks)
-        warnings = list(meta.quality_warnings)
+        extra = meta.extra
+        total_chars = sum(len(s.text.strip()) for s in doc.sections)
+        warnings: list[str] = list(extra.get("quality_warnings") or [])
+        confidence = float(extra.get("extraction_confidence", 1.0))
+        is_scanned = bool(extra.get("is_scanned", False))
+        is_hvac_diagram = bool(extra.get("is_hvac_diagram", False))
+        needs_ocr = bool(extra.get("needs_ocr", False))
 
-        if len(doc.blocks) == 0 or total_chars == 0:
-            meta.extraction_confidence = min(meta.extraction_confidence, 0.2)
-            if meta.is_scanned:
-                meta.needs_ocr = True
+        if len(doc.sections) == 0 or total_chars == 0:
+            confidence = min(confidence, 0.2)
+            extra["extraction_confidence"] = confidence
+            if is_scanned:
+                needs_ocr = True
+                extra["needs_ocr"] = True
 
-        if meta.extraction_confidence >= self.confidence_threshold and not meta.needs_ocr:
+        if confidence >= self.confidence_threshold and not needs_ocr:
             return None
 
-        if (len(doc.blocks) == 0 or total_chars == 0) and meta.is_scanned:
+        if (len(doc.sections) == 0 or total_chars == 0) and is_scanned:
             limitation_type = "scanned_pdf_needs_ocr"
             recommended_action = (
-                "Scanned PDF produced 0 extracted text blocks; run Docling/Tesseract or external "
+                "Scanned PDF produced 0 extracted sections; run Docling/Tesseract or external "
                 "high-DPI OCR before re-ingestion."
             )
-            msg = "Scanned PDF with 0 extracted text blocks (needs_ocr=True)."
+            msg = "Scanned PDF with 0 extracted text sections (needs_ocr=True)."
             logger.warning(
-                "Scanned PDF '%s' (doc_id=%s) yielded 0 text blocks; flagged needs_ocr=True.",
-                meta.file_name,
-                meta.doc_id,
+                "Scanned PDF '%s' (doc_id=%s) yielded 0 sections; flagged needs_ocr=True.",
+                meta.source_path,
+                doc.document_id,
             )
-        elif len(doc.blocks) == 0 or total_chars == 0:
+        elif len(doc.sections) == 0 or total_chars == 0:
             limitation_type = "empty_or_unreadable_document"
             recommended_action = (
-                "Verify source file integrity or run external high-DPI OCR before re-ingestion."
+                "Verify source file integrity or run external OCR before re-ingestion."
             )
-            msg = "No extractable text or table blocks found."
-        elif meta.is_hvac_diagram:
+            msg = "No extractable text or table sections found."
+        elif is_hvac_diagram:
             limitation_type = "complex_hvac_diagram"
             recommended_action = (
                 "Graphical HVAC/PID schematic with sparse text callouts; "
                 "cross-reference with equipment schedule (Toestellenlijst) or native CAD (.dwg)."
             )
             msg = "Oversized/vector HVAC diagram with sparse text callouts."
-        elif meta.is_scanned or meta.needs_ocr:
+        elif is_scanned or needs_ocr:
             limitation_type = "low_confidence_scan"
-            recommended_action = (
-                "Scanned archival PDF with low OCR confidence; "
-                "re-scan at 300+ DPI or review OCR output manually."
-            )
+            recommended_action = "Scanned archival PDF with low OCR confidence; re-scan at 300+ DPI or review manually."
             msg = "Scanned PDF with low OCR readability confidence."
         else:
             limitation_type = "low_extraction_confidence"
@@ -146,22 +140,22 @@ class QualityLogger:
 
         if msg not in warnings:
             warnings.append(msg)
-        meta.quality_warnings = warnings
+        extra["quality_warnings"] = warnings
 
         record = LimitationRecord(
-            doc_id=meta.doc_id,
-            file_name=meta.file_name,
-            relative_folder_path=meta.relative_folder_path,
-            project_id=meta.project_id,
+            doc_id=doc.document_id,
+            file_name=Path(meta.source_path).name,
+            source_path=meta.source_path,
+            project=meta.project,
             building=meta.building,
             phase=meta.phase,
-            doc_category=meta.doc_category.value,
-            extraction_method=meta.extraction_method.value,
-            is_scanned=meta.is_scanned,
-            is_hvac_diagram=meta.is_hvac_diagram,
-            needs_ocr=meta.needs_ocr,
-            extraction_confidence=round(meta.extraction_confidence, 3),
-            total_blocks=len(doc.blocks),
+            doc_category=str(extra.get("doc_category", "unknown")),
+            extraction_method=str(extra.get("extraction_method", "unknown")),
+            is_scanned=is_scanned,
+            is_hvac_diagram=is_hvac_diagram,
+            needs_ocr=needs_ocr,
+            extraction_confidence=round(confidence, 3),
+            total_sections=len(doc.sections),
             total_char_count=total_chars,
             quality_warnings=warnings,
             limitation_type=limitation_type,
@@ -172,28 +166,23 @@ class QualityLogger:
 
     def log_corrupted_file(
         self,
-        relative_path: Union[str, Path],
+        relative_path: str | Path,
         error_message: str,
-        project_id: Optional[str] = None,
-        building: Optional[str] = None,
-        phase: Optional[str] = None,
+        project: str | None = None,
+        building: str | None = None,
+        phase: str | None = None,
     ) -> LimitationRecord:
-        """Log a corrupted or unreadable file that raised an exception during extraction."""
         rel = Path(relative_path)
         record = LimitationRecord(
             doc_id=f"corrupted_{rel.name}",
             file_name=rel.name,
-            relative_folder_path=rel.parent.as_posix() if rel.parent != Path(".") else "",
-            project_id=project_id,
+            source_path=rel.as_posix(),
+            project=project,
             building=building,
             phase=phase,
             doc_category="unknown",
             extraction_method="failed",
-            is_scanned=False,
-            is_hvac_diagram=False,
             extraction_confidence=0.0,
-            total_blocks=0,
-            total_char_count=0,
             quality_warnings=[f"Extraction error: {error_message}"],
             limitation_type="corrupted_or_unreadable_file",
             recommended_action="Replace corrupted file from SharePoint archive.",
@@ -202,22 +191,20 @@ class QualityLogger:
         return record
 
     def write_record(self, record: LimitationRecord) -> None:
-        """Append a single LimitationRecord as a JSON line to `limitations_report.jsonl`."""
         self.report_path.parent.mkdir(parents=True, exist_ok=True)
         with self.report_path.open("a", encoding="utf-8") as fh:
             fh.write(record.model_dump_json() + "\n")
 
-    def read_records(self) -> List[LimitationRecord]:
-        """Read all logged limitation records from `limitations_report.jsonl`."""
+    def read_records(self) -> list[LimitationRecord]:
         if not self.report_path.exists():
             return []
-        records: List[LimitationRecord] = []
+        records: list[LimitationRecord] = []
         for line in self.report_path.read_text(encoding="utf-8").splitlines():
             line = line.strip()
             if not line:
                 continue
             try:
-                data: Dict[str, Any] = json.loads(line)
+                data: dict[str, Any] = json.loads(line)
                 records.append(LimitationRecord.model_validate(data))
             except Exception:
                 continue

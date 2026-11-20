@@ -1,40 +1,63 @@
 # Ingenium RAG
 
-SharePoint document ingestion, metadata-aware retrieval, and citation-grounded
-answering for Ingenium projects. The repository is structured as an installable
-Python package so each pipeline stage can be developed and deployed independently.
+SharePoint document extraction, metadata-aware Parent-Child Hybrid RAG, and citation-grounded answering for Ingenium engineering projects.
 
-## Quick start
+## Architecture
+
+The codebase follows a strict **Pipes-and-Filters** design where every stage lives under `src/`, communicates exclusively through canonical Pydantic models in [src/domain.py](src/domain.py), and is wired in [src/pipeline.py](src/pipeline.py):
+
+| Stage | Module | Input → Output |
+| :--- | :--- | :--- |
+| 1. Extraction & Metadata | `src/etl/` | SharePoint / local PDF, DOCX, XLSX → `ParsedDoc` |
+| 2. Table-Aware Chunking | `src/chunking/` | `ParsedDoc` → `ParentChunk[]`, `ChildChunk[]` |
+| 3. Hybrid Embedding | `src/embedding/` | `ChildChunk[]` / query → `EmbeddedChildBatch` / `EncodedQuery` (`BAAI/bge-m3`) |
+| 4. Hybrid Vector Storage | `src/storage/` | Local disk-persistent Qdrant (`./data/qdrant_poc`) with native RRF + multi-building filters |
+| 5. Retrieval & Reranking | `src/retrieval/` | Query + filters → `SearchResult[]` (`BAAI/bge-reranker-v2-m3`) |
+| 6. Grounded Generation | `src/generation/` | `SearchResult[]` → `Answer` + `Citation[]` (`ExtractiveStubLLM` or local OpenAI-compatible LLM) |
+| 7. Evaluation | `src/evaluation/` | Q&A dataset → `citation_precision` & `source_recall` |
+
+See [GEMINI.md](GEMINI.md) for the full directory map and architectural invariants.
+
+## Quick Start
 
 ```bash
-cp .env.example .env
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
-pip install -e ".[dev]"
-pytest
-uvicorn ingenium_rag.api.app:app --reload
+make install
+make check
 ```
 
-The API exposes `GET /health` and `POST /v1/query`. The initial implementation
-uses an in-memory vector store and dependency-free text parsing as development
-adapters. Production deployments should provide the Microsoft Graph, Docling/OCR,
-embedding, vector database, and LLM adapters at the boundaries in `src/ingenium_rag`.
+Configure SharePoint credentials (and optional local LLM endpoint) in a git-ignored `.env` at the repo root:
 
-## Repository layout
+```dotenv
+AZURE_TENANT_ID=...
+AZURE_CLIENT_ID=...
+AZURE_CLIENT_SECRET=...
+SHAREPOINT_HOSTNAME=ingeniumnv.sharepoint.com
+SHAREPOINT_SITE_PATH=/sites/06038004-INT
+SHAREPOINT_DRIVE_NAME=Documents
 
-- `configs/` contains external YAML settings and metadata extraction rules.
-- `src/ingenium_rag/domain.py` defines the shared data contracts.
-- `src/ingenium_rag/connectors/` fetches SharePoint files and tracks incremental hashes.
-- `src/ingenium_rag/processing/` parses documents, extracts metadata, and creates chunks.
-- `src/ingenium_rag/storage/` provides shared embedding and repository boundaries.
-- `src/ingenium_rag/retrieval/` extracts filters, searches, deduplicates, and reranks context.
-- `src/ingenium_rag/generation/` generates grounded answers and LibreChat citations.
-- `src/ingenium_rag/pipelines/` wires offline indexing and online RAG execution.
-- `data/` is local-only cache and evaluation data and is intentionally ignored by Git.
-- `tests/` contains unit tests for the core contracts and pipeline behavior.
+# Optional: local OpenAI-compatible LLM (Ollama / vLLM); omit to use ExtractiveStubLLM
+# LLM_BASE_URL=http://localhost:11434
+# LLM_MODEL=qwen2.5:14b
+```
 
-## Local services
+## Common Commands (`Makefile`)
 
-`docker compose up -d` starts Qdrant, pgvector/Postgres, and the API container.
-Never commit `.env` or downloaded SharePoint content; use `.env.example` as the
-configuration template.
+Run `make help` to see all available targets:
+
+```bash
+make test                                                                # run pytest (incl. architecture boundary checks)
+make lint                                                                # run ruff linter
+make format                                                              # auto-format with ruff
+make ingest                                                              # index data/processed -> data/qdrant_poc
+make ingest MODE=sharepoint PREFIX="General/05_Uitvoering" LIMIT=10      # stream from SharePoint & index
+make ingest-dry-run MODE=sharepoint PREFIX="General/04_Prijsvraag"       # preview inventory without downloading
+make report                                                              # show extracted docs & scanned-PDF audit
+make query Q="Wat zijn de eisen voor brandwerende deuren?" RETRIEVAL_ONLY=1
+make query Q="medische gassen" PROJECT="06038.004" BUILDING="Blok L"
+make eval DATASET=data/eval.json                                         # evaluate a JSON/CSV question set
+make api                                                                 # start FastAPI (GET /health, POST /v1/query)
+make clean                                                               # clear caches (never touches data/)
+make reset-db                                                            # wipe ./data/qdrant_poc (with confirmation)
+```

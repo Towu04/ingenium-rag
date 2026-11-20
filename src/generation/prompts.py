@@ -18,7 +18,11 @@ def build_user_prompt(question: str, results: Sequence[SearchResult]) -> str:
     for idx, result in enumerate(results, start=1):
         parent = result.parent_chunk
         meta = parent.metadata
-        pages = f"Pages {', '.join(map(str, parent.page_numbers))}" if parent.page_numbers else "Pages N/A"
+        pages = (
+            f"Pages {', '.join(map(str, parent.page_numbers))}"
+            if parent.page_numbers
+            else "Pages N/A"
+        )
         section = parent.section_header or "General"
         header_parts = [
             f"[{idx}] Source: {meta.source_path}",
