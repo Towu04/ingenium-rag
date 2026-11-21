@@ -74,7 +74,7 @@ def _read_tabular_grids(path: Path) -> list[list[list[str]]]:
         delim = ";" if lines[0].count(";") > lines[0].count(",") else ","
         return [[[_clean_cell(c) for c in row] for row in csv.reader(lines, delimiter=delim)]]
 
-    if ext in {".xlsx", ".xls"}:
+    if ext == ".xlsx":
         import openpyxl
 
         wb = openpyxl.load_workbook(path, data_only=True, read_only=True)
@@ -300,7 +300,7 @@ class DocumentRegisterIndex:
         path = Path(register_path)
         if not path.exists():
             raise FileNotFoundError(f"Document register not found: {path}")
-        if path.suffix.lower() not in {".csv", ".xlsx", ".xls"}:
+        if path.suffix.lower() not in {".csv", ".xlsx"}:
             return []
         parsed: list[DocumentRegisterEntry] = []
         for grid in _read_tabular_grids(path):

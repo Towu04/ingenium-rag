@@ -64,7 +64,7 @@ make download-models   # caches BAAI/bge-m3 and BAAI/bge-reranker-v2-m3 locally
 ```
 
 ### 2. Configure `.env`
-Create a `.env` file in the repository root (gitignored). SharePoint variables are only needed for `MODE=sharepoint`; local file ingestion works without them.
+Copy `.env.example` to `.env` in the repository root (gitignored). SharePoint variables are only needed for `MODE=sharepoint`; local file ingestion works without them.
 
 | Variable | Required? | Default | Description |
 | :--- | :---: | :--- | :--- |
@@ -72,9 +72,12 @@ Create a `.env` file in the repository root (gitignored). SharePoint variables a
 | `AZURE_CLIENT_ID` | SharePoint only | `""` | Entra App Registration client ID (alias: `CLIENT_ID`). |
 | `AZURE_CLIENT_SECRET` | SharePoint only | `""` | Entra App Registration client secret (alias: `CLIENT_SECRET`). |
 | `SHAREPOINT_HOSTNAME` | SharePoint only | `""` | SharePoint host (e.g. `company.sharepoint.com`). |
-| `SHAREPOINT_SITE_PATH` | SharePoint only | `""` | Target site path (e.g. `/sites/12345001-INT`). |
+| `SHAREPOINT_SITE_PATH` | SharePoint only | `""` | Single target site path (e.g. `/sites/12345001-INT`). |
+| `SHAREPOINT_SITE_PATHS` | No | `""` | Comma-separated site paths or URLs for multi-site ingestion. |
+| `SHAREPOINT_SITES_FILE` | No | `None` | Path to a TSV/CSV site list (`project_code<TAB>url`, e.g. `data/sharepoint_sites.tsv`). |
 | `SHAREPOINT_DRIVE_NAME` | No | `Documents` | Document library name. |
 | `TEMP_BEARER_TOKEN` | No | `""` | Optional Microsoft Graph Explorer token for quick testing without App Registration. |
+| `ETL_WORKERS` | No | `4` | Concurrent worker threads for SharePoint sync and local ETL. |
 | `DEVICE` | No | auto | Override compute device (`cuda`, `mps`, or `cpu`). |
 | `EMBEDDING_MODEL` | No | `BAAI/bge-m3` | Dense + sparse embedding model ID. |
 | `EMBEDDING_BATCH_SIZE` | No | `32` | Per-forward-pass embedding batch size. |
@@ -101,17 +104,19 @@ Create a `.env` file in the repository root (gitignored). SharePoint variables a
 ```bash
 # Preview remote or local inventory & inferred metadata (no downloads/extraction)
 make ingest-dry-run MODE=sharepoint PREFIX="General/05_Uitvoering"
+make ingest-dry-run MODE=sharepoint SITES_FILE=data/sharepoint_sites.tsv
 make ingest-dry-run MODE=raw RAW_DIR=data/raw
 
-# Stream from SharePoint -> ETL -> chunk -> embed -> Qdrant (data/qdrant_poc)
+# Stream from one or more SharePoint sites -> ETL -> chunk -> embed -> Qdrant (indexed per site)
 make ingest MODE=sharepoint
-make ingest MODE=sharepoint PREFIX="General/05_Uitvoering" LIMIT=10 FORCE=1
+make ingest MODE=sharepoint SITE=/sites/12345001-INT PREFIX="General/05_Uitvoering" LIMIT=10 FORCE=1
+make ingest MODE=sharepoint SITES_FILE=data/sharepoint_sites.tsv WORKERS=4
 
-# Ingest from a local raw directory, or index pre-extracted ParsedDoc JSONs (MODE=etl default)
+# Ingest from a local raw directory (default RAW_DIR=data/raw), or index pre-extracted JSONs (MODE=etl)
 make ingest MODE=raw RAW_DIR=data/raw
 make ingest
 
-# Inspect extracted documents manifest & scanned-PDF / limitation warnings
+# Inspect extracted documents manifest, scanned-PDF warnings & unauthorized (401/403) targets
 make report
 ```
 
@@ -169,9 +174,9 @@ make api
 | `make check` | Pre-PR gate: runs `make lint` + `make test`. |
 | `make test` / `make test-cov` | Run offline `pytest` suite (with optional terminal coverage). |
 | `make lint` / `make format` | Run `ruff check` / `ruff format` across `src/`, `scripts/`, and `tests/`. |
-| `make ingest` | Run ETL + indexing (`MODE=etl\|raw\|sharepoint`, `RAW_DIR`, `ETL_DIR`, `QDRANT_PATH`, `PREFIX`, `LIMIT`, `FORCE`). |
-| `make ingest-dry-run` | Preview file inventory and inferred metadata (`MODE=raw\|sharepoint`). |
-| `make report` | Print extracted documents summary and logged scanned-PDF/limitations audit. |
+| `make ingest` | Run ETL + indexing (`MODE=etl\|raw\|sharepoint`, `RAW_DIR`, `ETL_DIR`, `QDRANT_PATH`, `SITE`, `SITES_FILE`, `WORKERS`, `PREFIX`, `LIMIT`, `FORCE`). |
+| `make ingest-dry-run` | Preview file inventory and metadata (`MODE=raw\|sharepoint`, `SITE`, `SITES_FILE`, `PREFIX`). |
+| `make report` | Print extracted documents summary and logged scanned-PDF / unauthorized / limitation warnings. |
 | `make query` | Query the index (`Q`, `PROJECT`, `BUILDING`, `PHASE`, `DEBUG`, `JSON`, `VERBOSE`, `QUIET`, `MIN_SCORE`, `RETRIEVAL_ONLY`, `NO_RERANK`). |
 | `make inspect` | Print DB stats & metadata distributions (optional `DOC_ID`, `JSON=1`). |
 | `make export-chunks` | Export `parent_chunks.jsonl` and `child_chunks.jsonl` (`OUT`, optional `DOC_ID`). |
@@ -191,6 +196,7 @@ All CLI entry points are also installed as console scripts (`ingenium-ingest`, `
 ingenium-rag/
 ├── Makefile                    # Unified developer & pipeline commands
 ├── pyproject.toml              # Dependencies, ruff/pytest config, CLI entry points
+├── .env.example                # Documented environment variable template
 ├── src/
 │   ├── domain.py               # Canonical Pydantic contracts & generic normalization
 │   ├── config.py               # Centralized Settings, device detection, logging setup

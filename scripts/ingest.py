@@ -14,6 +14,7 @@ from scripts._cli import (
     PipelineProgress,
     add_common_args,
     build_parser,
+    err_console,
     out_console,
     print_kv_table,
     run_cli,
@@ -219,6 +220,7 @@ def _main() -> None:
             base_sp = SharePointConnector.from_env(json_out_dir=args.processed_dir / "json")
             all_ext: dict[str, int] = {}
             total_files = 0
+            unauthorized_sites: list[str] = []
             for spec in sites:
                 try:
                     summary = etl.scan_sharepoint_inventory(
@@ -231,7 +233,8 @@ def _main() -> None:
                     if not args.as_json:
                         _print_inventory(f"SharePoint ({spec.hostname}{spec.site_path})", summary)
                 except SharePointAuthError as auth_err:
-                    out_console.print(f"[yellow]Skipping unauthorized site:[/yellow] {auth_err}")
+                    unauthorized_sites.append(f"{spec.hostname}{spec.site_path}")
+                    err_console.print(f"[yellow]Skipping unauthorized site:[/yellow] {auth_err}")
             if args.as_json:
                 sys.stdout.write(
                     json.dumps(
@@ -239,6 +242,7 @@ def _main() -> None:
                             "sites": [f"{s.hostname}{s.site_path}" for s in sites],
                             "total_files": total_files,
                             "extension_counts": all_ext,
+                            "unauthorized_sites": unauthorized_sites,
                         },
                         indent=2,
                     )

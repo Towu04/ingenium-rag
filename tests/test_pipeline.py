@@ -310,3 +310,121 @@ def test_retrieve_with_trace_reports_filters_funnel_and_child_text(tmp_path: Pat
         assert trace.reranked_dropped == 0
         assert trace.results[0].matched_child_text is not None
         assert "EI1 30" in trace.results[0].matched_child_text
+
+
+def test_openai_compatible_llm_normalizes_v1_base_url() -> None:
+    from generation.generator import OpenAICompatibleLLM
+
+    expected = "http://localhost:11434/v1/chat/completions"
+    for url in (
+        "http://localhost:11434",
+        "http://localhost:11434/",
+        "http://localhost:11434/v1",
+        "http://localhost:11434/v1/",
+    ):
+        llm = OpenAICompatibleLLM(base_url=url, model="qwen2.5:14b")
+        assert llm.endpoint == expected
+
+
+def test_fastapi_lifespan_closes_repository(monkeypatch) -> None:
+    import api.app as app_module
+
+    closed = {"called": False}
+
+    class _FakeRepo:
+        def close(self) -> None:
+            closed["called"] = True
+
+    app_module._get_pipeline_and_repo.cache_clear()
+    monkeypatch.setattr(app_module, "build_rag_pipeline", lambda: (object(), _FakeRepo()))
+    try:
+        with TestClient(app_module.app) as client:
+            assert client.get("/health").status_code == 200
+            app_module.get_pipeline()
+        assert closed["called"] is True
+    finally:
+        app_module._get_pipeline_and_repo.cache_clear()
+
+
+def test_ingest_sharepoint_indexes_incrementally_per_site(tmp_path: Path, monkeypatch) -> None:
+    import pipeline as pipeline_module
+    from config import SharePointSiteSpec
+    from etl.runner import ETLRunResult
+
+    json_dir = tmp_path / "processed" / "json"
+    json_dir.mkdir(parents=True)
+
+    doc1 = ParsedDoc(
+        document_id="site1-doc1",
+        content_hash="h1",
+        markdown="Site 1 specs",
+        sections=[
+            ParsedSection(
+                text="Brandwerende deur EI1 30 in Blok A.",
+                page_numbers=[1],
+                section_header="1. Deuren",
+            )
+        ],
+        metadata=DocumentMetadata(source_path="S1/Spec.pdf", project="10001-INT"),
+    )
+    doc2 = ParsedDoc(
+        document_id="site2-doc1",
+        content_hash="h2",
+        markdown="Site 2 specs",
+        sections=[
+            ParsedSection(
+                text="Luchtgroep debiet 4000 m3/h in Blok B.",
+                page_numbers=[1],
+                section_header="2. HVAC",
+            )
+        ],
+        metadata=DocumentMetadata(source_path="S2/HVAC.pdf", project="10002-INT"),
+    )
+    p1 = json_dir / "site1-doc1.json"
+    p2 = json_dir / "site2-doc1.json"
+    p1.write_text(doc1.model_dump_json(), encoding="utf-8")
+    p2.write_text(doc2.model_dump_json(), encoding="utf-8")
+
+    class _FakeSP:
+        def for_site(self, spec: SharePointSiteSpec):
+            return spec
+
+    site1_indexed_before_site2 = {"value": False}
+    embedder = _FakeEmbedder()
+    chunker = ParentChildChunker(parent_size=200, child_size=80, child_overlap=10)
+
+    with LocalHybridRepository(path=":memory:") as repo:
+
+        def _fake_run_sharepoint(self, *, connector, **kwargs) -> ETLRunResult:
+            if connector.site_path == "/sites/10001-INT":
+                return ETLRunResult(discovered_files=1, processed_files=1, output_json_paths=[p1])
+            # When site 2 begins ETL, site 1 must already be indexed in Qdrant!
+            site1_indexed_before_site2["value"] = not repo.needs_indexing("site1-doc1", "h1")
+            return ETLRunResult(discovered_files=1, processed_files=1, output_json_paths=[p2])
+
+        monkeypatch.setattr(
+            pipeline_module.SharePointConnector,
+            "from_env",
+            classmethod(lambda cls, **kw: _FakeSP()),
+        )
+        monkeypatch.setattr(pipeline_module.ETLRunner, "run_sharepoint", _fake_run_sharepoint)
+
+        indexer = IndexingPipeline(repository=repo, embedder=embedder, chunker=chunker)
+        stats = indexer.ingest_sharepoint(
+            sites=[
+                SharePointSiteSpec(
+                    hostname="tenant.sharepoint.com",
+                    site_path="/sites/10001-INT",
+                    project_code="10001-INT",
+                ),
+                SharePointSiteSpec(
+                    hostname="tenant.sharepoint.com",
+                    site_path="/sites/10002-INT",
+                    project_code="10002-INT",
+                ),
+            ],
+            processed_dir=tmp_path / "processed",
+        )
+        assert site1_indexed_before_site2["value"] is True
+        assert stats.indexed_docs == 2
+        assert repo.collection_counts()["documents"] == 2

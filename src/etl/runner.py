@@ -12,7 +12,7 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from config import SUPPORTED_EXTRACTION_EXTENSIONS, get_settings
-from domain import ParsedDoc, normalize_project, utc_now
+from domain import ParsedDoc, compute_doc_id, normalize_project, utc_now
 from etl.catalog import DocumentRegisterIndex, ProjectCatalog, is_document_register_file
 from etl.extractors import DocxExtractor, PdfExtractor, XlsxExtractor
 from etl.extractors.common import render_markdown_export
@@ -204,6 +204,7 @@ class ETLRunResult:
     unauthorized_targets: list[str] = field(default_factory=list)
     limitations_logged: int = 0
     documents: list[ParsedDoc] = field(default_factory=list)
+    output_json_paths: list[Path] = field(default_factory=list)
 
 
 class ETLRunner:
@@ -243,6 +244,7 @@ class ETLRunner:
         self.docx_extractor = DocxExtractor(metadata_matcher=self.metadata_matcher)
         self.xlsx_extractor = XlsxExtractor(metadata_matcher=self.metadata_matcher)
         self._state_lock = threading.Lock()
+        self._pdf_lock = threading.Lock()
         self._unsaved_manifest_updates = 0
 
     def _append_inventory_item(
@@ -308,6 +310,7 @@ class ETLRunner:
                 self.manifest.save()
                 self._unsaved_manifest_updates = 0
             result.processed_files += 1
+            result.output_json_paths.append(out_json)
             result.documents.append(parsed_doc)
         return out_json
 
@@ -656,7 +659,6 @@ class ETLRunner:
         rel_path = Path(eff_rel_posix)
         pass_label = "Pass 1" if is_register else "Pass 2"
         local_path: Path | None = None
-        seeded_json: Path | None = None
 
         with self._state_lock:
             result.discovered_files += 1
@@ -668,8 +670,16 @@ class ETLRunner:
                 last_modified=item.last_modified,
                 size_bytes=item.size_bytes,
             )
-            if up_to_date and not is_register:
-                result.skipped_unchanged_files += 1
+            if up_to_date:
+                existing_entry = self.manifest.state.files.get(eff_rel_posix)
+                if existing_entry is not None:
+                    existing_json = Path(existing_entry.json_path)
+                    if not existing_json.exists():
+                        existing_json = self.json_out_dir / f"{existing_entry.doc_id}.json"
+                    if existing_json.exists():
+                        result.output_json_paths.append(existing_json)
+                if not is_register:
+                    result.skipped_unchanged_files += 1
 
         try:
             if up_to_date:
@@ -684,38 +694,30 @@ class ETLRunner:
             logger.debug(
                 "[%s: %d/%d] Streaming & extracting: %s", pass_label, idx, total, eff_rel_posix
             )
-            local_path, seeded_json, file_hash = sp.download_and_seed(
-                item,
-                json_out_dir=self.json_out_dir,
-                relative_path_override=eff_rel_posix,
-            )
+            local_path = sp.download_file(item, target_rel_path=eff_rel_posix)
+            file_hash = compute_file_sha256(local_path)
+            doc_id = compute_doc_id(eff_rel_posix)
             if is_register:
                 self.register_index.load_register_file(local_path)
 
-            seeded_doc = ParsedDoc.model_validate_json(seeded_json.read_text(encoding="utf-8"))
             parsed_doc = self._dispatch(
                 local_path,
                 rel_path,
-                sharepoint_url=seeded_doc.metadata.sharepoint_url or item.web_url,
+                sharepoint_url=item.web_url,
             )
-            parsed_doc.document_id = seeded_doc.document_id
+            parsed_doc.document_id = doc_id
             parsed_doc.content_hash = file_hash
             if project_override:
                 parsed_doc.metadata.project = project_override
-            parsed_doc.metadata.extra["sharepoint_item_id"] = seeded_doc.metadata.extra.get(
-                "sharepoint_item_id"
-            )
-            parsed_doc.metadata.extra["sharepoint_etag"] = seeded_doc.metadata.extra.get(
-                "sharepoint_etag"
-            )
-            if seeded_doc.metadata.sharepoint_url:
-                parsed_doc.metadata.sharepoint_url = seeded_doc.metadata.sharepoint_url
+            parsed_doc.metadata.extra["sharepoint_item_id"] = item.item_id
+            parsed_doc.metadata.extra["sharepoint_etag"] = item.etag or item.ctag
+            if item.web_url:
+                parsed_doc.metadata.sharepoint_url = item.web_url
 
             json_path = self._persist_extracted_doc(
                 parsed_doc,
                 eff_rel_posix,
                 result,
-                json_path=seeded_json,
                 quick_xor_hash=item.quick_xor_hash,
                 last_modified=item.last_modified,
                 size_bytes=item.size_bytes,
@@ -725,8 +727,6 @@ class ETLRunner:
             )
 
         except SharePointAuthError as auth_err:
-            if seeded_json is not None and seeded_json.exists():
-                seeded_json.unlink(missing_ok=True)
             logger.warning(
                 "[%s: %d/%d] UNAUTHORIZED (%d) on %s",
                 pass_label,
@@ -737,8 +737,6 @@ class ETLRunner:
             )
             self._record_unauthorized(eff_rel_posix, auth_err, result, project=project_override)
         except Exception as exc:
-            if seeded_json is not None and seeded_json.exists():
-                seeded_json.unlink(missing_ok=True)
             logger.error("[%s: %d/%d] ERROR on %s: %s", pass_label, idx, total, item.name, exc)
             self._record_failure(rel_path, exc, result, sharepoint_url=item.web_url)
         finally:
@@ -759,10 +757,11 @@ class ETLRunner:
             "drop_noisy_callouts": self.drop_noisy_callouts,
         }
         if ext == ".pdf":
-            return self.pdf_extractor.extract(file_path, **kwargs)
+            with self._pdf_lock:
+                return self.pdf_extractor.extract(file_path, **kwargs)
         if ext == ".docx":
             return self.docx_extractor.extract(file_path, **kwargs)
-        if ext in {".xlsx", ".xls"}:
+        if ext == ".xlsx":
             return self.xlsx_extractor.extract(file_path, **kwargs)
         raise ValueError(f"Unsupported file extension for extraction: {ext}")
 

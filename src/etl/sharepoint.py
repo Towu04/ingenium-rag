@@ -24,7 +24,6 @@ from config import (
     get_settings,
     load_credentials_file,
 )
-from domain import DocumentMetadata, ExtractionMethod, ParsedDoc, compute_doc_id, utc_now
 
 logger = logging.getLogger(__name__)
 
@@ -46,15 +45,6 @@ def compute_file_sha256(file_path: str | Path) -> str:
         for chunk in iter(lambda: fh.read(65536), b""):
             hasher.update(chunk)
     return hasher.hexdigest()
-
-
-def _default_method_for_ext(ext: str) -> ExtractionMethod:
-    ext_lower = ext.lower()
-    if ext_lower == ".docx":
-        return ExtractionMethod.PYTHON_DOCX
-    if ext_lower in {".xlsx", ".xls"}:
-        return ExtractionMethod.OPENPYXL_TABLE
-    return ExtractionMethod.PYMUPDF_DIGITAL
 
 
 @dataclass
@@ -478,66 +468,6 @@ class SharePointConnector:
                 if chunk:
                     fh.write(chunk)
         return local_path
-
-    def seed_target_json(
-        self,
-        item: RemoteDriveItem,
-        local_file_path: str | Path,
-        json_out_dir: str | Path | None = None,
-        *,
-        relative_path_override: str | Path | None = None,
-    ) -> tuple[Path, str]:
-        """Compute SHA-256 and seed `<doc_id>.json` as a canonical `ParsedDoc` with SharePoint provenance."""
-        target_dir = Path(json_out_dir) if json_out_dir is not None else self.config.json_out_dir
-        target_dir.mkdir(parents=True, exist_ok=True)
-
-        eff_rel = Path(relative_path_override or item.relative_path).as_posix()
-        file_hash = compute_file_sha256(local_file_path)
-        doc_id = compute_doc_id(eff_rel)
-
-        seeded_doc = ParsedDoc(
-            document_id=doc_id,
-            content_hash=file_hash,
-            markdown="",
-            sections=[],
-            metadata=DocumentMetadata(
-                source_path=eff_rel,
-                sharepoint_url=item.web_url,
-                extra={
-                    "file_name": item.name,
-                    "file_extension": item.extension,
-                    "relative_folder_path": Path(eff_rel).parent.as_posix()
-                    if Path(eff_rel).parent != Path(".")
-                    else "",
-                    "sharepoint_item_id": item.item_id,
-                    "sharepoint_etag": item.etag or item.ctag,
-                    "extraction_method": _default_method_for_ext(item.extension).value,
-                    "processed_at": utc_now().isoformat(),
-                },
-            ),
-        )
-        json_path = target_dir / f"{doc_id}.json"
-        json_path.write_text(seeded_doc.model_dump_json(indent=2), encoding="utf-8")
-        return json_path, file_hash
-
-    def download_and_seed(
-        self,
-        item: RemoteDriveItem,
-        staging_dir: str | Path | None = None,
-        json_out_dir: str | Path | None = None,
-        *,
-        relative_path_override: str | Path | None = None,
-    ) -> tuple[Path, Path, str]:
-        local_path = self.download_file(
-            item, staging_dir=staging_dir, target_rel_path=relative_path_override
-        )
-        seeded_json, file_hash = self.seed_target_json(
-            item,
-            local_path,
-            json_out_dir=json_out_dir,
-            relative_path_override=relative_path_override,
-        )
-        return local_path, seeded_json, file_hash
 
     def cleanup_local_file(
         self,

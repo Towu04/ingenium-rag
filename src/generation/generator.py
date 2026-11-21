@@ -54,7 +54,11 @@ class OpenAICompatibleLLM:
         temperature: float = 0.0,
         timeout: float = 120.0,
     ) -> None:
-        self.endpoint = f"{base_url.rstrip('/')}/v1/chat/completions"
+        normalized = base_url.rstrip("/")
+        if normalized.endswith("/v1"):
+            self.endpoint = f"{normalized}/chat/completions"
+        else:
+            self.endpoint = f"{normalized}/v1/chat/completions"
         self.model = model
         self.api_key = api_key
         self.temperature = temperature

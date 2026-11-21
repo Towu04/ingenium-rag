@@ -1,7 +1,7 @@
 # GEMINI.md — Ingenium RAG Architecture & Developer Guide
 
 ## Overview
-Parent-Child Hybrid RAG PoC for Ingenium engineering/construction documents (AZ Sint-Jan Brugge) with metadata filtering on `project`, `building` (multi-value array), and `phase`.
+Parent-Child Hybrid RAG PoC for Ingenium engineering/construction documents with metadata filtering on `project`, `building` (multi-value array), and `phase`.
 
 ## Architecture: Pipes-and-Filters
 Every pipeline stage is strictly isolated under `src/` and communicates **only** through canonical contracts in `src/domain.py`. Stages never import each other; only `src/pipeline.py` wires stages together. This invariant is enforced automatically by `tests/test_architecture.py`.
@@ -40,14 +40,14 @@ Answer (text + Citation[] + retrieved_results)
 - `src/generation/` — `prompts.py`, `citations.py`, `generator.py` (`LLMClient` protocol, `ExtractiveStubLLM` default, `OpenAICompatibleLLM` for local Ollama/vLLM).
 - `src/evaluation/` — `metrics.py` (`citation_precision`, `source_recall`), `runner.py`.
 - `src/api/` — FastAPI HTTP layer (`GET /health`, `POST /v1/query`).
-- `scripts/` — Thin CLI entry points: `ingest.py` (`ingenium-ingest`), `query.py` (`ingenium-query`), `eval.py` (`ingenium-eval`).
+- `scripts/` — Thin CLI entry points + shared Rich CLI helper (`_cli.py`): `ingest.py` (`ingenium-ingest`), `query.py` (`ingenium-query`), `inspect_rag.py` (`ingenium-inspect`), `eval.py` (`ingenium-eval`).
 - `tests/` — Stage-mirrored test suite + `test_architecture.py` (enforces zero cross-stage imports and zero `print()` inside `src/`).
 
 ## Key Invariants & Conventions
 1. **Stage isolation**: Do not import sibling stages from within `etl`, `chunking`, `embedding`, `storage`, `retrieval`, `generation`, or `evaluation`. Pass data through `domain.py` types or lightweight `Protocol`s and wire in `src/pipeline.py`.
-2. **Logging over `print()`**: All modules under `src/` must use `logging.getLogger(__name__)`. Only CLI scripts under `scripts/` print to stdout.
-3. **Metadata normalization**: Unresolved `project`, `building`, or `phase` values are always `None` (never `"UNKNOWN_*"`). Multi-building documents store `buildings: list[str]` in Qdrant so `MatchValue(value="Blok L")` works out of the box.
-4. **Local LLM**: Defaults to `ExtractiveStubLLM` when `LLM_BASE_URL` / `LLM_MODEL` are unset in `.env`. Plugging in a local Ollama/vLLM server requires only setting those env vars.
+2. **Logging over `print()`**: All modules under `src/` must use `logging.getLogger(__name__)`. Only CLI scripts under `scripts/` print to stdout (all logs/progress/errors go to `stderr`).
+3. **Metadata normalization**: Unresolved `project`, `building`, or `phase` values are always `None` (never `"UNKNOWN_*"`). Multi-building documents store `buildings: list[str]` in Qdrant so `MatchValue(value="Blok A")` works out of the box.
+4. **Local LLM**: Defaults to `ExtractiveStubLLM` when `LLM_BASE_URL` / `LLM_MODEL` are unset in `.env` (see `.env.example`). Plugging in a local Ollama/vLLM server requires only setting those env vars.
 5. **Qdrant local lock**: Disk-persistent local Qdrant (`./data/qdrant_poc`) allows one process at a time; always use `with LocalHybridRepository(...) as repo:`.
 
 ## Common `make` Commands
@@ -56,10 +56,16 @@ make help                                                                # list 
 make check                                                               # ruff lint + pytest
 make test                                                                # run offline pytest suite
 make ingest                                                              # index data/processed -> data/qdrant_poc
-make ingest MODE=sharepoint PREFIX="General/05_Uitvoering" LIMIT=10      # stream from SharePoint & index
-make ingest-dry-run MODE=sharepoint PREFIX="General/04_Prijsvraag"       # inventory preview (no downloads)
-make report                                                              # manifest & scanned-PDF/limitations report
-make query Q="Wat zijn de eisen voor brandwerende deuren?" BUILDING="Blok L" RETRIEVAL_ONLY=1
+make ingest MODE=raw RAW_DIR=data/raw                                    # extract local raw files & index
+make ingest MODE=sharepoint SITE=/sites/12345001-INT PREFIX="General/05_Uitvoering" LIMIT=10
+make ingest MODE=sharepoint SITES_FILE=data/sharepoint_sites.tsv WORKERS=4
+make ingest-dry-run MODE=sharepoint SITES_FILE=data/sharepoint_sites.tsv # inventory preview (no downloads)
+make report                                                              # manifest, scanned-PDF & unauthorized report
+make query Q="Wat zijn de eisen voor brandwerende deuren?" BUILDING="Blok A" DEBUG=1
+make query Q="fire-resistant doors" JSON=1 | jq '.trace.results[0]'
+make inspect                                                             # Qdrant stats & metadata distributions
+make export-chunks OUT=data/exports                                      # export JSONL chunks for RAGAS
+make batch-query QUESTIONS=questions.txt OUT=data/exports/report.md      # batch retrieval inspection report
 make eval DATASET=data/eval.json                                         # run evaluation dataset
 make api                                                                 # start FastAPI on :8000
 make clean                                                               # clear caches (preserves data/)

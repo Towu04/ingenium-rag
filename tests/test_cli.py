@@ -188,3 +188,42 @@ def test_pipeline_progress_disables_bars_on_non_tty_quiet_and_json() -> None:
         assert p_json.enabled is False
         assert p_json.show_bars is False
         p_json("stage_done", 1, 4, "Done")
+
+
+def test_ingest_dry_run_json_routes_unauthorized_warning_to_stderr(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    import scripts.ingest as ingest_cli
+    from config import SharePointSiteSpec
+    from etl import SharePointAuthError
+
+    class _FakeSP:
+        def for_site(self, spec: SharePointSiteSpec):
+            return spec
+
+    def _raise_403(self, *, connector, folder_prefix=None):
+        raise SharePointAuthError(403, f"{connector.hostname}{connector.site_path}")
+
+    monkeypatch.setattr(
+        ingest_cli,
+        "load_sharepoint_sites",
+        lambda **kw: [
+            SharePointSiteSpec(hostname="tenant.sharepoint.com", site_path="/sites/SECRET-INT")
+        ],
+    )
+    monkeypatch.setattr(
+        ingest_cli.SharePointConnector,
+        "from_env",
+        classmethod(lambda cls, **kw: _FakeSP()),
+    )
+    monkeypatch.setattr(ingest_cli.ETLRunner, "scan_sharepoint_inventory", _raise_403)
+    monkeypatch.setattr(
+        sys, "argv", ["ingenium-ingest", "--from-sharepoint", "--dry-run", "--json"]
+    )
+
+    ingest_cli._main()
+    captured = capsys.readouterr()
+    parsed = json.loads(captured.out)
+    assert parsed["total_files"] == 0
+    assert parsed["unauthorized_sites"] == ["tenant.sharepoint.com/sites/SECRET-INT"]
+    assert "Skipping unauthorized site" in captured.err

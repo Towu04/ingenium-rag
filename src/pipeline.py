@@ -495,17 +495,10 @@ class IndexingPipeline:
                 f"SharePoint Discovery & Sync ({len(site_list)} site(s), workers={eff_workers})",
             )
 
-        t_etl_total = time.perf_counter()
-        total_discovered = 0
-        total_parsed = 0
-        total_skipped_etl = 0
+        t_etl_total = 0.0
+        total_stats = IndexingStats()
         total_scanned_empty = 0
         total_dropped_callouts = 0
-        total_unauth = 0
-        unauth_targets: list[str] = []
-
-        if on_progress:
-            on_progress("stage_start", 2, 4, "SharePoint Streaming & ETL Extraction")
 
         for s_idx, spec in enumerate(site_list, start=1):
             site_sp = base_connector.for_site(spec)
@@ -517,6 +510,14 @@ class IndexingPipeline:
                 spec.site_path,
                 spec.project_code or "auto",
             )
+            if on_progress:
+                on_progress(
+                    "stage_start",
+                    2,
+                    4,
+                    f"SharePoint ETL [{s_idx}/{len(site_list)}]: {spec.site_path}",
+                )
+            t_site_etl = time.perf_counter()
             etl_res = etl.run_sharepoint(
                 connector=site_sp,
                 force=force_etl,
@@ -527,39 +528,66 @@ class IndexingPipeline:
                 namespace_by_site=namespace_by_site,
                 on_progress=on_progress,
             )
-            total_discovered += etl_res.discovered_files
-            total_parsed += etl_res.processed_files
-            total_skipped_etl += etl_res.skipped_unchanged_files
+            site_etl_elapsed = time.perf_counter() - t_site_etl
+            t_etl_total += site_etl_elapsed
+
+            total_stats.discovered_files += etl_res.discovered_files
             total_scanned_empty += etl_res.scanned_empty_files
             total_dropped_callouts += etl_res.dropped_noisy_callouts
-            total_unauth += etl_res.unauthorized_count
-            unauth_targets.extend(etl_res.unauthorized_targets)
+            total_stats.unauthorized_count += etl_res.unauthorized_count
+            total_stats.unauthorized_targets.extend(etl_res.unauthorized_targets)
 
-        etl_elapsed = time.perf_counter() - t_etl_total
-        if on_progress:
-            on_progress(
-                "stage_done",
-                2,
-                4,
-                f"SharePoint ETL done in {etl_elapsed:.1f}s "
-                f"({total_parsed} parsed, {total_scanned_empty} scanned/empty, "
-                f"{total_skipped_etl} unchanged, {total_unauth} unauthorized)",
-            )
+            if on_progress:
+                on_progress(
+                    "stage_done",
+                    2,
+                    4,
+                    f"Site [{s_idx}/{len(site_list)}] ETL done in {site_etl_elapsed:.1f}s "
+                    f"({etl_res.processed_files} parsed, {etl_res.scanned_empty_files} scanned/empty, "
+                    f"{etl_res.skipped_unchanged_files} unchanged, {etl_res.unauthorized_count} unauthorized)",
+                )
 
-        stats = self.ingest_processed_dir(
-            out_base,
-            force=force_index,
-            on_progress=on_progress,
-            stage_offset=2,
-            total_stages=4,
+            # Incrementally index this site's ParsedDocs right after ETL completes
+            site_docs: list[ParsedDoc] = []
+            seen_paths: set[Path] = set()
+            for jp in etl_res.output_json_paths:
+                if jp in seen_paths or not jp.exists():
+                    continue
+                seen_paths.add(jp)
+                try:
+                    site_docs.append(ParsedDoc.model_validate_json(jp.read_text(encoding="utf-8")))
+                except Exception:
+                    total_stats.failed_docs += 1
+                    logger.warning("Skipping corrupt ParsedDoc JSON '%s'.", jp)
+
+            if site_docs:
+                site_idx_stats = self.index_documents(
+                    site_docs,
+                    force=force_index,
+                    on_progress=on_progress,
+                    stage_offset=2,
+                    total_stages=4,
+                )
+                total_stats.total_docs += site_idx_stats.total_docs
+                total_stats.indexed_docs += site_idx_stats.indexed_docs
+                total_stats.skipped_unchanged += site_idx_stats.skipped_unchanged
+                total_stats.skipped_empty += site_idx_stats.skipped_empty
+                total_stats.scanned_empty_docs += site_idx_stats.scanned_empty_docs
+                total_stats.dropped_noisy_callouts += site_idx_stats.dropped_noisy_callouts
+                total_stats.failed_docs += site_idx_stats.failed_docs
+                total_stats.total_parents += site_idx_stats.total_parents
+                total_stats.total_children += site_idx_stats.total_children
+                for k, v in site_idx_stats.stage_timings.items():
+                    total_stats.stage_timings[k] = round(
+                        total_stats.stage_timings.get(k, 0.0) + v, 2
+                    )
+
+        total_stats.scanned_empty_docs = max(total_stats.scanned_empty_docs, total_scanned_empty)
+        total_stats.dropped_noisy_callouts = max(
+            total_stats.dropped_noisy_callouts, total_dropped_callouts
         )
-        stats.discovered_files = total_discovered
-        stats.scanned_empty_docs = max(stats.scanned_empty_docs, total_scanned_empty)
-        stats.dropped_noisy_callouts = max(stats.dropped_noisy_callouts, total_dropped_callouts)
-        stats.unauthorized_count = total_unauth
-        stats.unauthorized_targets = unauth_targets
-        stats.stage_timings = {"etl": round(etl_elapsed, 2), **stats.stage_timings}
-        return stats
+        total_stats.stage_timings = {"etl": round(t_etl_total, 2), **total_stats.stage_timings}
+        return total_stats
 
 
 class RAGPipeline:

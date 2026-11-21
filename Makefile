@@ -20,7 +20,7 @@ PYTEST := PYTHONPATH=src:. HF_HUB_OFFLINE=1 $(PYTHON) -m pytest
 # Runtime Overrides (ingest / query / eval)
 # =============================================================================
 MODE           ?= etl
-RAW_DIR        ?= data/raw_sharepoint
+RAW_DIR        ?= data/raw
 ETL_DIR        ?= data/processed
 QDRANT_PATH    ?= data/qdrant_poc
 PREFIX         ?=
