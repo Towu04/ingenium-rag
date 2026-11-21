@@ -11,10 +11,11 @@ from typing import Any
 from rich.panel import Panel
 from rich.table import Table
 
-from config import configure_logging, get_settings
+from config import get_settings
 from domain import RetrievalTrace
 from scripts._cli import (
     CLIError,
+    PipelineProgress,
     add_common_args,
     build_parser,
     clean_preview,
@@ -22,6 +23,7 @@ from scripts._cli import (
     err_console,
     out_console,
     run_cli,
+    setup_cli_logging,
     suppress_hf_noise_early,
 )
 from storage import LocalHybridRepository
@@ -269,24 +271,27 @@ def _cmd_batch_query(args: argparse.Namespace) -> None:
     from pipeline import build_rag_pipeline
 
     t0 = time.perf_counter()
-    if not args.quiet and not args.as_json:
-        err_console.print(f"[dim]Running {len(questions)} question(s)...[/dim]")
-
-    pipeline, repo = build_rag_pipeline(qdrant_path=args.qdrant_path, device=args.device)
     traces: list[RetrievalTrace] = []
-    with repo:
-        for item in questions:
-            trace = pipeline.retrieve_with_trace(
-                item["question"],
-                top_k=args.top_k,
-                retrieve_k=args.retrieve_k,
-                project=item.get("project"),
-                building=item.get("building"),
-                phase=item.get("phase"),
-                auto_filter=args.auto_filter,
-                min_score=args.min_score,
-            )
-            traces.append(trace)
+    with PipelineProgress(quiet=args.quiet, json_mode=args.as_json) as prog:
+        pipeline, repo = build_rag_pipeline(
+            qdrant_path=args.qdrant_path, device=args.device, on_progress=prog
+        )
+        with repo:
+            prog("bar_start", 0, len(questions), "Running batch queries")
+            for idx, item in enumerate(questions, start=1):
+                trace = pipeline.retrieve_with_trace(
+                    item["question"],
+                    top_k=args.top_k,
+                    retrieve_k=args.retrieve_k,
+                    project=item.get("project"),
+                    building=item.get("building"),
+                    phase=item.get("phase"),
+                    auto_filter=args.auto_filter,
+                    min_score=args.min_score,
+                )
+                traces.append(trace)
+                prog("bar_advance", idx, len(questions), item["question"][:48])
+            prog("bar_done", len(questions), len(questions), "Running batch queries")
 
     out_path: Path = args.out
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -386,7 +391,7 @@ def _main() -> None:
     p_batch.set_defaults(func=_cmd_batch_query)
 
     args = parser.parse_args()
-    configure_logging(verbose=args.verbose, quiet=args.quiet, json_mode=args.as_json)
+    setup_cli_logging(verbose=args.verbose, quiet=args.quiet, json_mode=args.as_json)
     args.func(args)
 
 

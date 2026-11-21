@@ -2,6 +2,7 @@
 
 import json
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -18,6 +19,7 @@ from etl.quality import QualityLogger
 from etl.sharepoint import RemoteDriveItem, SharePointConnector, compute_file_sha256
 
 logger = logging.getLogger(__name__)
+ProgressCallback = Callable[[str, int, int, str], None]
 
 
 class ManifestEntry(BaseModel):
@@ -170,6 +172,8 @@ class ETLRunResult:
     discovered_files: int = 0
     processed_files: int = 0
     skipped_unchanged_files: int = 0
+    scanned_empty_files: int = 0
+    dropped_noisy_callouts: int = 0
     failed_files: int = 0
     limitations_logged: int = 0
     documents: list[ParsedDoc] = field(default_factory=list)
@@ -248,6 +252,14 @@ class ETLRunner:
     ) -> Path:
         if self.quality_logger.evaluate_and_log(parsed_doc) is not None:
             result.limitations_logged += 1
+        result.dropped_noisy_callouts += int(
+            parsed_doc.metadata.extra.get("dropped_noisy_callouts") or 0
+        )
+        if not parsed_doc.sections and (
+            parsed_doc.metadata.extra.get("is_scanned")
+            or parsed_doc.metadata.extra.get("needs_ocr")
+        ):
+            result.scanned_empty_files += 1
         md_path, out_json = self._write_outputs(parsed_doc, json_path=json_path)
         self.manifest.record_success(
             rel_posix, parsed_doc, md_path, out_json, quick_xor_hash=quick_xor_hash
@@ -328,7 +340,13 @@ class ETLRunner:
             )
         return summary
 
-    def run_local(self, raw_dir: str | Path, *, force: bool = False) -> ETLRunResult:
+    def run_local(
+        self,
+        raw_dir: str | Path,
+        *,
+        force: bool = False,
+        on_progress: ProgressCallback | None = None,
+    ) -> ETLRunResult:
         """Incrementally extract all supported files in `raw_dir` into `ParsedDoc` JSON/MD."""
         root = Path(raw_dir)
         if not root.exists():
@@ -349,6 +367,8 @@ class ETLRunner:
         result = ETLRunResult()
         total = len(supported_files)
         logger.info("Pass 2: processing %d supported local file(s)...", total)
+        if on_progress and total:
+            on_progress("bar_start", 0, total, "ETL Extraction")
 
         for idx, file_path in enumerate(supported_files, start=1):
             result.discovered_files += 1
@@ -359,6 +379,8 @@ class ETLRunner:
             if not force and self.manifest.is_up_to_date(rel_posix, file_hash):
                 result.skipped_unchanged_files += 1
                 logger.debug("[%d/%d] SKIP unchanged: %s", idx, total, rel_posix)
+                if on_progress:
+                    on_progress("bar_advance", idx, total, f"skip {file_path.name}")
                 continue
 
             try:
@@ -377,7 +399,11 @@ class ETLRunner:
             except Exception as exc:
                 logger.error("[%d/%d] ERROR extracting %s: %s", idx, total, rel_posix, exc)
                 self._record_failure(rel_path, exc, result)
+            if on_progress:
+                on_progress("bar_advance", idx, total, file_path.name)
 
+        if on_progress and total:
+            on_progress("bar_done", total, total, "ETL Extraction")
         logger.info(
             "Local ETL complete: processed=%d skipped=%d failed=%d limitations=%d",
             result.processed_files,
@@ -395,6 +421,7 @@ class ETLRunner:
         max_files: int | None = None,
         folder_prefix: str | None = None,
         extensions: set[str] | None = None,
+        on_progress: ProgressCallback | None = None,
     ) -> ETLRunResult:
         """Stream files from SharePoint one-by-one, enrich `ParsedDoc` JSON in-place, and delete binaries."""
         sp = connector or SharePointConnector.from_env(json_out_dir=self.json_out_dir)
@@ -424,19 +451,31 @@ class ETLRunner:
             len(regular_items),
         )
         result = ETLRunResult()
+        total_items = len(register_items) + len(regular_items)
+        done_items = 0
+        if on_progress and total_items:
+            on_progress("bar_start", 0, total_items, "SharePoint Sync & ETL")
 
         # Pass 1: Document Registers
         for idx, item in enumerate(register_items, start=1):
             self._process_remote_item(
                 sp, item, idx, len(register_items), is_register=True, force=force, result=result
             )
+            done_items += 1
+            if on_progress:
+                on_progress("bar_advance", done_items, total_items, item.name)
 
         # Pass 2: Regular files
         for idx, item in enumerate(regular_items, start=1):
             self._process_remote_item(
                 sp, item, idx, len(regular_items), is_register=False, force=force, result=result
             )
+            done_items += 1
+            if on_progress:
+                on_progress("bar_advance", done_items, total_items, item.name)
 
+        if on_progress and total_items:
+            on_progress("bar_done", total_items, total_items, "SharePoint Sync & ETL")
         logger.info(
             "SharePoint ETL complete: processed=%d skipped=%d failed=%d limitations=%d",
             result.processed_files,

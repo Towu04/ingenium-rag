@@ -1,6 +1,7 @@
 """Shared CLI formatting, stdout/stderr consoles, common flags, and friendly error handling."""
 
 import argparse
+import logging
 import os
 import re
 import sys
@@ -8,7 +9,21 @@ from collections.abc import Callable, Sequence
 from pathlib import Path
 
 from rich.console import Console
+from rich.logging import RichHandler
+from rich.progress import (
+    BarColumn,
+    MofNCompleteColumn,
+    Progress,
+    SpinnerColumn,
+    TaskID,
+    TaskProgressColumn,
+    TextColumn,
+    TimeElapsedColumn,
+    TimeRemainingColumn,
+)
 from rich.table import Table
+
+from config import configure_logging
 
 # Strict stdout vs stderr separation: primary output -> stdout, logs/status/errors -> stderr.
 out_console = Console(highlight=False)
@@ -143,6 +158,90 @@ def ensure_qdrant_ready(qdrant_path: Path, *, require_docs: bool = True) -> None
             raise CLIError(
                 f"Qdrant index at '{qdrant_path}' is empty (0 documents). Run 'make ingest' first."
             )
+
+
+def setup_cli_logging(
+    *,
+    verbose: bool = False,
+    quiet: bool = False,
+    json_mode: bool = False,
+    default_level: int = logging.WARNING,
+    disable_progress: bool | None = None,
+) -> None:
+    """Configure stderr logging routed through `err_console` so logs never tear progress bars."""
+    handler: logging.Handler | None = None
+    if not quiet and not json_mode:
+        handler = RichHandler(
+            console=err_console,
+            show_path=False,
+            markup=False,
+            rich_tracebacks=False,
+            log_time_format="[%H:%M:%S]",
+        )
+    configure_logging(
+        verbose=verbose,
+        quiet=quiet,
+        json_mode=json_mode,
+        default_level=default_level,
+        disable_progress=disable_progress,
+        handler=handler,
+    )
+
+
+class PipelineProgress:
+    """Stderr-only stage milestone and live progress-bar reporter (auto-disabled on non-TTY/quiet/JSON)."""
+
+    def __init__(self, *, quiet: bool = False, json_mode: bool = False) -> None:
+        self.enabled = not (quiet or json_mode)
+        self.show_bars = self.enabled and sys.stderr.isatty()
+        self._progress: Progress | None = None
+        self._task_id: TaskID | None = None
+        self._base_label: str = ""
+
+    def __enter__(self) -> "PipelineProgress":
+        if self.show_bars:
+            self._progress = Progress(
+                SpinnerColumn(),
+                TextColumn("[bold cyan]{task.description}"),
+                BarColumn(),
+                MofNCompleteColumn(),
+                TaskProgressColumn(),
+                TimeElapsedColumn(),
+                TimeRemainingColumn(),
+                console=err_console,
+                transient=True,
+            )
+            self._progress.start()
+        return self
+
+    def __exit__(self, *args: object) -> None:
+        if self._progress is not None:
+            self._progress.stop()
+            self._progress = None
+            self._task_id = None
+
+    def __call__(self, event: str, current: int, total: int, detail: str) -> None:
+        if not self.enabled:
+            return
+        if event == "stage_start":
+            err_console.print(f"[bold cyan][{current}/{total}][/bold cyan] {detail}")
+        elif event == "stage_done":
+            err_console.print(f"[green]✓[/green] {detail}")
+        elif event == "model_load_start":
+            err_console.print(f"[dim]{detail}[/dim]")
+        elif event == "model_load_done":
+            err_console.print(f"[green]✓[/green] [dim]{detail}[/dim]")
+        elif event == "bar_start" and self._progress is not None:
+            self._base_label = detail
+            self._task_id = self._progress.add_task(detail, total=max(total, 1))
+        elif event == "bar_advance" and self._progress is not None and self._task_id is not None:
+            short = detail if len(detail) <= 38 else f"{detail[:35]}..."
+            desc = f"{self._base_label} · {short}" if short else self._base_label
+            self._progress.update(self._task_id, completed=current, description=desc)
+        elif event == "bar_done" and self._progress is not None and self._task_id is not None:
+            self._progress.update(self._task_id, completed=total)
+            self._progress.remove_task(self._task_id)
+            self._task_id = None
 
 
 def run_cli(main_fn: Callable[[], None]) -> None:

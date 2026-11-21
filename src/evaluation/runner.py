@@ -2,11 +2,14 @@
 
 import csv
 import json
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any, Protocol
 
 from domain import Answer
 from evaluation.metrics import citation_precision, source_recall
+
+ProgressCallback = Callable[[str, int, int, str], None]
 
 
 class AnswerRunner(Protocol):
@@ -41,10 +44,14 @@ def run_evaluation(
     rows: list[dict[str, Any]],
     *,
     top_k: int = 5,
+    on_progress: ProgressCallback | None = None,
 ) -> list[dict[str, Any]]:
     """Run each evaluation question and compute citation precision and source recall."""
     outputs: list[dict[str, Any]] = []
-    for row in rows:
+    total = len(rows)
+    if on_progress and total:
+        on_progress("bar_start", 0, total, "Evaluating questions")
+    for idx, row in enumerate(rows, start=1):
         question = str(row["question"])
         answer = runner.run(
             question,
@@ -76,4 +83,8 @@ def run_evaluation(
                 ),
             }
         )
+        if on_progress:
+            on_progress("bar_advance", idx, total, question[:48])
+    if on_progress and total:
+        on_progress("bar_done", total, total, "Evaluating questions")
     return outputs

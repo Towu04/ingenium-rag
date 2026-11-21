@@ -8,15 +8,16 @@ from pathlib import Path
 
 from rich.table import Table
 
-from config import configure_logging, get_settings
+from config import get_settings
 from etl import ETLRunner, SharePointConnector
 from scripts._cli import (
+    PipelineProgress,
     add_common_args,
     build_parser,
-    err_console,
     out_console,
     print_kv_table,
     run_cli,
+    setup_cli_logging,
     suppress_hf_noise_early,
 )
 
@@ -170,11 +171,11 @@ def _main() -> None:
     add_common_args(parser, default_qdrant_path=settings.qdrant_path)
 
     args = parser.parse_args()
-    configure_logging(
+    setup_cli_logging(
         verbose=args.verbose,
         quiet=args.quiet,
         json_mode=args.as_json,
-        default_level=logging.INFO,
+        default_level=logging.WARNING,
         disable_progress=args.quiet or args.as_json,
     )
 
@@ -225,15 +226,19 @@ def _main() -> None:
             manifest_path=args.processed_dir / "manifest.json",
             drop_noisy_callouts=not args.keep_noisy_callouts,
         )
-        if args.from_sharepoint:
-            res = etl.run_sharepoint(
-                force=args.force, max_files=args.max_files, folder_prefix=args.folder_prefix
-            )
-        elif args.raw_dir is not None:
-            res = etl.run_local(args.raw_dir, force=args.force)
-        else:
-            parser.error("--extract-only requires --raw-dir or --from-sharepoint.")
-            return
+        with PipelineProgress(quiet=args.quiet, json_mode=args.as_json) as prog:
+            if args.from_sharepoint:
+                res = etl.run_sharepoint(
+                    force=args.force,
+                    max_files=args.max_files,
+                    folder_prefix=args.folder_prefix,
+                    on_progress=prog,
+                )
+            elif args.raw_dir is not None:
+                res = etl.run_local(args.raw_dir, force=args.force, on_progress=prog)
+            else:
+                parser.error("--extract-only requires --raw-dir or --from-sharepoint.")
+                return
 
         elapsed = time.perf_counter() - t0
         if args.as_json:
@@ -244,6 +249,8 @@ def _main() -> None:
                         "discovered_files": res.discovered_files,
                         "processed_files": res.processed_files,
                         "skipped_unchanged_files": res.skipped_unchanged_files,
+                        "scanned_empty_files": res.scanned_empty_files,
+                        "dropped_noisy_callouts": res.dropped_noisy_callouts,
                         "failed_files": res.failed_files,
                         "limitations_logged": res.limitations_logged,
                     },
@@ -259,6 +266,8 @@ def _main() -> None:
                 ("Discovered", res.discovered_files),
                 ("Processed", res.processed_files),
                 ("Skipped (unchanged)", res.skipped_unchanged_files),
+                ("Scanned / empty (needs OCR)", res.scanned_empty_files),
+                ("Noisy callouts dropped", res.dropped_noisy_callouts),
                 ("Failed", res.failed_files),
                 ("Limitations logged", res.limitations_logged),
             ],
@@ -268,14 +277,14 @@ def _main() -> None:
     from pipeline import IndexingPipeline
     from storage import LocalHybridRepository
 
-    if not args.quiet and not args.as_json:
-        err_console.print(f"[dim]Opening local Qdrant index at {args.qdrant_path}...[/dim]")
-
-    with LocalHybridRepository(path=str(args.qdrant_path)) as repo:
+    with (
+        LocalHybridRepository(path=str(args.qdrant_path)) as repo,
+        PipelineProgress(quiet=args.quiet, json_mode=args.as_json) as prog,
+    ):
         pipeline = IndexingPipeline(repository=repo, device=args.device)
 
         if args.etl_dir is not None:
-            stats = pipeline.ingest_processed_dir(args.etl_dir, force=args.force)
+            stats = pipeline.ingest_processed_dir(args.etl_dir, force=args.force, on_progress=prog)
         elif args.from_sharepoint:
             stats = pipeline.ingest_sharepoint(
                 catalog_path=catalog,
@@ -285,6 +294,7 @@ def _main() -> None:
                 max_files=args.max_files,
                 folder_prefix=args.folder_prefix,
                 drop_noisy_callouts=not args.keep_noisy_callouts,
+                on_progress=prog,
             )
         else:
             stats = pipeline.ingest_raw_folder(
@@ -294,6 +304,7 @@ def _main() -> None:
                 force_etl=args.force,
                 force_index=args.force,
                 drop_noisy_callouts=not args.keep_noisy_callouts,
+                on_progress=prog,
             )
 
         counts = repo.collection_counts()
@@ -304,10 +315,14 @@ def _main() -> None:
             json.dumps(
                 {
                     "elapsed_seconds": round(elapsed, 2),
+                    "stage_timings": stats.stage_timings,
+                    "discovered_files": stats.discovered_files or stats.total_docs,
                     "total_docs": stats.total_docs,
                     "indexed_docs": stats.indexed_docs,
                     "skipped_unchanged": stats.skipped_unchanged,
                     "skipped_empty": stats.skipped_empty,
+                    "scanned_empty_docs": stats.scanned_empty_docs,
+                    "dropped_noisy_callouts": stats.dropped_noisy_callouts,
                     "failed_docs": stats.failed_docs,
                     "new_parents": stats.total_parents,
                     "new_children": stats.total_children,
@@ -319,21 +334,31 @@ def _main() -> None:
         )
         return
 
-    print_kv_table(
-        f"Ingestion Complete ({elapsed:.1f}s)",
+    timing_parts = [f"{k}={v:.1f}s" for k, v in stats.stage_timings.items()]
+    summary_rows: list[tuple[str, object]] = [
+        ("Total runtime", f"{elapsed:.1f}s"),
+    ]
+    if timing_parts:
+        summary_rows.append(("Stage timings", " | ".join(timing_parts)))
+    summary_rows.extend(
         [
-            ("Documents seen", stats.total_docs),
-            ("Indexed", stats.indexed_docs),
-            ("Skipped (unchanged)", stats.skipped_unchanged),
-            ("Skipped (empty)", stats.skipped_empty),
+            (
+                "Discovered / loaded docs",
+                f"{stats.discovered_files or stats.total_docs} / {stats.total_docs}",
+            ),
+            ("Newly indexed", stats.indexed_docs),
+            ("Skipped (unchanged hash)", stats.skipped_unchanged),
+            ("Scanned / empty", f"{stats.scanned_empty_docs} / {stats.skipped_empty}"),
             ("Failed", stats.failed_docs),
+            ("Noisy callouts dropped", stats.dropped_noisy_callouts),
             ("New parent / child chunks", f"{stats.total_parents} / {stats.total_children}"),
             (
-                "Qdrant totals (docs / parents / children)",
-                f"{counts['documents']} / {counts['parent_chunks']} / {counts['child_chunks']}",
+                f"Qdrant totals ({args.qdrant_path})",
+                f"{counts['documents']} docs / {counts['parent_chunks']} parents / {counts['child_chunks']} children",
             ),
-        ],
+        ]
     )
+    print_kv_table("Ingestion Summary", summary_rows)
 
 
 def main() -> None:

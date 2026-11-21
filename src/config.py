@@ -179,6 +179,7 @@ def configure_logging(
     json_mode: bool = False,
     default_level: int = logging.WARNING,
     disable_progress: bool | None = None,
+    handler: logging.Handler | None = None,
 ) -> None:
     """Configure consistent stderr-only logging and silence third-party chatter unless verbose."""
     if verbose:
@@ -188,11 +189,15 @@ def configure_logging(
     else:
         level = default_level
 
-    handler = logging.StreamHandler(sys.stderr)
-    handler.setFormatter(
-        logging.Formatter("%(asctime)s %(levelname)-7s %(name)s: %(message)s", datefmt="%H:%M:%S")
-    )
-    logging.basicConfig(level=level, handlers=[handler], force=True)
+    active_handler = handler
+    if active_handler is None:
+        active_handler = logging.StreamHandler(sys.stderr)
+        active_handler.setFormatter(
+            logging.Formatter(
+                "%(asctime)s %(levelname)-7s %(name)s: %(message)s", datefmt="%H:%M:%S"
+            )
+        )
+    logging.basicConfig(level=level, handlers=[active_handler], force=True)
 
     third_party_level = logging.INFO if verbose else logging.ERROR
     for name in _NOISY_THIRD_PARTY_LOGGERS:

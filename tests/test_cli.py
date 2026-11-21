@@ -11,7 +11,13 @@ import pytest
 
 from config import configure_logging
 from domain import ChildChunk, DocumentMetadata, EmbeddedChildBatch, ParentChunk, ParsedDoc
-from scripts._cli import CLIError, clean_preview, format_friendly_error, run_cli
+from scripts._cli import (
+    CLIError,
+    PipelineProgress,
+    clean_preview,
+    format_friendly_error,
+    run_cli,
+)
 from storage import LocalHybridRepository
 
 
@@ -170,3 +176,15 @@ def test_cli_friendly_errors_return_nonzero_without_traceback(tmp_path: Path) ->
     assert proc_eval.returncode == 1
     assert proc_eval.stdout == ""
     assert "Traceback" not in proc_eval.stderr
+
+
+def test_pipeline_progress_disables_bars_on_non_tty_quiet_and_json() -> None:
+    with PipelineProgress(quiet=True) as p_quiet:
+        assert p_quiet.enabled is False
+        assert p_quiet.show_bars is False
+        p_quiet("stage_start", 1, 4, "Test")
+
+    with PipelineProgress(json_mode=True) as p_json:
+        assert p_json.enabled is False
+        assert p_json.show_bars is False
+        p_json("stage_done", 1, 4, "Done")

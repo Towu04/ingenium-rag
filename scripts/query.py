@@ -8,10 +8,11 @@ from pathlib import Path
 from rich.panel import Panel
 from rich.table import Table
 
-from config import configure_logging, get_settings
+from config import detect_device, get_settings
 from domain import Answer, RetrievalTrace
 from scripts._cli import (
     CLIError,
+    PipelineProgress,
     add_common_args,
     build_parser,
     clean_preview,
@@ -19,6 +20,7 @@ from scripts._cli import (
     err_console,
     out_console,
     run_cli,
+    setup_cli_logging,
     suppress_hf_noise_early,
 )
 
@@ -180,7 +182,7 @@ def _main() -> None:
     add_common_args(parser, default_qdrant_path=settings.qdrant_path)
     args = parser.parse_args()
 
-    configure_logging(verbose=args.verbose, quiet=args.quiet, json_mode=args.as_json)
+    setup_cli_logging(verbose=args.verbose, quiet=args.quiet, json_mode=args.as_json)
 
     question = args.question or ("" if args.as_json else input("Question: ").strip())
     if not question:
@@ -190,42 +192,54 @@ def _main() -> None:
     from storage import LocalHybridRepository
 
     t0 = time.perf_counter()
-    if not args.quiet and not args.as_json:
-        err_console.print("[dim]Loading retrieval models and querying index...[/dim]")
 
     from generation.generator import GroundedGenerator
     from pipeline import RAGPipeline, build_llm_client, build_rag_pipeline
     from retrieval import Searcher
 
-    if args.no_rerank:
-        from embedding import BGEM3Embedder
+    with PipelineProgress(quiet=args.quiet, json_mode=args.as_json) as prog:
+        if args.no_rerank:
+            from embedding import BGEM3Embedder
 
-        repo = LocalHybridRepository(path=str(args.qdrant_path))
-        embedder = BGEM3Embedder(model_name=settings.embedding_model, device=args.device)
-        pipeline = RAGPipeline(
-            searcher=Searcher(embedder=embedder, repository=repo),
-            reranker=_PassThroughReranker(),
-            generator=GroundedGenerator(llm=build_llm_client(settings)),
-            retrieve_k=args.retrieve_k,
-            rerank_k=args.top_k,
-        )
-    else:
-        pipeline, repo = build_rag_pipeline(qdrant_path=args.qdrant_path, device=args.device)
+            dev = detect_device(args.device or settings.device)
+            prog("model_load_start", 0, 0, f"Loading {settings.embedding_model} on {dev}...")
+            t_m = time.perf_counter()
+            repo = LocalHybridRepository(path=str(args.qdrant_path))
+            embedder = BGEM3Embedder(model_name=settings.embedding_model, device=dev)
+            prog(
+                "model_load_done",
+                0,
+                0,
+                f"{settings.embedding_model} ready on {dev} in {time.perf_counter() - t_m:.1f}s",
+            )
+            pipeline = RAGPipeline(
+                searcher=Searcher(embedder=embedder, repository=repo),
+                reranker=_PassThroughReranker(),
+                generator=GroundedGenerator(llm=build_llm_client(settings)),
+                retrieve_k=args.retrieve_k,
+                rerank_k=args.top_k,
+            )
+        else:
+            pipeline, repo = build_rag_pipeline(
+                qdrant_path=args.qdrant_path, device=args.device, on_progress=prog
+            )
 
-    with repo:
-        trace = pipeline.retrieve_with_trace(
-            question,
-            top_k=args.top_k,
-            retrieve_k=args.retrieve_k,
-            project=args.project,
-            building=args.building,
-            phase=args.phase,
-            auto_filter=args.auto_filter,
-            min_score=args.min_score,
-        )
-        answer = (
-            None if args.retrieval_only else pipeline.generator.generate(question, trace.results)
-        )
+        with repo:
+            trace = pipeline.retrieve_with_trace(
+                question,
+                top_k=args.top_k,
+                retrieve_k=args.retrieve_k,
+                project=args.project,
+                building=args.building,
+                phase=args.phase,
+                auto_filter=args.auto_filter,
+                min_score=args.min_score,
+            )
+            answer = (
+                None
+                if args.retrieval_only
+                else pipeline.generator.generate(question, trace.results)
+            )
 
     elapsed = time.perf_counter() - t0
     if not args.quiet and not args.as_json:

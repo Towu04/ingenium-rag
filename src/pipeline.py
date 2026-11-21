@@ -7,15 +7,15 @@ isolated and testable in complete independence.
 
 import logging
 import time
-from collections.abc import Iterable, Sequence
-from dataclasses import dataclass
+from collections.abc import Callable, Iterable, Sequence
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Protocol
 
 import numpy as np
 
 from chunking import ParentChildChunker
-from config import Settings, get_settings
+from config import Settings, detect_device, get_settings
 from domain import (
     Answer,
     ChildChunk,
@@ -49,17 +49,24 @@ class RerankerProtocol(Protocol):
     ) -> list[SearchResult]: ...
 
 
+ProgressCallback = Callable[[str, int, int, str], None]
+
+
 @dataclass
 class IndexingStats:
     """Execution summary for an `IndexingPipeline` run."""
 
+    discovered_files: int = 0
     total_docs: int = 0
     indexed_docs: int = 0
     skipped_unchanged: int = 0
     skipped_empty: int = 0
+    scanned_empty_docs: int = 0
+    dropped_noisy_callouts: int = 0
     failed_docs: int = 0
     total_parents: int = 0
     total_children: int = 0
+    stage_timings: dict[str, float] = field(default_factory=dict)
 
 
 class IndexingPipeline:
@@ -85,17 +92,36 @@ class IndexingPipeline:
             else self._settings.embed_batch_buffer_size
         )
 
-    @property
-    def embedder(self) -> ChildEmbedder:
-        """Lazily load `BGEM3Embedder` only when at least one chunk actually needs embedding."""
+    def _get_embedder(self, on_progress: ProgressCallback | None = None) -> ChildEmbedder:
         if self._embedder is None:
+            dev = detect_device(self._device or self._settings.device)
+            if on_progress:
+                on_progress(
+                    "model_load_start",
+                    0,
+                    0,
+                    f"Loading {self._settings.embedding_model} on {dev}...",
+                )
+            t0 = time.perf_counter()
             self._embedder = BGEM3Embedder(
                 model_name=self._settings.embedding_model,
-                device=self._device or self._settings.device,
+                device=dev,
                 batch_size=self._settings.embedding_batch_size,
                 max_length=self._settings.embedding_max_length,
             )
+            if on_progress:
+                on_progress(
+                    "model_load_done",
+                    0,
+                    0,
+                    f"{self._settings.embedding_model} ready on {dev} in {time.perf_counter() - t0:.1f}s",
+                )
         return self._embedder
+
+    @property
+    def embedder(self) -> ChildEmbedder:
+        """Lazily load `BGEM3Embedder` only when at least one chunk actually needs embedding."""
+        return self._get_embedder()
 
     @property
     def chunker(self) -> ParentChildChunker:
@@ -116,15 +142,111 @@ class IndexingPipeline:
         documents: Iterable[ParsedDoc],
         *,
         force: bool = False,
+        on_progress: ProgressCallback | None = None,
+        stage_offset: int = 0,
+        total_stages: int = 2,
     ) -> IndexingStats:
         """Index `ParsedDoc`s into Qdrant using length-sorted cross-document batch embedding."""
         t_start = time.perf_counter()
+        docs_list = list(documents)
         stats = IndexingStats()
+
+        # --- Chunking stage ---
+        chunk_stage = stage_offset + 1
+        if on_progress:
+            on_progress("stage_start", chunk_stage, total_stages, "Chunking")
+        t_chunk0 = time.perf_counter()
+        pending_bundles: list[tuple[ParsedDoc, list[ParentChunk], list[ChildChunk]]] = []
+        if on_progress and docs_list:
+            on_progress("bar_start", 0, len(docs_list), "Chunking documents")
+
+        for idx, doc in enumerate(docs_list, start=1):
+            stats.total_docs += 1
+            stats.dropped_noisy_callouts += int(
+                doc.metadata.extra.get("dropped_noisy_callouts") or 0
+            )
+            try:
+                if not force and not self.repository.needs_indexing(
+                    doc.document_id, doc.content_hash
+                ):
+                    stats.skipped_unchanged += 1
+                    logger.debug(
+                        "Skipping unchanged '%s' (%s).", doc.metadata.source_path, doc.document_id
+                    )
+                    if on_progress:
+                        on_progress(
+                            "bar_advance",
+                            idx,
+                            len(docs_list),
+                            f"unchanged {Path(doc.metadata.source_path).name}",
+                        )
+                    continue
+
+                parents, children = self.chunker.chunk(doc)
+                if not parents or not children:
+                    stats.skipped_empty += 1
+                    if doc.metadata.extra.get("is_scanned") or doc.metadata.extra.get("needs_ocr"):
+                        stats.scanned_empty_docs += 1
+                    logger.warning(
+                        "Skipping '%s' (%s): 0 chunks generated.",
+                        doc.metadata.source_path,
+                        doc.document_id,
+                    )
+                    if on_progress:
+                        on_progress(
+                            "bar_advance",
+                            idx,
+                            len(docs_list),
+                            f"empty {Path(doc.metadata.source_path).name}",
+                        )
+                    continue
+
+                pending_bundles.append((doc, parents, children))
+            except Exception:
+                stats.failed_docs += 1
+                logger.exception(
+                    "Failed to prepare '%s' (%s).", doc.metadata.source_path, doc.document_id
+                )
+            if on_progress:
+                on_progress("bar_advance", idx, len(docs_list), Path(doc.metadata.source_path).name)
+
+        if on_progress and docs_list:
+            on_progress("bar_done", len(docs_list), len(docs_list), "Chunking documents")
+        chunk_elapsed = time.perf_counter() - t_chunk0
+        stats.stage_timings["chunking"] = round(chunk_elapsed, 2)
+        total_pending_children = sum(len(c) for _, _, c in pending_bundles)
+        if on_progress:
+            on_progress(
+                "stage_done",
+                chunk_stage,
+                total_stages,
+                f"Chunking done in {chunk_elapsed:.1f}s "
+                f"({len(pending_bundles)} doc(s) queued, {total_pending_children} children, "
+                f"{stats.skipped_unchanged} unchanged)",
+            )
+
+        # --- Hybrid Embedding & Qdrant Indexing stage ---
+        embed_stage = stage_offset + 2
+        eff_dev = getattr(self._embedder, "device", None) or detect_device(
+            self._device or self._settings.device
+        )
+        if on_progress:
+            on_progress(
+                "stage_start",
+                embed_stage,
+                total_stages,
+                f"Hybrid Embedding & Qdrant Indexing (device={eff_dev})",
+            )
+        t_embed_stage = time.perf_counter()
+        embedded_so_far = 0
+        if on_progress and total_pending_children:
+            on_progress("bar_start", 0, total_pending_children, "Embedding & indexing chunks")
+
         buffer: list[tuple[ParsedDoc, list[ParentChunk], list[ChildChunk]]] = []
         buffered_children = 0
 
         def flush_buffer() -> None:
-            nonlocal buffered_children
+            nonlocal buffered_children, embedded_so_far
             if not buffer:
                 return
 
@@ -142,7 +264,8 @@ class IndexingPipeline:
                     key=lambda i: len(flat_children[i].embedding_text or flat_children[i].text),
                 )
                 sorted_children = [flat_children[i] for i in order]
-                sorted_batch = self.embedder.embed_children(sorted_children)
+                embedder = self._get_embedder(on_progress=on_progress)
+                sorted_batch = embedder.embed_children(sorted_children)
 
                 dense_out = np.empty_like(sorted_batch.dense_vecs)
                 sparse_out: list[dict[int, float]] = [{} for _ in range(len(flat_children))]
@@ -185,42 +308,42 @@ class IndexingPipeline:
                         "Failed to upsert '%s' (%s).", doc.metadata.source_path, doc.document_id
                     )
 
+            embedded_so_far += len(flat_children)
+            if on_progress and total_pending_children:
+                on_progress(
+                    "bar_advance",
+                    embedded_so_far,
+                    total_pending_children,
+                    f"{len(buffer)} doc(s) upserted",
+                )
             buffer.clear()
             buffered_children = 0
 
-        for doc in documents:
-            stats.total_docs += 1
-            try:
-                if not force and not self.repository.needs_indexing(
-                    doc.document_id, doc.content_hash
-                ):
-                    stats.skipped_unchanged += 1
-                    logger.debug(
-                        "Skipping unchanged '%s' (%s).", doc.metadata.source_path, doc.document_id
-                    )
-                    continue
-
-                parents, children = self.chunker.chunk(doc)
-                if not parents or not children:
-                    stats.skipped_empty += 1
-                    logger.warning(
-                        "Skipping '%s' (%s): 0 chunks generated.",
-                        doc.metadata.source_path,
-                        doc.document_id,
-                    )
-                    continue
-
-                buffer.append((doc, parents, children))
-                buffered_children += len(children)
-                if buffered_children >= self.embed_batch_buffer_size:
-                    flush_buffer()
-            except Exception:
-                stats.failed_docs += 1
-                logger.exception(
-                    "Failed to prepare '%s' (%s).", doc.metadata.source_path, doc.document_id
-                )
+        for bundle in pending_bundles:
+            buffer.append(bundle)
+            buffered_children += len(bundle[2])
+            if buffered_children >= self.embed_batch_buffer_size:
+                flush_buffer()
 
         flush_buffer()
+        if on_progress and total_pending_children:
+            on_progress(
+                "bar_done",
+                total_pending_children,
+                total_pending_children,
+                "Embedding & indexing chunks",
+            )
+        embed_elapsed = time.perf_counter() - t_embed_stage
+        stats.stage_timings["embedding_and_indexing"] = round(embed_elapsed, 2)
+        if on_progress:
+            on_progress(
+                "stage_done",
+                embed_stage,
+                total_stages,
+                f"Embedding & Indexing done in {embed_elapsed:.1f}s "
+                f"({stats.indexed_docs} indexed, {stats.total_parents} parents, "
+                f"{stats.total_children} children)",
+            )
         logger.info(
             "Indexing complete in %.1fs: %d indexed, %d unchanged, %d empty, %d failed "
             "(%d parents, %d children).",
@@ -241,6 +364,9 @@ class IndexingPipeline:
         force: bool = False,
         use_manifest: bool = True,
         dedupe_by_hash: bool = True,
+        on_progress: ProgressCallback | None = None,
+        stage_offset: int = 0,
+        total_stages: int = 2,
     ) -> IndexingStats:
         """Load persisted `ParsedDoc` JSONs from `processed_dir` and index them."""
         docs = load_processed_docs(
@@ -248,7 +374,13 @@ class IndexingPipeline:
             use_manifest=use_manifest,
             dedupe_by_hash=dedupe_by_hash,
         )
-        return self.index_documents(docs, force=force)
+        return self.index_documents(
+            docs,
+            force=force,
+            on_progress=on_progress,
+            stage_offset=stage_offset,
+            total_stages=total_stages,
+        )
 
     def ingest_raw_folder(
         self,
@@ -259,6 +391,7 @@ class IndexingPipeline:
         force_etl: bool = False,
         force_index: bool = False,
         drop_noisy_callouts: bool = True,
+        on_progress: ProgressCallback | None = None,
     ) -> IndexingStats:
         """Run local ETL extraction into `processed_dir`, then index all valid `ParsedDoc`s."""
         out_base = (
@@ -271,8 +404,36 @@ class IndexingPipeline:
             manifest_path=out_base / "manifest.json",
             drop_noisy_callouts=drop_noisy_callouts,
         )
-        etl.run_local(raw_dir, force=force_etl)
-        return self.ingest_processed_dir(out_base, force=force_index)
+        if on_progress:
+            on_progress("stage_start", 1, 4, "Discovery & Local Sync")
+            on_progress("stage_done", 1, 4, f"Local source ready ({raw_dir})")
+            on_progress("stage_start", 2, 4, "ETL Extraction")
+        t_etl = time.perf_counter()
+        etl_res = etl.run_local(raw_dir, force=force_etl, on_progress=on_progress)
+        etl_elapsed = time.perf_counter() - t_etl
+        if on_progress:
+            on_progress(
+                "stage_done",
+                2,
+                4,
+                f"ETL Extraction done in {etl_elapsed:.1f}s "
+                f"({etl_res.processed_files} parsed, {etl_res.scanned_empty_files} scanned/empty, "
+                f"{etl_res.skipped_unchanged_files} unchanged)",
+            )
+        stats = self.ingest_processed_dir(
+            out_base,
+            force=force_index,
+            on_progress=on_progress,
+            stage_offset=2,
+            total_stages=4,
+        )
+        stats.discovered_files = etl_res.discovered_files
+        stats.scanned_empty_docs = max(stats.scanned_empty_docs, etl_res.scanned_empty_files)
+        stats.dropped_noisy_callouts = max(
+            stats.dropped_noisy_callouts, etl_res.dropped_noisy_callouts
+        )
+        stats.stage_timings = {"etl": round(etl_elapsed, 2), **stats.stage_timings}
+        return stats
 
     def ingest_sharepoint(
         self,
@@ -284,6 +445,7 @@ class IndexingPipeline:
         max_files: int | None = None,
         folder_prefix: str | None = None,
         drop_noisy_callouts: bool = True,
+        on_progress: ProgressCallback | None = None,
     ) -> IndexingStats:
         """Stream files from SharePoint via ETL, persist `ParsedDoc` JSONs, and index into Qdrant."""
         out_base = (
@@ -296,14 +458,43 @@ class IndexingPipeline:
             manifest_path=out_base / "manifest.json",
             drop_noisy_callouts=drop_noisy_callouts,
         )
+        if on_progress:
+            on_progress("stage_start", 1, 4, "SharePoint Discovery & Sync")
         connector = SharePointConnector.from_env(json_out_dir=out_base / "json")
-        etl.run_sharepoint(
+        if on_progress:
+            on_progress("stage_start", 2, 4, "SharePoint Streaming & ETL Extraction")
+        t_etl = time.perf_counter()
+        etl_res = etl.run_sharepoint(
             connector=connector,
             force=force_etl,
             max_files=max_files,
             folder_prefix=folder_prefix,
+            on_progress=on_progress,
         )
-        return self.ingest_processed_dir(out_base, force=force_index)
+        etl_elapsed = time.perf_counter() - t_etl
+        if on_progress:
+            on_progress(
+                "stage_done",
+                2,
+                4,
+                f"SharePoint ETL done in {etl_elapsed:.1f}s "
+                f"({etl_res.processed_files} parsed, {etl_res.scanned_empty_files} scanned/empty, "
+                f"{etl_res.skipped_unchanged_files} unchanged)",
+            )
+        stats = self.ingest_processed_dir(
+            out_base,
+            force=force_index,
+            on_progress=on_progress,
+            stage_offset=2,
+            total_stages=4,
+        )
+        stats.discovered_files = etl_res.discovered_files
+        stats.scanned_empty_docs = max(stats.scanned_empty_docs, etl_res.scanned_empty_files)
+        stats.dropped_noisy_callouts = max(
+            stats.dropped_noisy_callouts, etl_res.dropped_noisy_callouts
+        )
+        stats.stage_timings = {"etl": round(etl_elapsed, 2), **stats.stage_timings}
+        return stats
 
 
 class RAGPipeline:
@@ -478,23 +669,48 @@ def build_rag_pipeline(
     qdrant_path: str | Path | None = None,
     device: str | None = None,
     settings: Settings | None = None,
+    on_progress: ProgressCallback | None = None,
 ) -> tuple[RAGPipeline, LocalHybridRepository]:
     """Build a ready-to-use `(RAGPipeline, LocalHybridRepository)` pair (caller should close repo)."""
     cfg = settings or get_settings()
+    eff_dev = detect_device(device or cfg.device)
     repo = LocalHybridRepository(path=str(qdrant_path or cfg.qdrant_path))
+
+    if on_progress:
+        on_progress("model_load_start", 0, 0, f"Loading {cfg.embedding_model} on {eff_dev}...")
+    t0 = time.perf_counter()
     embedder = BGEM3Embedder(
         model_name=cfg.embedding_model,
-        device=device or cfg.device,
+        device=eff_dev,
         batch_size=cfg.embedding_batch_size,
         max_length=cfg.embedding_max_length,
     )
+    if on_progress:
+        on_progress(
+            "model_load_done",
+            0,
+            0,
+            f"{cfg.embedding_model} ready on {eff_dev} in {time.perf_counter() - t0:.1f}s",
+        )
+
+    if on_progress:
+        on_progress("model_load_start", 0, 0, f"Loading {cfg.reranker_model} on {eff_dev}...")
+    t1 = time.perf_counter()
     reranker = BGEM3Reranker(
         model_name=cfg.reranker_model,
-        device=device or cfg.device,
+        device=eff_dev,
         batch_size=cfg.reranker_batch_size,
         max_length=cfg.reranker_max_length,
         min_score=cfg.reranker_min_score,
     )
+    if on_progress:
+        on_progress(
+            "model_load_done",
+            0,
+            0,
+            f"{cfg.reranker_model} ready on {eff_dev} in {time.perf_counter() - t1:.1f}s",
+        )
+
     pipeline = RAGPipeline(
         searcher=Searcher(embedder=embedder, repository=repo),
         reranker=reranker,

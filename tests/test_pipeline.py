@@ -254,9 +254,23 @@ def test_indexing_pipeline_lazy_embedder_and_length_sorted_batching(
         )
         stats1 = indexer.ingest_processed_dir(processed_dir, use_manifest=False)
         assert stats1.indexed_docs == 2
+        assert "chunking" in stats1.stage_timings
+        assert "embedding_and_indexing" in stats1.stage_timings
         # Both docs batched into a single length-sorted embed_children call
         assert len(rec_embedder.calls) == 1
         assert rec_embedder.calls[0] == sorted(rec_embedder.calls[0])
+
+        # Verify on_progress receives stage milestones and bar events
+        events: list[str] = []
+        stats_forced = indexer.ingest_processed_dir(
+            processed_dir,
+            use_manifest=False,
+            force=True,
+            on_progress=lambda ev, cur, tot, detail: events.append(ev),
+        )
+        assert stats_forced.indexed_docs == 2
+        assert "stage_start" in events and "stage_done" in events
+        assert "bar_start" in events and "bar_done" in events
 
         # Lazy embedder guard: when all docs are unchanged, BGEM3Embedder must never be instantiated
         def _fail_if_loaded(*args, **kwargs):

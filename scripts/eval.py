@@ -7,10 +7,11 @@ from pathlib import Path
 
 from rich.table import Table
 
-from config import configure_logging, get_settings
+from config import get_settings
 from evaluation import load_eval_rows, run_evaluation
 from scripts._cli import (
     CLIError,
+    PipelineProgress,
     add_common_args,
     build_parser,
     clean_preview,
@@ -18,6 +19,7 @@ from scripts._cli import (
     err_console,
     out_console,
     run_cli,
+    setup_cli_logging,
     suppress_hf_noise_early,
 )
 
@@ -58,7 +60,7 @@ def _main() -> None:
     add_common_args(parser, default_qdrant_path=settings.qdrant_path)
     args = parser.parse_args()
 
-    configure_logging(verbose=args.verbose, quiet=args.quiet, json_mode=args.as_json)
+    setup_cli_logging(verbose=args.verbose, quiet=args.quiet, json_mode=args.as_json)
 
     ensure_qdrant_ready(args.qdrant_path, require_docs=True)
     rows = load_eval_rows(args.dataset)
@@ -66,14 +68,14 @@ def _main() -> None:
         raise CLIError(f"Evaluation dataset '{args.dataset}' is empty.")
 
     t0 = time.perf_counter()
-    if not args.quiet and not args.as_json:
-        err_console.print(f"[dim]Evaluating {len(rows)} question(s)...[/dim]")
-
     from pipeline import build_rag_pipeline
 
-    pipeline, repo = build_rag_pipeline(qdrant_path=args.qdrant_path, device=args.device)
-    with repo:
-        results = run_evaluation(pipeline, rows, top_k=args.top_k)
+    with PipelineProgress(quiet=args.quiet, json_mode=args.as_json) as prog:
+        pipeline, repo = build_rag_pipeline(
+            qdrant_path=args.qdrant_path, device=args.device, on_progress=prog
+        )
+        with repo:
+            results = run_evaluation(pipeline, rows, top_k=args.top_k, on_progress=prog)
 
     elapsed = time.perf_counter() - t0
     args.output.parent.mkdir(parents=True, exist_ok=True)
