@@ -4,6 +4,8 @@ import hashlib
 import logging
 import os
 import re
+import threading
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -12,17 +14,29 @@ from urllib.parse import quote
 import msal
 import requests
 from pydantic import BaseModel, Field
+from requests.adapters import HTTPAdapter
 
 from config import (
     GRAPH_API_BASE_URL,
     GRAPH_DEFAULT_SCOPE,
     SUPPORTED_EXTRACTION_EXTENSIONS,
+    SharePointSiteSpec,
     get_settings,
     load_credentials_file,
 )
 from domain import DocumentMetadata, ExtractionMethod, ParsedDoc, compute_doc_id, utc_now
 
 logger = logging.getLogger(__name__)
+
+
+class SharePointAuthError(RuntimeError):
+    """Raised on HTTP 401/403 from SharePoint / Microsoft Graph."""
+
+    def __init__(self, status_code: int, target: str, reason: str = "") -> None:
+        self.status_code = status_code
+        self.target = target
+        self.reason = reason or ("Forbidden" if status_code == 403 else "Unauthorized")
+        super().__init__(f"HTTP {status_code} ({self.reason}) accessing '{target}'")
 
 
 def compute_file_sha256(file_path: str | Path) -> str:
@@ -56,6 +70,10 @@ class SharePointConfig:
     temp_bearer_token: str = ""
     staging_dir: Path = get_settings().raw_sharepoint_dir
     json_out_dir: Path = get_settings().json_out_dir
+
+    @property
+    def site_slug(self) -> str:
+        return self.site_path.strip("/").split("/")[-1] if self.site_path.strip("/") else "default"
 
     @classmethod
     def from_env(
@@ -122,6 +140,7 @@ class RemoteDriveItem(BaseModel):
     ctag: str | None = None
     quick_xor_hash: str | None = None
     sha256_hash: str | None = None
+    last_modified: str | None = None
     size_bytes: int = 0
     download_url: str | None = None
     extra: dict[str, Any] = Field(default_factory=dict)
@@ -145,10 +164,35 @@ class SharePointConnector:
         session: requests.Session | None = None,
     ) -> None:
         self.config = sp_config or SharePointConfig.from_env()
-        self.session = session or requests.Session()
+        if session is not None:
+            self.session = session
+        else:
+            self.session = requests.Session()
+            adapter = HTTPAdapter(pool_connections=16, pool_maxsize=16)
+            self.session.mount("https://", adapter)
+            self.session.mount("http://", adapter)
         self._access_token: str | None = None
+        self._auth_lock = threading.Lock()
         self._site_id: str | None = None
         self._drive_id: str | None = None
+
+    def for_site(self, spec: SharePointSiteSpec) -> "SharePointConnector":
+        """Create a site-scoped connector sharing this connector's pooled session and MSAL token."""
+        site_cfg = SharePointConfig(
+            tenant_id=self.config.tenant_id,
+            client_id=self.config.client_id,
+            client_secret=self.config.client_secret,
+            hostname=spec.hostname or self.config.hostname,
+            site_path=spec.site_path,
+            drive_name=self.config.drive_name,
+            temp_bearer_token=self.config.temp_bearer_token,
+            staging_dir=self.config.staging_dir,
+            json_out_dir=self.config.json_out_dir,
+        )
+        child = SharePointConnector(sp_config=site_cfg, session=self.session)
+        child._access_token = self._access_token
+        child._auth_lock = self._auth_lock
+        return child
 
     @classmethod
     def from_env(
@@ -167,10 +211,13 @@ class SharePointConnector:
             session=session,
         )
 
-    def authenticate(self) -> str:
+    def authenticate(self, *, force_refresh: bool = False) -> str:
         self.config.validate_credentials()
         if self.config.temp_bearer_token:
             self._access_token = self.config.temp_bearer_token
+            return self._access_token
+
+        if self._access_token and not force_refresh:
             return self._access_token
 
         authority = f"https://login.microsoftonline.com/{self.config.tenant_id}"
@@ -192,13 +239,85 @@ class SharePointConnector:
         return self._access_token
 
     def _headers(self) -> dict[str, str]:
-        if not self._access_token:
-            self.authenticate()
-        return {"Authorization": f"Bearer {self._access_token}", "Accept": "application/json"}
+        with self._auth_lock:
+            if not self._access_token:
+                self.authenticate()
+            token = self._access_token
+        return {"Authorization": f"Bearer {token}", "Accept": "application/json"}
 
-    def _graph_get(self, url: str) -> dict[str, Any]:
-        resp = self.session.get(url, headers=self._headers(), timeout=60)
-        resp.raise_for_status()
+    def _request_with_retry(
+        self,
+        url: str,
+        *,
+        target_label: str,
+        use_auth: bool = True,
+        stream: bool = False,
+        timeout: int = 60,
+        max_retries: int = 3,
+    ) -> Any:
+        """Execute GET with fail-fast 403, single MSAL refresh on 401, and 429/503 backoff."""
+        refreshed_token = False
+        for attempt in range(max_retries + 1):
+            used_token = self._access_token
+            kwargs: dict[str, Any] = {"timeout": timeout}
+            if stream:
+                kwargs["stream"] = True
+            if use_auth:
+                kwargs["headers"] = self._headers()
+                used_token = self._access_token
+
+            resp = self.session.get(url, **kwargs)
+            status = int(getattr(resp, "status_code", 200))
+
+            if status == 403:
+                raise SharePointAuthError(403, target_label, "Forbidden")
+
+            if status == 401:
+                if use_auth and not refreshed_token and not self.config.temp_bearer_token:
+                    with self._auth_lock:
+                        if self._access_token == used_token:
+                            logger.warning(
+                                "HTTP 401 on '%s'; refreshing Microsoft Entra token once.",
+                                target_label,
+                            )
+                            self.authenticate(force_refresh=True)
+                    refreshed_token = True
+                    continue
+                raise SharePointAuthError(401, target_label, "Unauthorized")
+
+            if status in (429, 503) and attempt < max_retries:
+                headers = getattr(resp, "headers", None) or {}
+                retry_after_raw = headers.get("Retry-After") or headers.get("retry-after")
+                try:
+                    wait_s = min(float(retry_after_raw), 30.0) if retry_after_raw else 0.0
+                except (TypeError, ValueError):
+                    wait_s = 0.0
+                if wait_s <= 0:
+                    wait_s = min(2.0**attempt, 15.0)
+                logger.warning(
+                    "HTTP %d on '%s' (attempt %d/%d); backing off %.1fs.",
+                    status,
+                    target_label,
+                    attempt + 1,
+                    max_retries,
+                    wait_s,
+                )
+                time.sleep(wait_s)
+                continue
+
+            resp.raise_for_status()
+            return resp
+
+        raise RuntimeError(f"Exhausted retries requesting '{target_label}'")
+
+    def _graph_get(self, url: str, *, target_label: str | None = None) -> dict[str, Any]:
+        resp = self._request_with_retry(
+            url,
+            target_label=target_label or f"{self.config.hostname}{self.config.site_path}",
+            use_auth=True,
+            stream=False,
+            timeout=60,
+        )
         return resp.json()
 
     def resolve_site_and_drive(self) -> tuple[str, str]:
@@ -319,6 +438,7 @@ class SharePointConnector:
             ctag=raw_item.get("cTag"),
             quick_xor_hash=hashes.get("quickXorHash"),
             sha256_hash=hashes.get("sha256Hash") or hashes.get("sha1Hash"),
+            last_modified=raw_item.get("lastModifiedDateTime"),
             size_bytes=int(raw_item.get("size") or 0),
             download_url=raw_item.get("@microsoft.graph.downloadUrl"),
         )
@@ -327,18 +447,31 @@ class SharePointConnector:
         self,
         item: RemoteDriveItem,
         staging_dir: str | Path | None = None,
+        *,
+        target_rel_path: str | Path | None = None,
     ) -> Path:
         base_staging = Path(staging_dir) if staging_dir is not None else self.config.staging_dir
-        local_path = base_staging / Path(item.relative_path)
+        local_path = base_staging / Path(target_rel_path or item.relative_path)
         local_path.parent.mkdir(parents=True, exist_ok=True)
 
         if item.download_url:
-            resp = self.session.get(item.download_url, stream=True, timeout=120)
+            resp = self._request_with_retry(
+                item.download_url,
+                target_label=item.relative_path,
+                use_auth=False,
+                stream=True,
+                timeout=120,
+            )
         else:
             _, drive_id = self.resolve_site_and_drive()
             content_url = f"{GRAPH_API_BASE_URL}/drives/{drive_id}/items/{item.item_id}/content"
-            resp = self.session.get(content_url, headers=self._headers(), stream=True, timeout=120)
-        resp.raise_for_status()
+            resp = self._request_with_retry(
+                content_url,
+                target_label=item.relative_path,
+                use_auth=True,
+                stream=True,
+                timeout=120,
+            )
 
         with local_path.open("wb") as fh:
             for chunk in resp.iter_content(chunk_size=65536):
@@ -351,13 +484,16 @@ class SharePointConnector:
         item: RemoteDriveItem,
         local_file_path: str | Path,
         json_out_dir: str | Path | None = None,
+        *,
+        relative_path_override: str | Path | None = None,
     ) -> tuple[Path, str]:
         """Compute SHA-256 and seed `<doc_id>.json` as a canonical `ParsedDoc` with SharePoint provenance."""
         target_dir = Path(json_out_dir) if json_out_dir is not None else self.config.json_out_dir
         target_dir.mkdir(parents=True, exist_ok=True)
 
+        eff_rel = Path(relative_path_override or item.relative_path).as_posix()
         file_hash = compute_file_sha256(local_file_path)
-        doc_id = compute_doc_id(item.relative_path)
+        doc_id = compute_doc_id(eff_rel)
 
         seeded_doc = ParsedDoc(
             document_id=doc_id,
@@ -365,12 +501,14 @@ class SharePointConnector:
             markdown="",
             sections=[],
             metadata=DocumentMetadata(
-                source_path=Path(item.relative_path).as_posix(),
+                source_path=eff_rel,
                 sharepoint_url=item.web_url,
                 extra={
                     "file_name": item.name,
                     "file_extension": item.extension,
-                    "relative_folder_path": item.relative_folder_path,
+                    "relative_folder_path": Path(eff_rel).parent.as_posix()
+                    if Path(eff_rel).parent != Path(".")
+                    else "",
                     "sharepoint_item_id": item.item_id,
                     "sharepoint_etag": item.etag or item.ctag,
                     "extraction_method": _default_method_for_ext(item.extension).value,
@@ -387,9 +525,18 @@ class SharePointConnector:
         item: RemoteDriveItem,
         staging_dir: str | Path | None = None,
         json_out_dir: str | Path | None = None,
+        *,
+        relative_path_override: str | Path | None = None,
     ) -> tuple[Path, Path, str]:
-        local_path = self.download_file(item, staging_dir=staging_dir)
-        seeded_json, file_hash = self.seed_target_json(item, local_path, json_out_dir=json_out_dir)
+        local_path = self.download_file(
+            item, staging_dir=staging_dir, target_rel_path=relative_path_override
+        )
+        seeded_json, file_hash = self.seed_target_json(
+            item,
+            local_path,
+            json_out_dir=json_out_dir,
+            relative_path_override=relative_path_override,
+        )
         return local_path, seeded_json, file_hash
 
     def cleanup_local_file(

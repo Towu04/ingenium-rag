@@ -24,6 +24,7 @@ def test_normalize_project_phase_and_buildings() -> None:
     assert normalize_project("  ") is None
     assert normalize_project("6038.004") == "06038.004"
     assert normalize_project("06038-004") == "06038.004"
+    assert normalize_project("22071-002a") == "22071.002A"
     assert normalize_project("PRJ-2021-104") == "PRJ-2021-104"
 
     assert normalize_phase("UNKNOWN_PHASE") is None
@@ -85,6 +86,18 @@ def test_taxonomy_heuristics_and_false_positive_guards() -> None:
             "https://ingeniumnv.sharepoint.com/sites/06038004-INT/Shared%20Documents/a.pdf"
         )
         == "06038.004"
+    )
+    assert (
+        infer_project_id_from_sharepoint_url(
+            "https://company.sharepoint.com/sites/22071002A-INT/Shared%20Documents/General/a.pdf"
+        )
+        == "22071.002A"
+    )
+    assert (
+        infer_project_id_from_sharepoint_url(
+            "https://company.sharepoint.com/sites/24041001B-INT/Shared%20Documents/a.pdf"
+        )
+        == "24041.001B"
     )
     assert infer_project_id_from_path("General/00_Info/17-341-1883 - Data sheets.pdf") is None
     assert infer_project_id_from_path("General/00_Info/1003-004 lijst IGEG's _001.pdf") is None

@@ -8,8 +8,8 @@ from pathlib import Path
 
 from rich.table import Table
 
-from config import get_settings
-from etl import ETLRunner, SharePointConnector
+from config import get_settings, load_sharepoint_sites
+from etl import ETLRunner, SharePointAuthError, SharePointConnector
 from scripts._cli import (
     PipelineProgress,
     add_common_args,
@@ -89,10 +89,14 @@ def _print_report(processed_dir: Path, limitations_log: Path, *, as_json: bool =
             "YES" if e.needs_ocr else "-",
         )
     out_console.print(table)
+    unauth_count = sum(
+        1 for rec in report["limitations"] if rec.limitation_type == "unauthorized_access"
+    )
     out_console.print(
         f"[bold]Totals:[/bold] {report['total_documents']} docs | "
         f"{report['total_pages']} pages | {report['total_tables']} tables | "
-        f"{report['needs_ocr_count']} needs_ocr | {len(report['limitations'])} limitations"
+        f"{report['needs_ocr_count']} needs_ocr | {unauth_count} unauthorized | "
+        f"{len(report['limitations'])} limitations"
     )
     if report["limitations"]:
         lim_table = Table(title="Logged Extraction Limitations", header_style="bold red")
@@ -159,7 +163,25 @@ def _main() -> None:
         "--folder-prefix", type=str, default=None, help="SharePoint subfolder prefix."
     )
     parser.add_argument(
-        "--max-files", type=int, default=None, help="Cap SharePoint files streamed."
+        "--site",
+        type=str,
+        default=None,
+        help="Target a single SharePoint site URL or /sites/<slug> path.",
+    )
+    parser.add_argument(
+        "--sites-file",
+        type=Path,
+        default=None,
+        help="TSV/CSV file of SharePoint sites (project_code<TAB>url).",
+    )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=settings.etl_workers,
+        help=f"Concurrent workers for SharePoint sync/ETL (default: {settings.etl_workers}).",
+    )
+    parser.add_argument(
+        "--max-files", type=int, default=None, help="Cap SharePoint files streamed per site."
     )
     parser.add_argument(
         "--device", type=str, default=settings.device, help="Device override (cuda/mps/cpu)."
@@ -188,33 +210,62 @@ def _main() -> None:
     if args.dry_run:
         etl = ETLRunner(catalog_path=catalog)
         if args.from_sharepoint:
-            connector = SharePointConnector.from_env(json_out_dir=args.processed_dir / "json")
-            summary = etl.scan_sharepoint_inventory(
-                connector=connector, folder_prefix=args.folder_prefix
+            sites = load_sharepoint_sites(
+                sites_file=args.sites_file,
+                site_override=args.site,
+                folder_prefix=args.folder_prefix,
+                settings=settings,
             )
-            title = f"SharePoint ({connector.config.hostname}{connector.config.site_path})"
+            base_sp = SharePointConnector.from_env(json_out_dir=args.processed_dir / "json")
+            all_ext: dict[str, int] = {}
+            total_files = 0
+            for spec in sites:
+                try:
+                    summary = etl.scan_sharepoint_inventory(
+                        connector=base_sp.for_site(spec),
+                        folder_prefix=args.folder_prefix or spec.folder_prefix,
+                    )
+                    total_files += summary.total_files
+                    for ext, cnt in summary.extension_counts.items():
+                        all_ext[ext] = all_ext.get(ext, 0) + cnt
+                    if not args.as_json:
+                        _print_inventory(f"SharePoint ({spec.hostname}{spec.site_path})", summary)
+                except SharePointAuthError as auth_err:
+                    out_console.print(f"[yellow]Skipping unauthorized site:[/yellow] {auth_err}")
+            if args.as_json:
+                sys.stdout.write(
+                    json.dumps(
+                        {
+                            "sites": [f"{s.hostname}{s.site_path}" for s in sites],
+                            "total_files": total_files,
+                            "extension_counts": all_ext,
+                        },
+                        indent=2,
+                    )
+                    + "\n"
+                )
+            return
         elif args.raw_dir is not None:
             summary = etl.scan_inventory(args.raw_dir)
             title = str(args.raw_dir)
+            if args.as_json:
+                sys.stdout.write(
+                    json.dumps(
+                        {
+                            "source": title,
+                            "total_files": summary.total_files,
+                            "extension_counts": summary.extension_counts,
+                        },
+                        indent=2,
+                    )
+                    + "\n"
+                )
+            else:
+                _print_inventory(title, summary)
+            return
         else:
             parser.error("--dry-run requires --raw-dir or --from-sharepoint.")
             return
-
-        if args.as_json:
-            sys.stdout.write(
-                json.dumps(
-                    {
-                        "source": title,
-                        "total_files": summary.total_files,
-                        "extension_counts": summary.extension_counts,
-                    },
-                    indent=2,
-                )
-                + "\n"
-            )
-        else:
-            _print_inventory(title, summary)
-        return
 
     t0 = time.perf_counter()
 
@@ -228,14 +279,41 @@ def _main() -> None:
         )
         with PipelineProgress(quiet=args.quiet, json_mode=args.as_json) as prog:
             if args.from_sharepoint:
-                res = etl.run_sharepoint(
-                    force=args.force,
-                    max_files=args.max_files,
+                sites = load_sharepoint_sites(
+                    sites_file=args.sites_file,
+                    site_override=args.site,
                     folder_prefix=args.folder_prefix,
-                    on_progress=prog,
+                    settings=settings,
                 )
+                base_sp = SharePointConnector.from_env(json_out_dir=args.processed_dir / "json")
+                ns_by_site = len(sites) > 1
+                from etl import ETLRunResult
+
+                res = ETLRunResult()
+                for spec in sites:
+                    site_res = etl.run_sharepoint(
+                        connector=base_sp.for_site(spec),
+                        force=args.force,
+                        max_files=args.max_files,
+                        folder_prefix=args.folder_prefix or spec.folder_prefix,
+                        workers=args.workers,
+                        project_override=spec.project_code,
+                        namespace_by_site=ns_by_site,
+                        on_progress=prog,
+                    )
+                    res.discovered_files += site_res.discovered_files
+                    res.processed_files += site_res.processed_files
+                    res.skipped_unchanged_files += site_res.skipped_unchanged_files
+                    res.scanned_empty_files += site_res.scanned_empty_files
+                    res.dropped_noisy_callouts += site_res.dropped_noisy_callouts
+                    res.failed_files += site_res.failed_files
+                    res.unauthorized_count += site_res.unauthorized_count
+                    res.unauthorized_targets.extend(site_res.unauthorized_targets)
+                    res.limitations_logged += site_res.limitations_logged
             elif args.raw_dir is not None:
-                res = etl.run_local(args.raw_dir, force=args.force, on_progress=prog)
+                res = etl.run_local(
+                    args.raw_dir, force=args.force, workers=args.workers, on_progress=prog
+                )
             else:
                 parser.error("--extract-only requires --raw-dir or --from-sharepoint.")
                 return
@@ -251,6 +329,8 @@ def _main() -> None:
                         "skipped_unchanged_files": res.skipped_unchanged_files,
                         "scanned_empty_files": res.scanned_empty_files,
                         "dropped_noisy_callouts": res.dropped_noisy_callouts,
+                        "unauthorized_count": res.unauthorized_count,
+                        "unauthorized_targets": res.unauthorized_targets,
                         "failed_files": res.failed_files,
                         "limitations_logged": res.limitations_logged,
                     },
@@ -268,10 +348,15 @@ def _main() -> None:
                 ("Skipped (unchanged)", res.skipped_unchanged_files),
                 ("Scanned / empty (needs OCR)", res.scanned_empty_files),
                 ("Noisy callouts dropped", res.dropped_noisy_callouts),
+                ("Unauthorized (401/403)", res.unauthorized_count),
                 ("Failed", res.failed_files),
                 ("Limitations logged", res.limitations_logged),
             ],
         )
+        if res.unauthorized_targets:
+            out_console.print("[yellow]Unauthorized targets skipped:[/yellow]")
+            for t in res.unauthorized_targets[:20]:
+                out_console.print(f"  - {t}")
         return
 
     from pipeline import IndexingPipeline
@@ -286,7 +371,14 @@ def _main() -> None:
         if args.etl_dir is not None:
             stats = pipeline.ingest_processed_dir(args.etl_dir, force=args.force, on_progress=prog)
         elif args.from_sharepoint:
+            sites = load_sharepoint_sites(
+                sites_file=args.sites_file,
+                site_override=args.site,
+                folder_prefix=args.folder_prefix,
+                settings=settings,
+            )
             stats = pipeline.ingest_sharepoint(
+                sites=sites,
                 catalog_path=catalog,
                 processed_dir=args.processed_dir,
                 force_etl=args.force,
@@ -294,6 +386,7 @@ def _main() -> None:
                 max_files=args.max_files,
                 folder_prefix=args.folder_prefix,
                 drop_noisy_callouts=not args.keep_noisy_callouts,
+                workers=args.workers,
                 on_progress=prog,
             )
         else:
@@ -304,6 +397,7 @@ def _main() -> None:
                 force_etl=args.force,
                 force_index=args.force,
                 drop_noisy_callouts=not args.keep_noisy_callouts,
+                workers=args.workers,
                 on_progress=prog,
             )
 
@@ -323,6 +417,8 @@ def _main() -> None:
                     "skipped_empty": stats.skipped_empty,
                     "scanned_empty_docs": stats.scanned_empty_docs,
                     "dropped_noisy_callouts": stats.dropped_noisy_callouts,
+                    "unauthorized_count": stats.unauthorized_count,
+                    "unauthorized_targets": stats.unauthorized_targets,
                     "failed_docs": stats.failed_docs,
                     "new_parents": stats.total_parents,
                     "new_children": stats.total_children,
@@ -335,9 +431,7 @@ def _main() -> None:
         return
 
     timing_parts = [f"{k}={v:.1f}s" for k, v in stats.stage_timings.items()]
-    summary_rows: list[tuple[str, object]] = [
-        ("Total runtime", f"{elapsed:.1f}s"),
-    ]
+    summary_rows: list[tuple[str, object]] = [("Total runtime", f"{elapsed:.1f}s")]
     if timing_parts:
         summary_rows.append(("Stage timings", " | ".join(timing_parts)))
     summary_rows.extend(
@@ -349,6 +443,7 @@ def _main() -> None:
             ("Newly indexed", stats.indexed_docs),
             ("Skipped (unchanged hash)", stats.skipped_unchanged),
             ("Scanned / empty", f"{stats.scanned_empty_docs} / {stats.skipped_empty}"),
+            ("Unauthorized (401/403)", stats.unauthorized_count),
             ("Failed", stats.failed_docs),
             ("Noisy callouts dropped", stats.dropped_noisy_callouts),
             ("New parent / child chunks", f"{stats.total_parents} / {stats.total_children}"),
@@ -359,6 +454,10 @@ def _main() -> None:
         ]
     )
     print_kv_table("Ingestion Summary", summary_rows)
+    if stats.unauthorized_targets:
+        out_console.print("[yellow]Unauthorized targets skipped:[/yellow]")
+        for t in stats.unauthorized_targets[:20]:
+            out_console.print(f"  - {t}")
 
 
 def main() -> None:

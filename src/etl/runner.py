@@ -2,7 +2,9 @@
 
 import json
 import logging
+import threading
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -10,13 +12,18 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from config import SUPPORTED_EXTRACTION_EXTENSIONS, get_settings
-from domain import ParsedDoc, utc_now
+from domain import ParsedDoc, normalize_project, utc_now
 from etl.catalog import DocumentRegisterIndex, ProjectCatalog, is_document_register_file
 from etl.extractors import DocxExtractor, PdfExtractor, XlsxExtractor
 from etl.extractors.common import render_markdown_export
 from etl.metadata import MatchedMetadata, MetadataMatcher
 from etl.quality import QualityLogger
-from etl.sharepoint import RemoteDriveItem, SharePointConnector, compute_file_sha256
+from etl.sharepoint import (
+    RemoteDriveItem,
+    SharePointAuthError,
+    SharePointConnector,
+    compute_file_sha256,
+)
 
 logger = logging.getLogger(__name__)
 ProgressCallback = Callable[[str, int, int, str], None]
@@ -45,6 +52,8 @@ class ManifestEntry(BaseModel):
     sharepoint_item_id: str | None = None
     sharepoint_etag: str | None = None
     quick_xor_hash: str | None = None
+    last_modified: str | None = None
+    size_bytes: int = 0
     processed_at: str = Field(default_factory=lambda: utc_now().isoformat())
 
 
@@ -99,6 +108,8 @@ class ManifestManager:
         remote_etag: str | None = None,
         quick_xor_hash: str | None = None,
         sha256: str | None = None,
+        last_modified: str | None = None,
+        size_bytes: int | None = None,
     ) -> bool:
         entry = self.state.files.get(Path(relative_path).as_posix())
         if entry is None or not self._outputs_exist(entry):
@@ -107,7 +118,17 @@ class ManifestManager:
             return True
         if quick_xor_hash and entry.quick_xor_hash and entry.quick_xor_hash == quick_xor_hash:
             return True
-        return bool(sha256 and entry.sha256 == sha256)
+        if sha256 and entry.sha256 == sha256:
+            return True
+        if (
+            last_modified
+            and entry.last_modified
+            and entry.last_modified == last_modified
+            and size_bytes is not None
+            and entry.size_bytes == size_bytes
+        ):
+            return True
+        return False
 
     def record_success(
         self,
@@ -117,6 +138,8 @@ class ManifestManager:
         json_path: Path,
         *,
         quick_xor_hash: str | None = None,
+        last_modified: str | None = None,
+        size_bytes: int = 0,
     ) -> ManifestEntry:
         norm_key = Path(relative_path).as_posix()
         meta = doc.metadata
@@ -145,6 +168,8 @@ class ManifestManager:
             sharepoint_item_id=extra.get("sharepoint_item_id"),
             sharepoint_etag=extra.get("sharepoint_etag"),
             quick_xor_hash=quick_xor_hash,
+            last_modified=last_modified,
+            size_bytes=size_bytes,
         )
         self.state.files[norm_key] = entry
         return entry
@@ -175,6 +200,8 @@ class ETLRunResult:
     scanned_empty_files: int = 0
     dropped_noisy_callouts: int = 0
     failed_files: int = 0
+    unauthorized_count: int = 0
+    unauthorized_targets: list[str] = field(default_factory=list)
     limitations_logged: int = 0
     documents: list[ParsedDoc] = field(default_factory=list)
 
@@ -215,6 +242,8 @@ class ETLRunner:
         self.pdf_extractor = PdfExtractor(metadata_matcher=self.metadata_matcher)
         self.docx_extractor = DocxExtractor(metadata_matcher=self.metadata_matcher)
         self.xlsx_extractor = XlsxExtractor(metadata_matcher=self.metadata_matcher)
+        self._state_lock = threading.Lock()
+        self._unsaved_manifest_updates = 0
 
     def _append_inventory_item(
         self,
@@ -249,25 +278,60 @@ class ETLRunner:
         *,
         json_path: Path | None = None,
         quick_xor_hash: str | None = None,
+        last_modified: str | None = None,
+        size_bytes: int = 0,
+        save_every: int = 20,
     ) -> Path:
-        if self.quality_logger.evaluate_and_log(parsed_doc) is not None:
-            result.limitations_logged += 1
-        result.dropped_noisy_callouts += int(
-            parsed_doc.metadata.extra.get("dropped_noisy_callouts") or 0
-        )
-        if not parsed_doc.sections and (
-            parsed_doc.metadata.extra.get("is_scanned")
-            or parsed_doc.metadata.extra.get("needs_ocr")
-        ):
-            result.scanned_empty_files += 1
         md_path, out_json = self._write_outputs(parsed_doc, json_path=json_path)
-        self.manifest.record_success(
-            rel_posix, parsed_doc, md_path, out_json, quick_xor_hash=quick_xor_hash
-        )
-        self.manifest.save()
-        result.processed_files += 1
-        result.documents.append(parsed_doc)
+        with self._state_lock:
+            if self.quality_logger.evaluate_and_log(parsed_doc) is not None:
+                result.limitations_logged += 1
+            result.dropped_noisy_callouts += int(
+                parsed_doc.metadata.extra.get("dropped_noisy_callouts") or 0
+            )
+            if not parsed_doc.sections and (
+                parsed_doc.metadata.extra.get("is_scanned")
+                or parsed_doc.metadata.extra.get("needs_ocr")
+            ):
+                result.scanned_empty_files += 1
+            self.manifest.record_success(
+                rel_posix,
+                parsed_doc,
+                md_path,
+                out_json,
+                quick_xor_hash=quick_xor_hash,
+                last_modified=last_modified,
+                size_bytes=size_bytes,
+            )
+            self._unsaved_manifest_updates += 1
+            if self._unsaved_manifest_updates >= save_every:
+                self.manifest.save()
+                self._unsaved_manifest_updates = 0
+            result.processed_files += 1
+            result.documents.append(parsed_doc)
         return out_json
+
+    def _flush_manifest(self) -> None:
+        with self._state_lock:
+            if self._unsaved_manifest_updates > 0:
+                self.manifest.save()
+                self._unsaved_manifest_updates = 0
+
+    def _record_unauthorized(
+        self,
+        target: str,
+        exc: SharePointAuthError,
+        result: ETLRunResult,
+        *,
+        project: str | None = None,
+    ) -> None:
+        with self._state_lock:
+            result.unauthorized_count += 1
+            result.unauthorized_targets.append(f"HTTP {exc.status_code}: {target}")
+            self.quality_logger.log_unauthorized(
+                target, exc.status_code, exc.reason, project=project
+            )
+            result.limitations_logged += 1
 
     def _record_failure(
         self,
@@ -277,16 +341,17 @@ class ETLRunner:
         *,
         sharepoint_url: str | None = None,
     ) -> None:
-        result.failed_files += 1
         matched = self.metadata_matcher.match(rel_path, sharepoint_url=sharepoint_url)
-        self.quality_logger.log_corrupted_file(
-            rel_path,
-            str(exc),
-            project=matched.project,
-            building=matched.building,
-            phase=matched.phase,
-        )
-        result.limitations_logged += 1
+        with self._state_lock:
+            result.failed_files += 1
+            self.quality_logger.log_corrupted_file(
+                rel_path,
+                str(exc),
+                project=matched.project,
+                building=matched.building,
+                phase=matched.phase,
+            )
+            result.limitations_logged += 1
 
     def scan_inventory(self, raw_dir: str | Path) -> InventorySummary:
         """Scan a local folder tree and preview resolved metadata without running OCR."""
@@ -345,6 +410,7 @@ class ETLRunner:
         raw_dir: str | Path,
         *,
         force: bool = False,
+        workers: int = 1,
         on_progress: ProgressCallback | None = None,
     ) -> ETLRunResult:
         """Incrementally extract all supported files in `raw_dir` into `ParsedDoc` JSON/MD."""
@@ -366,28 +432,32 @@ class ETLRunner:
         ]
         result = ETLRunResult()
         total = len(supported_files)
+        done = 0
         logger.info("Pass 2: processing %d supported local file(s)...", total)
         if on_progress and total:
             on_progress("bar_start", 0, total, "ETL Extraction")
 
-        for idx, file_path in enumerate(supported_files, start=1):
-            result.discovered_files += 1
+        def _handle_local(idx: int, file_path: Path) -> str:
             rel_path = file_path.relative_to(root)
             rel_posix = rel_path.as_posix()
             file_hash = compute_file_sha256(file_path)
 
-            if not force and self.manifest.is_up_to_date(rel_posix, file_hash):
-                result.skipped_unchanged_files += 1
+            with self._state_lock:
+                result.discovered_files += 1
+                is_up = not force and self.manifest.is_up_to_date(rel_posix, file_hash)
+                if is_up:
+                    result.skipped_unchanged_files += 1
+            if is_up:
                 logger.debug("[%d/%d] SKIP unchanged: %s", idx, total, rel_posix)
-                if on_progress:
-                    on_progress("bar_advance", idx, total, f"skip {file_path.name}")
-                continue
+                return f"skip {file_path.name}"
 
             try:
                 logger.debug("[%d/%d] Extracting: %s", idx, total, rel_posix)
                 parsed_doc = self._dispatch(file_path, rel_path)
                 parsed_doc.content_hash = file_hash
-                json_path = self._persist_extracted_doc(parsed_doc, rel_posix, result)
+                json_path = self._persist_extracted_doc(
+                    parsed_doc, rel_posix, result, size_bytes=file_path.stat().st_size
+                )
                 logger.debug(
                     "[%d/%d] DONE: %s -> %s (%d sections)",
                     idx,
@@ -399,8 +469,29 @@ class ETLRunner:
             except Exception as exc:
                 logger.error("[%d/%d] ERROR extracting %s: %s", idx, total, rel_posix, exc)
                 self._record_failure(rel_path, exc, result)
-            if on_progress:
-                on_progress("bar_advance", idx, total, file_path.name)
+            return file_path.name
+
+        try:
+            eff_workers = max(1, workers)
+            if eff_workers == 1 or total <= 1:
+                for idx, fp in enumerate(supported_files, start=1):
+                    label = _handle_local(idx, fp)
+                    done += 1
+                    if on_progress:
+                        on_progress("bar_advance", done, total, label)
+            else:
+                with ThreadPoolExecutor(max_workers=eff_workers) as pool:
+                    futures = [
+                        pool.submit(_handle_local, idx, fp)
+                        for idx, fp in enumerate(supported_files, start=1)
+                    ]
+                    for fut in as_completed(futures):
+                        label = fut.result()
+                        done += 1
+                        if on_progress:
+                            on_progress("bar_advance", done, total, label)
+        finally:
+            self._flush_manifest()
 
         if on_progress and total:
             on_progress("bar_done", total, total, "ETL Extraction")
@@ -421,14 +512,27 @@ class ETLRunner:
         max_files: int | None = None,
         folder_prefix: str | None = None,
         extensions: set[str] | None = None,
+        workers: int = 1,
+        project_override: str | None = None,
+        namespace_by_site: bool = False,
         on_progress: ProgressCallback | None = None,
     ) -> ETLRunResult:
-        """Stream files from SharePoint one-by-one, enrich `ParsedDoc` JSON in-place, and delete binaries."""
+        """Stream files from SharePoint with bounded concurrency, skipping unchanged files pre-download."""
         sp = connector or SharePointConnector.from_env(json_out_dir=self.json_out_dir)
         self.markdown_out_dir.mkdir(parents=True, exist_ok=True)
         self.json_out_dir.mkdir(parents=True, exist_ok=True)
 
-        remote_items = sp.list_remote_files(supported_only=True, folder_prefix=folder_prefix)
+        result = ETLRunResult()
+        site_label = f"{sp.config.hostname}{sp.config.site_path}"
+        norm_proj_override = normalize_project(project_override) if project_override else None
+
+        try:
+            remote_items = sp.list_remote_files(supported_only=True, folder_prefix=folder_prefix)
+        except SharePointAuthError as auth_err:
+            logger.warning("Skipping unauthorized SharePoint site '%s': %s", site_label, auth_err)
+            self._record_unauthorized(site_label, auth_err, result, project=norm_proj_override)
+            return result
+
         if extensions:
             norm_exts = {e.lower() if e.startswith(".") else f".{e.lower()}" for e in extensions}
             remote_items = [item for item in remote_items if item.extension in norm_exts]
@@ -446,42 +550,88 @@ class ETLRunner:
             regular_items = regular_items[: max(0, max_files - len(register_items))]
 
         logger.info(
-            "Starting 2-pass SharePoint extraction: %d register(s) + %d regular file(s).",
+            "Starting 2-pass SharePoint extraction (%s): %d register(s) + %d regular file(s).",
+            sp.config.site_slug,
             len(register_items),
             len(regular_items),
         )
-        result = ETLRunResult()
         total_items = len(register_items) + len(regular_items)
         done_items = 0
+        bar_title = f"SharePoint ({sp.config.site_slug})"
         if on_progress and total_items:
-            on_progress("bar_start", 0, total_items, "SharePoint Sync & ETL")
+            on_progress("bar_start", 0, total_items, bar_title)
 
-        # Pass 1: Document Registers
-        for idx, item in enumerate(register_items, start=1):
-            self._process_remote_item(
-                sp, item, idx, len(register_items), is_register=True, force=force, result=result
-            )
-            done_items += 1
-            if on_progress:
-                on_progress("bar_advance", done_items, total_items, item.name)
+        try:
+            # Pass 1: Document Registers (sequential so register index is populated before Pass 2)
+            for idx, item in enumerate(register_items, start=1):
+                self._process_remote_item(
+                    sp,
+                    item,
+                    idx,
+                    len(register_items),
+                    is_register=True,
+                    force=force,
+                    result=result,
+                    project_override=norm_proj_override,
+                    namespace_by_site=namespace_by_site,
+                )
+                done_items += 1
+                if on_progress:
+                    on_progress("bar_advance", done_items, total_items, item.name)
 
-        # Pass 2: Regular files
-        for idx, item in enumerate(regular_items, start=1):
-            self._process_remote_item(
-                sp, item, idx, len(regular_items), is_register=False, force=force, result=result
-            )
-            done_items += 1
-            if on_progress:
-                on_progress("bar_advance", done_items, total_items, item.name)
+            # Pass 2: Regular files (bounded concurrency for I/O + extraction)
+            eff_workers = max(1, workers)
+            if eff_workers == 1 or len(regular_items) <= 1:
+                for idx, item in enumerate(regular_items, start=1):
+                    self._process_remote_item(
+                        sp,
+                        item,
+                        idx,
+                        len(regular_items),
+                        is_register=False,
+                        force=force,
+                        result=result,
+                        project_override=norm_proj_override,
+                        namespace_by_site=namespace_by_site,
+                    )
+                    done_items += 1
+                    if on_progress:
+                        on_progress("bar_advance", done_items, total_items, item.name)
+            else:
+                with ThreadPoolExecutor(max_workers=eff_workers) as pool:
+                    futures = {
+                        pool.submit(
+                            self._process_remote_item,
+                            sp,
+                            item,
+                            idx,
+                            len(regular_items),
+                            is_register=False,
+                            force=force,
+                            result=result,
+                            project_override=norm_proj_override,
+                            namespace_by_site=namespace_by_site,
+                        ): item
+                        for idx, item in enumerate(regular_items, start=1)
+                    }
+                    for fut in as_completed(futures):
+                        item = futures[fut]
+                        fut.result()
+                        done_items += 1
+                        if on_progress:
+                            on_progress("bar_advance", done_items, total_items, item.name)
+        finally:
+            self._flush_manifest()
 
         if on_progress and total_items:
-            on_progress("bar_done", total_items, total_items, "SharePoint Sync & ETL")
+            on_progress("bar_done", total_items, total_items, bar_title)
         logger.info(
-            "SharePoint ETL complete: processed=%d skipped=%d failed=%d limitations=%d",
+            "SharePoint ETL complete (%s): processed=%d skipped=%d unauthorized=%d failed=%d",
+            sp.config.site_slug,
             result.processed_files,
             result.skipped_unchanged_files,
+            result.unauthorized_count,
             result.failed_files,
-            result.limitations_logged,
         )
         return result
 
@@ -495,34 +645,49 @@ class ETLRunner:
         is_register: bool,
         force: bool,
         result: ETLRunResult,
+        project_override: str | None = None,
+        namespace_by_site: bool = False,
     ) -> None:
-        result.discovered_files += 1
-        rel_path = Path(item.relative_path)
-        rel_posix = rel_path.as_posix()
+        eff_rel_posix = (
+            f"{sp.config.site_slug}/{Path(item.relative_path).as_posix()}"
+            if namespace_by_site
+            else Path(item.relative_path).as_posix()
+        )
+        rel_path = Path(eff_rel_posix)
         pass_label = "Pass 1" if is_register else "Pass 2"
         local_path: Path | None = None
         seeded_json: Path | None = None
 
-        try:
+        with self._state_lock:
+            result.discovered_files += 1
             up_to_date = not force and self.manifest.is_remote_up_to_date(
-                rel_posix,
+                eff_rel_posix,
                 remote_etag=item.etag or item.ctag,
                 quick_xor_hash=item.quick_xor_hash,
                 sha256=item.sha256_hash,
+                last_modified=item.last_modified,
+                size_bytes=item.size_bytes,
             )
+            if up_to_date and not is_register:
+                result.skipped_unchanged_files += 1
+
+        try:
             if up_to_date:
                 if is_register:
-                    local_path = sp.download_file(item)
+                    local_path = sp.download_file(item, target_rel_path=eff_rel_posix)
                     self.register_index.load_register_file(local_path)
-                result.skipped_unchanged_files += 1
+                    with self._state_lock:
+                        result.skipped_unchanged_files += 1
                 logger.debug("[%s: %d/%d] SKIP unchanged: %s", pass_label, idx, total, item.name)
                 return
 
             logger.debug(
-                "[%s: %d/%d] Streaming & extracting: %s", pass_label, idx, total, rel_posix
+                "[%s: %d/%d] Streaming & extracting: %s", pass_label, idx, total, eff_rel_posix
             )
             local_path, seeded_json, file_hash = sp.download_and_seed(
-                item, json_out_dir=self.json_out_dir
+                item,
+                json_out_dir=self.json_out_dir,
+                relative_path_override=eff_rel_posix,
             )
             if is_register:
                 self.register_index.load_register_file(local_path)
@@ -535,6 +700,8 @@ class ETLRunner:
             )
             parsed_doc.document_id = seeded_doc.document_id
             parsed_doc.content_hash = file_hash
+            if project_override:
+                parsed_doc.metadata.project = project_override
             parsed_doc.metadata.extra["sharepoint_item_id"] = seeded_doc.metadata.extra.get(
                 "sharepoint_item_id"
             )
@@ -546,15 +713,29 @@ class ETLRunner:
 
             json_path = self._persist_extracted_doc(
                 parsed_doc,
-                rel_posix,
+                eff_rel_posix,
                 result,
                 json_path=seeded_json,
                 quick_xor_hash=item.quick_xor_hash,
+                last_modified=item.last_modified,
+                size_bytes=item.size_bytes,
             )
             logger.debug(
                 "[%s: %d/%d] DONE: %s -> %s", pass_label, idx, total, item.name, json_path.name
             )
 
+        except SharePointAuthError as auth_err:
+            if seeded_json is not None and seeded_json.exists():
+                seeded_json.unlink(missing_ok=True)
+            logger.warning(
+                "[%s: %d/%d] UNAUTHORIZED (%d) on %s",
+                pass_label,
+                idx,
+                total,
+                auth_err.status_code,
+                eff_rel_posix,
+            )
+            self._record_unauthorized(eff_rel_posix, auth_err, result, project=project_override)
         except Exception as exc:
             if seeded_json is not None and seeded_json.exists():
                 seeded_json.unlink(missing_ok=True)

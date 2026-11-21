@@ -7,6 +7,7 @@ from etl.quality import LimitationRecord, QualityLogger, score_callout_readabili
 from etl.runner import ETLRunner, ETLRunResult, ManifestManager, load_processed_docs
 from etl.sharepoint import (
     RemoteDriveItem,
+    SharePointAuthError,
     SharePointConfig,
     SharePointConnector,
     compute_file_sha256,
@@ -25,6 +26,7 @@ __all__ = [
     "ProjectCatalog",
     "QualityLogger",
     "RemoteDriveItem",
+    "SharePointAuthError",
     "SharePointConfig",
     "SharePointConnector",
     "XlsxExtractor",

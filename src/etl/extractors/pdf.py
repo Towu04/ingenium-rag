@@ -241,38 +241,44 @@ class PdfExtractor:
                 page_num = idx + 1
                 inspection = inspections[idx]
 
-                # 1. Tables via PyMuPDF find_tables()
+                # 1. Tables via PyMuPDF find_tables() (skip on dense vector/diagram pages to avoid stalls)
                 table_rects: list[fitz.Rect] = []
                 page_tables: list[tuple[float, str]] = []
-                try:
-                    for tbl in page.find_tables().tables:
-                        raw_grid: list[list[str]] = []
-                        if hasattr(tbl, "rows") and tbl.rows:
-                            for row in tbl.rows:
-                                raw_grid.append(
-                                    [
-                                        clean_cell_text(
-                                            page.get_text("text", clip=fitz.Rect(cell)) or ""
-                                        )
-                                        if cell is not None
-                                        else ""
-                                        for cell in row.cells
-                                    ]
-                                )
-                        else:
-                            raw_grid = [
-                                [clean_cell_text(c) for c in row] for row in (tbl.extract() or [])
-                            ]
-                        cleaned = [r for r in raw_grid if any(r)]
-                        if len(cleaned) < 2 or sum(1 for c in cleaned[0] if c) < 2:
-                            continue
-                        md_tbl, _ = build_markdown_table(cleaned[0], cleaned[1:])
-                        if md_tbl:
-                            t_rect = fitz.Rect(tbl.bbox)
-                            table_rects.append(t_rect)
-                            page_tables.append((t_rect.y0, md_tbl))
-                except Exception:
-                    pass
+                skip_tables = (
+                    inspection.is_hvac_diagram_page
+                    or inspection.vector_drawing_count >= settings.high_vector_drawings_threshold
+                )
+                if not skip_tables:
+                    try:
+                        for tbl in page.find_tables().tables:
+                            raw_grid: list[list[str]] = []
+                            if hasattr(tbl, "rows") and tbl.rows:
+                                for row in tbl.rows:
+                                    raw_grid.append(
+                                        [
+                                            clean_cell_text(
+                                                page.get_text("text", clip=fitz.Rect(cell)) or ""
+                                            )
+                                            if cell is not None
+                                            else ""
+                                            for cell in row.cells
+                                        ]
+                                    )
+                            else:
+                                raw_grid = [
+                                    [clean_cell_text(c) for c in row]
+                                    for row in (tbl.extract() or [])
+                                ]
+                            cleaned = [r for r in raw_grid if any(r)]
+                            if len(cleaned) < 2 or sum(1 for c in cleaned[0] if c) < 2:
+                                continue
+                            md_tbl, _ = build_markdown_table(cleaned[0], cleaned[1:])
+                            if md_tbl:
+                                t_rect = fitz.Rect(tbl.bbox)
+                                table_rects.append(t_rect)
+                                page_tables.append((t_rect.y0, md_tbl))
+                    except Exception:
+                        pass
 
                 # 2. Text blocks outside detected tables
                 raw_blocks = sorted(

@@ -6,9 +6,12 @@ Single source of truth for all stages (`etl`, `chunking`, `embedding`, `storage`
 
 import logging
 import os
+import re
 import sys
+from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
+from urllib.parse import unquote, urlparse
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -79,11 +82,14 @@ class Settings(BaseSettings):
     temp_bearer_token: str = ""
     sharepoint_hostname: str = ""
     sharepoint_site_path: str = ""
+    sharepoint_site_paths: str = ""
+    sharepoint_sites_file: Path | None = None
     sharepoint_drive_name: str = "Documents"
 
     # --- ETL Extraction & Quality Thresholds ---
     default_project_name: str | None = None
     building_aliases: dict[str, str] = {}
+    etl_workers: int = 4
     min_digital_text_chars_per_page: int = 50
     oversized_page_min_dimension_pt: float = 1250.0
     high_vector_drawings_threshold: int = 250
@@ -141,6 +147,161 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """Return the cached singleton `Settings` instance."""
     return Settings()
+
+
+@dataclass(frozen=True)
+class SharePointSiteSpec:
+    """Resolved SharePoint site target (from TSV/CSV sites file, CLI --site, or .env)."""
+
+    hostname: str
+    site_path: str
+    project_code: str | None = None
+    folder_prefix: str | None = None
+
+    @property
+    def site_slug(self) -> str:
+        return self.site_path.strip("/").split("/")[-1]
+
+    @property
+    def key(self) -> str:
+        return f"{self.hostname.lower()}/{self.site_path.strip('/').lower()}"
+
+
+_SP_SITE_URL_RE = re.compile(
+    r"^(/sites/[^/]+)(?:/(?:Shared Documents|Documents|Gedeelde documenten)(?:/(.*))?)?$",
+    re.IGNORECASE,
+)
+
+
+def parse_sharepoint_site_spec(
+    raw: str,
+    *,
+    default_hostname: str = "",
+    project_code: str | None = None,
+    folder_prefix_override: str | None = None,
+) -> SharePointSiteSpec:
+    """Parse a SharePoint site URL or `/sites/<slug>` path into a `SharePointSiteSpec`."""
+    cleaned = raw.strip()
+    if not cleaned:
+        raise ValueError("SharePoint site specification cannot be empty.")
+
+    hostname = default_hostname.strip()
+    url_prefix: str | None = None
+
+    if "://" in cleaned:
+        parsed = urlparse(cleaned)
+        hostname = parsed.netloc.strip() or hostname
+        path_decoded = unquote(parsed.path).rstrip("/")
+        m = _SP_SITE_URL_RE.match(path_decoded)
+        if m:
+            site_path = m.group(1)
+            url_prefix = (m.group(2) or "").strip("/") or None
+        else:
+            site_path = path_decoded if path_decoded.startswith("/") else f"/{path_decoded}"
+    else:
+        path_decoded = unquote(cleaned).rstrip("/")
+        if not path_decoded.startswith("/"):
+            path_decoded = (
+                f"/{path_decoded}"
+                if path_decoded.lower().startswith("sites/")
+                else f"/sites/{path_decoded}"
+            )
+        m = _SP_SITE_URL_RE.match(path_decoded)
+        if m:
+            site_path = m.group(1)
+            url_prefix = (m.group(2) or "").strip("/") or None
+        else:
+            site_path = path_decoded
+
+    return SharePointSiteSpec(
+        hostname=hostname,
+        site_path=site_path,
+        project_code=(project_code.strip() or None) if project_code else None,
+        folder_prefix=(
+            folder_prefix_override.strip("/")
+            if folder_prefix_override is not None and folder_prefix_override.strip("/")
+            else url_prefix
+        ),
+    )
+
+
+def load_sharepoint_sites(
+    *,
+    sites_file: Path | str | None = None,
+    site_override: str | None = None,
+    folder_prefix: str | None = None,
+    settings: Settings | None = None,
+) -> list[SharePointSiteSpec]:
+    """Resolve one or more SharePoint sites from CLI `--site`, `--sites-file`, or `.env`."""
+    cfg = settings or get_settings()
+    default_host = cfg.sharepoint_hostname.strip()
+
+    if site_override and site_override.strip():
+        return [
+            parse_sharepoint_site_spec(
+                site_override,
+                default_hostname=default_host,
+                folder_prefix_override=folder_prefix,
+            )
+        ]
+
+    resolved_file = Path(sites_file) if sites_file is not None else cfg.sharepoint_sites_file
+    specs: list[SharePointSiteSpec] = []
+
+    if resolved_file is not None:
+        if not resolved_file.exists():
+            raise FileNotFoundError(f"SharePoint sites file not found: {resolved_file}")
+        for raw_line in resolved_file.read_text(encoding="utf-8").splitlines():
+            line_no_nl = raw_line.rstrip("\r\n")
+            if not line_no_nl.strip() or line_no_nl.lstrip().startswith("#"):
+                continue
+            parts = (
+                line_no_nl.split("\t")
+                if "\t" in line_no_nl
+                else [p.strip() for p in line_no_nl.split(",", 1)]
+            )
+            if len(parts) == 1:
+                proj_code, raw_url = None, parts[0].strip()
+            else:
+                proj_code, raw_url = parts[0].strip() or None, parts[1].strip()
+            if not raw_url or raw_url.lower() in {"url", "sharepoint_url", "site_url", "site_path"}:
+                continue
+            specs.append(
+                parse_sharepoint_site_spec(
+                    raw_url,
+                    default_hostname=default_host,
+                    project_code=proj_code,
+                    folder_prefix_override=folder_prefix,
+                )
+            )
+    elif cfg.sharepoint_site_paths.strip():
+        for entry in cfg.sharepoint_site_paths.split(","):
+            if entry.strip():
+                specs.append(
+                    parse_sharepoint_site_spec(
+                        entry,
+                        default_hostname=default_host,
+                        folder_prefix_override=folder_prefix,
+                    )
+                )
+    elif cfg.sharepoint_site_path.strip():
+        specs.append(
+            parse_sharepoint_site_spec(
+                cfg.sharepoint_site_path,
+                default_hostname=default_host,
+                folder_prefix_override=folder_prefix,
+            )
+        )
+
+    # Deduplicate identical (hostname, site_path) preserving first non-empty project_code.
+    deduped: dict[str, SharePointSiteSpec] = {}
+    for spec in specs:
+        existing = deduped.get(spec.key)
+        if existing is None:
+            deduped[spec.key] = spec
+        elif existing.project_code is None and spec.project_code is not None:
+            deduped[spec.key] = spec
+    return list(deduped.values())
 
 
 def detect_device(preferred: str | None = None) -> str:

@@ -24,6 +24,9 @@ RAW_DIR        ?= data/raw_sharepoint
 ETL_DIR        ?= data/processed
 QDRANT_PATH    ?= data/qdrant_poc
 PREFIX         ?=
+SITE           ?=
+SITES_FILE     ?=
+WORKERS        ?=
 LIMIT          ?=
 FORCE          ?=
 Q              ?=
@@ -96,11 +99,13 @@ check: lint test ## Run linter and unit/integration tests (pre-PR gate)
 # =============================================================================
 # Pipeline Execution
 # =============================================================================
-ingest: ## Run ingestion pipeline (MODE=etl|raw|sharepoint, PREFIX=..., LIMIT=N, FORCE=1)
+ingest: ## Run ingestion pipeline (MODE=etl|raw|sharepoint, SITE=..., SITES_FILE=..., WORKERS=4, PREFIX=..., LIMIT=N, FORCE=1)
 	@set -- --processed-dir "$(ETL_DIR)" --qdrant-path "$(QDRANT_PATH)"; \
 	case "$(MODE)" in \
 		sharepoint) \
 			set -- "$$@" --from-sharepoint; \
+			if [ -n "$(SITE)" ]; then set -- "$$@" --site "$(SITE)"; fi; \
+			if [ -n "$(SITES_FILE)" ]; then set -- "$$@" --sites-file "$(SITES_FILE)"; fi; \
 			if [ -n "$(PREFIX)" ]; then set -- "$$@" --folder-prefix "$(PREFIX)"; fi; \
 			if [ -n "$(LIMIT)" ]; then set -- "$$@" --max-files "$(LIMIT)"; fi ;; \
 		raw) \
@@ -110,6 +115,7 @@ ingest: ## Run ingestion pipeline (MODE=etl|raw|sharepoint, PREFIX=..., LIMIT=N,
 		*) \
 			echo "Error: Invalid MODE='$(MODE)'. Expected: etl, raw, or sharepoint."; exit 1 ;; \
 	esac; \
+	if [ -n "$(WORKERS)" ]; then set -- "$$@" --workers "$(WORKERS)"; fi; \
 	if [ -n "$(FORCE)" ]; then set -- "$$@" --force; fi; \
 	$(PY_ENV) $(PYTHON) scripts/ingest.py "$$@" $(CLI_FLAGS)
 
@@ -118,13 +124,15 @@ ingest-dry-run: ## Preview file inventory and metadata without extracting (MODE=
 	case "$(MODE)" in \
 		sharepoint) \
 			set -- "$$@" --from-sharepoint; \
+			if [ -n "$(SITE)" ]; then set -- "$$@" --site "$(SITE)"; fi; \
+			if [ -n "$(SITES_FILE)" ]; then set -- "$$@" --sites-file "$(SITES_FILE)"; fi; \
 			if [ -n "$(PREFIX)" ]; then set -- "$$@" --folder-prefix "$(PREFIX)"; fi ;; \
 		raw) \
 			set -- "$$@" --raw-dir "$(RAW_DIR)" ;; \
 		*) \
 			echo "Error: Invalid MODE='$(MODE)'. Expected: raw or sharepoint."; exit 1 ;; \
 	esac; \
-	$(PY_ENV) $(PYTHON) scripts/ingest.py "$$@"
+	$(PY_ENV) $(PYTHON) scripts/ingest.py "$$@" $(CLI_FLAGS)
 
 report: ## Print processed documents summary and scanned-PDF/limitations audit report
 	$(PY_ENV) $(PYTHON) scripts/ingest.py --report --processed-dir "$(ETL_DIR)" $(CLI_FLAGS)

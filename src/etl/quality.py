@@ -198,6 +198,28 @@ class QualityLogger:
         self.write_record(record)
         return record
 
+    def log_unauthorized(
+        self,
+        target: str,
+        status_code: int,
+        reason: str = "",
+        *,
+        project: str | None = None,
+    ) -> LimitationRecord:
+        rel = Path(target)
+        record = LimitationRecord(
+            doc_id=f"unauthorized_{rel.name or 'site'}",
+            file_name=rel.name or target,
+            source_path=target,
+            project=project,
+            extraction_method="sharepoint_auth",
+            quality_warnings=[f"HTTP {status_code}: {reason or 'Access denied'}"],
+            limitation_type="unauthorized_access",
+            recommended_action="Grant Microsoft Entra app Sites.Read.All / site permission for this target.",
+        )
+        self.write_record(record)
+        return record
+
     def write_record(self, record: LimitationRecord) -> None:
         self.report_path.parent.mkdir(parents=True, exist_ok=True)
         with self.report_path.open("a", encoding="utf-8") as fh:

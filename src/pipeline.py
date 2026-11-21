@@ -15,7 +15,13 @@ from typing import Protocol
 import numpy as np
 
 from chunking import ParentChildChunker
-from config import Settings, detect_device, get_settings
+from config import (
+    Settings,
+    SharePointSiteSpec,
+    detect_device,
+    get_settings,
+    load_sharepoint_sites,
+)
 from domain import (
     Answer,
     ChildChunk,
@@ -64,6 +70,8 @@ class IndexingStats:
     scanned_empty_docs: int = 0
     dropped_noisy_callouts: int = 0
     failed_docs: int = 0
+    unauthorized_count: int = 0
+    unauthorized_targets: list[str] = field(default_factory=list)
     total_parents: int = 0
     total_children: int = 0
     stage_timings: dict[str, float] = field(default_factory=dict)
@@ -391,12 +399,12 @@ class IndexingPipeline:
         force_etl: bool = False,
         force_index: bool = False,
         drop_noisy_callouts: bool = True,
+        workers: int | None = None,
         on_progress: ProgressCallback | None = None,
     ) -> IndexingStats:
         """Run local ETL extraction into `processed_dir`, then index all valid `ParsedDoc`s."""
-        out_base = (
-            Path(processed_dir) if processed_dir is not None else get_settings().processed_dir
-        )
+        cfg = get_settings()
+        out_base = Path(processed_dir) if processed_dir is not None else cfg.processed_dir
         etl = ETLRunner(
             catalog_path=catalog_path,
             markdown_out_dir=out_base / "markdown",
@@ -409,7 +417,12 @@ class IndexingPipeline:
             on_progress("stage_done", 1, 4, f"Local source ready ({raw_dir})")
             on_progress("stage_start", 2, 4, "ETL Extraction")
         t_etl = time.perf_counter()
-        etl_res = etl.run_local(raw_dir, force=force_etl, on_progress=on_progress)
+        etl_res = etl.run_local(
+            raw_dir,
+            force=force_etl,
+            workers=workers if workers is not None else cfg.etl_workers,
+            on_progress=on_progress,
+        )
         etl_elapsed = time.perf_counter() - t_etl
         if on_progress:
             on_progress(
@@ -438,6 +451,7 @@ class IndexingPipeline:
     def ingest_sharepoint(
         self,
         *,
+        sites: Sequence[SharePointSiteSpec] | None = None,
         catalog_path: str | Path | None = None,
         processed_dir: str | Path | None = None,
         force_etl: bool = False,
@@ -445,12 +459,24 @@ class IndexingPipeline:
         max_files: int | None = None,
         folder_prefix: str | None = None,
         drop_noisy_callouts: bool = True,
+        workers: int | None = None,
         on_progress: ProgressCallback | None = None,
     ) -> IndexingStats:
-        """Stream files from SharePoint via ETL, persist `ParsedDoc` JSONs, and index into Qdrant."""
-        out_base = (
-            Path(processed_dir) if processed_dir is not None else get_settings().processed_dir
+        """Stream files from one or more SharePoint sites via ETL and incrementally index into Qdrant."""
+        cfg = get_settings()
+        out_base = Path(processed_dir) if processed_dir is not None else cfg.processed_dir
+        eff_workers = workers if workers is not None else cfg.etl_workers
+        site_list = (
+            list(sites)
+            if sites is not None
+            else load_sharepoint_sites(folder_prefix=folder_prefix, settings=cfg)
         )
+        if not site_list:
+            raise ValueError(
+                "No SharePoint sites configured. Set SHAREPOINT_SITE_PATH / SHAREPOINT_SITE_PATHS "
+                "in .env, or pass --site / --sites-file."
+            )
+
         etl = ETLRunner(
             catalog_path=catalog_path,
             markdown_out_dir=out_base / "markdown",
@@ -458,29 +484,68 @@ class IndexingPipeline:
             manifest_path=out_base / "manifest.json",
             drop_noisy_callouts=drop_noisy_callouts,
         )
+        base_connector = SharePointConnector.from_env(json_out_dir=out_base / "json")
+        namespace_by_site = len(site_list) > 1
+
         if on_progress:
-            on_progress("stage_start", 1, 4, "SharePoint Discovery & Sync")
-        connector = SharePointConnector.from_env(json_out_dir=out_base / "json")
+            on_progress(
+                "stage_start",
+                1,
+                4,
+                f"SharePoint Discovery & Sync ({len(site_list)} site(s), workers={eff_workers})",
+            )
+
+        t_etl_total = time.perf_counter()
+        total_discovered = 0
+        total_parsed = 0
+        total_skipped_etl = 0
+        total_scanned_empty = 0
+        total_dropped_callouts = 0
+        total_unauth = 0
+        unauth_targets: list[str] = []
+
         if on_progress:
             on_progress("stage_start", 2, 4, "SharePoint Streaming & ETL Extraction")
-        t_etl = time.perf_counter()
-        etl_res = etl.run_sharepoint(
-            connector=connector,
-            force=force_etl,
-            max_files=max_files,
-            folder_prefix=folder_prefix,
-            on_progress=on_progress,
-        )
-        etl_elapsed = time.perf_counter() - t_etl
+
+        for s_idx, spec in enumerate(site_list, start=1):
+            site_sp = base_connector.for_site(spec)
+            logger.info(
+                "Syncing SharePoint site [%d/%d]: %s%s (project=%s)",
+                s_idx,
+                len(site_list),
+                spec.hostname,
+                spec.site_path,
+                spec.project_code or "auto",
+            )
+            etl_res = etl.run_sharepoint(
+                connector=site_sp,
+                force=force_etl,
+                max_files=max_files,
+                folder_prefix=folder_prefix or spec.folder_prefix,
+                workers=eff_workers,
+                project_override=spec.project_code,
+                namespace_by_site=namespace_by_site,
+                on_progress=on_progress,
+            )
+            total_discovered += etl_res.discovered_files
+            total_parsed += etl_res.processed_files
+            total_skipped_etl += etl_res.skipped_unchanged_files
+            total_scanned_empty += etl_res.scanned_empty_files
+            total_dropped_callouts += etl_res.dropped_noisy_callouts
+            total_unauth += etl_res.unauthorized_count
+            unauth_targets.extend(etl_res.unauthorized_targets)
+
+        etl_elapsed = time.perf_counter() - t_etl_total
         if on_progress:
             on_progress(
                 "stage_done",
                 2,
                 4,
                 f"SharePoint ETL done in {etl_elapsed:.1f}s "
-                f"({etl_res.processed_files} parsed, {etl_res.scanned_empty_files} scanned/empty, "
-                f"{etl_res.skipped_unchanged_files} unchanged)",
+                f"({total_parsed} parsed, {total_scanned_empty} scanned/empty, "
+                f"{total_skipped_etl} unchanged, {total_unauth} unauthorized)",
             )
+
         stats = self.ingest_processed_dir(
             out_base,
             force=force_index,
@@ -488,11 +553,11 @@ class IndexingPipeline:
             stage_offset=2,
             total_stages=4,
         )
-        stats.discovered_files = etl_res.discovered_files
-        stats.scanned_empty_docs = max(stats.scanned_empty_docs, etl_res.scanned_empty_files)
-        stats.dropped_noisy_callouts = max(
-            stats.dropped_noisy_callouts, etl_res.dropped_noisy_callouts
-        )
+        stats.discovered_files = total_discovered
+        stats.scanned_empty_docs = max(stats.scanned_empty_docs, total_scanned_empty)
+        stats.dropped_noisy_callouts = max(stats.dropped_noisy_callouts, total_dropped_callouts)
+        stats.unauthorized_count = total_unauth
+        stats.unauthorized_targets = unauth_targets
         stats.stage_timings = {"etl": round(etl_elapsed, 2), **stats.stage_timings}
         return stats
 

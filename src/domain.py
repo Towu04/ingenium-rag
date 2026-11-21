@@ -97,7 +97,7 @@ _PHASE_CANONICAL_MAP: dict[str, str] = {
     "opleveringsdossier": "As-Built",
 }
 
-_DOSSIER_CODE_RE = re.compile(r"^(\d{4,5})[._\-](\d{3})$")
+_DOSSIER_CODE_RE = re.compile(r"^(\d{4,5})[._\-](\d{3}[A-Z]?)$", re.IGNORECASE)
 _POSTAL_CODE_HEADING_RE = re.compile(r"^(\d{4})\.?\s+[A-ZÀ-ÖØ-Þ]")
 
 DOCUMENT_REGISTER_FILENAME_RE = re.compile(
@@ -111,11 +111,17 @@ PROJECT_ID_PATTERNS: list[re.Pattern[str]] = [
         r"(?:^|[_\-\s/\\])((?:PRJ|PROJ|ING)[_\-]\d{2,4}(?:[_\-]\d{1,4})?)(?=$|[_\-\s/\\.,;?!])",
         re.IGNORECASE,
     ),
-    re.compile(r"(?<![\d.])(0\d{4}[._\-]\d{3}|\d{4,5}\.\d{3})(?![\d]|[._\-]\d)"),
+    re.compile(
+        r"(?<![\d.])(0\d{4}[._\-]\d{3}[A-Z]?|\d{4,5}\.\d{3}[A-Z]?)(?![\d]|[._\-]\d)",
+        re.IGNORECASE,
+    ),
 ]
 
 _SHAREPOINT_SITE_SLUG_RE = re.compile(r"/sites/([^/?#]+)", re.IGNORECASE)
-_SHAREPOINT_SITE_PROJECT_RE = re.compile(r"^(\d{4,5})[._\-]?(\d{3})(?:$|[-_][A-Za-z0-9]+$)")
+_SHAREPOINT_SITE_PROJECT_RE = re.compile(
+    r"^(\d{4,5})[._\-]?(\d{3}[A-Z]?)(?:$|[-_][A-Za-z0-9]+$)",
+    re.IGNORECASE,
+)
 
 _PB = r"(?:^|[_\-\s/\\0-9])"
 _PA = r"(?:$|[_\-\s/\\.,;?!])"
@@ -220,12 +226,12 @@ def strip_unknown_sentinel(value: str | None) -> str | None:
 
 
 def normalize_project(value: str | None) -> str | None:
-    """Normalize project identifiers (e.g. `1234.001`, `01234-001` -> `01234.001`)."""
+    """Normalize project identifiers (e.g. `1234.001`, `22071-002A` -> `22071.002A`)."""
     cleaned = strip_unknown_sentinel(value)
     if cleaned is None:
         return None
     m = _DOSSIER_CODE_RE.match(cleaned)
-    return f"{m.group(1).zfill(5)}.{m.group(2)}" if m else cleaned
+    return f"{m.group(1).zfill(5)}.{m.group(2).upper()}" if m else cleaned
 
 
 def normalize_phase(value: str | None) -> str | None:
@@ -282,7 +288,7 @@ def infer_project_id_from_sharepoint_url(sharepoint_url: str | None) -> str | No
     slug = slug_match.group(1)
     proj_match = _SHAREPOINT_SITE_PROJECT_RE.match(slug)
     if proj_match:
-        return f"{proj_match.group(1).zfill(5)}.{proj_match.group(2)}"
+        return f"{proj_match.group(1).zfill(5)}.{proj_match.group(2).upper()}"
     for pattern in PROJECT_ID_PATTERNS:
         m = pattern.search(slug)
         if m:
