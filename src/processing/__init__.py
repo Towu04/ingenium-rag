@@ -1,1 +1,0 @@
-"""Pure document transformation functions."""
