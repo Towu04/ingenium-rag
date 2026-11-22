@@ -44,12 +44,16 @@ DOC_ID         ?=
 OUT            ?= data/exports
 QUESTIONS      ?=
 DATASET        ?=
+SCENARIOS      ?=
+AUTO           ?=
+LIVE           ?=
+LOW_MEMORY     ?=
 
 CLI_FLAGS := $(if $(VERBOSE),--verbose,) $(if $(QUIET),--quiet,) $(if $(JSON),--json,)
 
 .PHONY: help install download-models test test-cov lint format check \
         ingest ingest-dry-run report query inspect export-chunks batch-query \
-        eval api clean reset-db
+        eval demo api clean reset-db
 
 # =============================================================================
 # Help & Setup
@@ -172,6 +176,16 @@ eval: ##@Query,_Inspection_&_Evaluation Run evaluation dataset (DATASET=path/to/
 		exit 1; \
 	fi
 	$(PY_ENV) $(PYTHON) scripts/eval.py --dataset "$(DATASET)" --qdrant-path "$(QDRANT_PATH)" $(CLI_FLAGS)
+
+demo: ##@Query,_Inspection_&_Evaluation Run stakeholder live demo (SCENARIOS=..., AUTO=1, LIVE=1)
+	@set -- --qdrant-path "$(QDRANT_PATH)"; \
+	if [ -n "$(SCENARIOS)" ]; then set -- "$$@" --scenarios "$(SCENARIOS)"; fi; \
+	if [ -n "$(MIN_SCORE)" ]; then set -- "$$@" --min-score "$(MIN_SCORE)"; fi; \
+	if [ -n "$(AUTO)" ]; then set -- "$$@" --auto; fi; \
+	if [ -n "$(LIVE)" ]; then set -- "$$@" --live; fi; \
+	if [ -n "$(LOW_MEMORY)" ]; then set -- "$$@" --low-memory; fi; \
+	if [ -n "$(VERBOSE)" ]; then set -- "$$@" --verbose; fi; \
+	$(PY_ENV) $(PYTHON) scripts/demo.py "$$@"
 
 api: ##@Query,_Inspection_&_Evaluation Start FastAPI server on http://127.0.0.1:8000 (/docs)
 	$(PY_ENV) $(PYTHON) -m uvicorn api.app:app --reload --port 8000
