@@ -5,6 +5,7 @@ import json
 import sys
 import time
 from collections import Counter
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -21,6 +22,8 @@ from scripts._cli import (
     clean_preview,
     ensure_qdrant_ready,
     err_console,
+    format_duration,
+    format_page_ranges,
     out_console,
     run_cli,
     setup_cli_logging,
@@ -91,11 +94,13 @@ def _cmd_stats(args: argparse.Namespace) -> None:
         phase_counts: Counter[str] = Counter()
         doc_parents: Counter[str] = Counter()
         doc_paths: dict[str, str] = {}
+        doc_projects: dict[str, str] = {}
         seen_docs: set[str] = set()
 
         for p in repo.iter_parents():
             doc_parents[p.document_id] += 1
             doc_paths.setdefault(p.document_id, p.metadata.source_path)
+            doc_projects.setdefault(p.document_id, p.metadata.project or "-")
             if p.document_id not in seen_docs:
                 seen_docs.add(p.document_id)
                 proj_counts[p.metadata.project or "<None>"] += 1
@@ -123,32 +128,57 @@ def _cmd_stats(args: argparse.Namespace) -> None:
         sys.stdout.write(json.dumps(payload, indent=2, ensure_ascii=False) + "\n")
         return
 
+    total_docs = max(counts["documents"], len(seen_docs), 1)
+    avg_parents = counts["parent_chunks"] / total_docs if counts["documents"] else 0.0
+    avg_children = counts["child_chunks"] / total_docs if counts["documents"] else 0.0
+
     overview = Table(title=f"Qdrant Index Overview ({args.qdrant_path})", header_style="bold cyan")
     overview.add_column("Collection", style="cyan")
     overview.add_column("Points", justify="right", style="green")
-    for col in ("documents", "parent_chunks", "child_chunks"):
-        overview.add_row(col, str(counts[col]))
+    overview.add_column("Avg / Doc", justify="right", style="dim")
+    overview.add_row("documents", f"{counts['documents']:,}", "-")
+    overview.add_row("parent_chunks", f"{counts['parent_chunks']:,}", f"{avg_parents:.1f}")
+    overview.add_row("child_chunks", f"{counts['child_chunks']:,}", f"{avg_children:.1f}")
     out_console.print(overview)
 
+    out_console.print()
     meta_tbl = Table(title="Metadata Distribution (by Document)", header_style="bold cyan")
-    meta_tbl.add_column("Field", style="cyan")
+    meta_tbl.add_column("Field", style="cyan", no_wrap=True)
     meta_tbl.add_column("Value")
     meta_tbl.add_column("Docs", justify="right", style="green")
-    for field_name, counter in (
-        ("Project", proj_counts),
-        ("Phase", phase_counts),
-        ("Building", bldg_counts),
+    meta_tbl.add_column("Share", justify="right", style="dim")
+    for field_idx, (field_name, counter) in enumerate(
+        (
+            ("Project", proj_counts),
+            ("Phase", phase_counts),
+            ("Building", bldg_counts),
+        )
     ):
+        if field_idx > 0:
+            meta_tbl.add_section()
         for idx, (val, cnt) in enumerate(counter.most_common(10)):
-            meta_tbl.add_row(field_name if idx == 0 else "", val, str(cnt))
+            display_val = "[dim](unspecified)[/dim]" if val == "<None>" else val
+            meta_tbl.add_row(
+                field_name if idx == 0 else "",
+                display_val,
+                f"{cnt:,}",
+                f"{(cnt / total_docs) * 100:.1f}%",
+            )
     out_console.print(meta_tbl)
 
+    out_console.print()
     docs_tbl = Table(title=f"Top {args.limit} Documents by Parent Chunks", header_style="bold cyan")
-    docs_tbl.add_column("Doc ID", style="cyan", width=16)
-    docs_tbl.add_column("Parents", justify="right", style="green", width=8)
-    docs_tbl.add_column("Source Path")
+    docs_tbl.add_column("Doc ID", style="cyan", no_wrap=True)
+    docs_tbl.add_column("Project", style="yellow", no_wrap=True)
+    docs_tbl.add_column("Parents", justify="right", style="green", no_wrap=True)
+    docs_tbl.add_column("Source Path", no_wrap=True, overflow="ellipsis", max_width=42)
     for doc_id, n_p in doc_parents.most_common(args.limit):
-        docs_tbl.add_row(doc_id, str(n_p), doc_paths.get(doc_id, ""))
+        docs_tbl.add_row(
+            doc_id[:10],
+            doc_projects.get(doc_id, "-"),
+            f"{n_p:,}",
+            doc_paths.get(doc_id, ""),
+        )
     out_console.print(docs_tbl)
 
 
@@ -196,8 +226,8 @@ def _cmd_export(args: argparse.Namespace) -> None:
     tbl.add_column("Collection", style="cyan")
     tbl.add_column("Exported", justify="right", style="green")
     tbl.add_column("Output Path")
-    tbl.add_row("parent_chunks", str(len(parents)), str(p_path))
-    tbl.add_row("child_chunks", str(len(children)), str(c_path))
+    tbl.add_row("parent_chunks", f"{len(parents):,}", str(p_path))
+    tbl.add_row("child_chunks", f"{len(children):,}", str(c_path))
     out_console.print(tbl)
 
 
@@ -223,8 +253,42 @@ def _load_questions(path: Path) -> list[dict[str, Any]]:
     ]
 
 
-def _render_markdown_report(traces: list[RetrievalTrace]) -> str:
+def _render_markdown_report(
+    traces: list[RetrievalTrace],
+    *,
+    qdrant_path: Path | None = None,
+) -> str:
+    timestamp = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
     lines: list[str] = ["# Batch Retrieval Inspection Report", ""]
+    meta_parts = [f"Generated: `{timestamp}`", f"Questions: `{len(traces)}`"]
+    if qdrant_path is not None:
+        meta_parts.append(f"Index: `{qdrant_path}`")
+    lines.append(" · ".join(meta_parts))
+    lines.append("")
+
+    # Executive Summary table for fast stakeholder review
+    lines.append("## Executive Summary")
+    lines.append("")
+    lines.append("| # | Question | Applied Filters | Hits | Top-1 Score | Top-1 Source |")
+    lines.append("| ---: | :--- | :--- | ---: | ---: | :--- |")
+    for q_idx, trace in enumerate(traces, start=1):
+        q_short = clean_preview(trace.query, max_chars=70).replace("|", "\\|")
+        flt = (
+            ", ".join(f"{k}={v}" for k, v in trace.applied_filters.items())
+            if trace.applied_filters
+            else "none"
+        )
+        top_score = f"{trace.results[0].score:.4f}" if trace.results else "-"
+        top_src = (
+            Path(trace.results[0].parent_chunk.metadata.source_path).name if trace.results else "-"
+        ).replace("|", "\\|")
+        lines.append(
+            f"| {q_idx} | {q_short} | `{flt}` | {len(trace.results)} | `{top_score}` | `{top_src}` |"
+        )
+    lines.append("")
+    lines.append("---")
+    lines.append("")
+
     for q_idx, trace in enumerate(traces, start=1):
         lines.append(f"## Q{q_idx}: {trace.query}")
         lines.append(
@@ -245,18 +309,24 @@ def _render_markdown_report(traces: list[RetrievalTrace]) -> str:
             p = res.parent_chunk
             m = p.metadata
             rrf = f"{res.retrieval_score:.4f}" if res.retrieval_score is not None else "n/a"
+            pages = format_page_ranges(p.page_numbers)
             lines.append(
                 f"### [{rank}] rerank=`{res.score:.4f}` | rrf=`{rrf}` | "
-                f"`{m.source_path}` (pages `{p.page_numbers}`, section: `{p.section_header}`)"
+                f"`{m.source_path}` (pages `{pages}`, section: `{p.section_header or '-'}`)"
             )
             lines.append(
-                f"- Metadata: project=`{m.project}`, buildings=`{m.buildings}`, phase=`{m.phase}`"
+                f"- **Metadata**: project=`{m.project or '-'}`, "
+                f"buildings=`{', '.join(m.buildings) or '-'}`, phase=`{m.phase or '-'}`"
             )
             lines.append(f"- **Matched child (`{res.matched_child_id}`)**:")
             child_txt = res.matched_child_text or "<not stored in payload>"
             lines.append(f"```text\n{child_txt}\n```")
-            lines.append(f"- **Full parent (`{p.id}`)**:")
-            lines.append(f"```text\n{p.text}\n```")
+            lines.append(
+                f"<details>\n"
+                f"<summary>Full parent chunk (<code>{p.id}</code>, {len(p.text):,} chars)</summary>\n\n"
+                f"```text\n{p.text}\n```\n"
+                f"</details>"
+            )
             lines.append("")
     return "\n".join(lines)
 
@@ -301,7 +371,9 @@ def _cmd_batch_query(args: argparse.Namespace) -> None:
             encoding="utf-8",
         )
     else:
-        out_path.write_text(_render_markdown_report(traces), encoding="utf-8")
+        out_path.write_text(
+            _render_markdown_report(traces, qdrant_path=args.qdrant_path), encoding="utf-8"
+        )
 
     elapsed = time.perf_counter() - t0
     if args.as_json:
@@ -321,14 +393,14 @@ def _cmd_batch_query(args: argparse.Namespace) -> None:
         return
 
     tbl = Table(
-        title=f"Batch Query Summary ({len(traces)} questions in {elapsed:.1f}s)",
+        title=f"Batch Query Summary ({len(traces)} questions in {format_duration(elapsed)})",
         header_style="bold cyan",
     )
     tbl.add_column("#", justify="right", width=3)
-    tbl.add_column("Question")
+    tbl.add_column("Question", no_wrap=True, overflow="ellipsis")
     tbl.add_column("Kept", justify="right", style="green", width=5)
     tbl.add_column("Top-1 Score", justify="right", style="cyan", width=11)
-    tbl.add_column("Top-1 Source")
+    tbl.add_column("Top-1 Source", no_wrap=True, overflow="ellipsis")
     for idx, tr in enumerate(traces, start=1):
         top_score = f"{tr.results[0].score:.4f}" if tr.results else "-"
         top_src = Path(tr.results[0].parent_chunk.metadata.source_path).name if tr.results else "-"

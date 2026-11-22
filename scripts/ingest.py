@@ -4,6 +4,7 @@ import json
 import logging
 import sys
 import time
+from collections import Counter
 from pathlib import Path
 
 from rich.table import Table
@@ -15,6 +16,7 @@ from scripts._cli import (
     add_common_args,
     build_parser,
     err_console,
+    format_duration,
     out_console,
     print_kv_table,
     run_cli,
@@ -23,22 +25,29 @@ from scripts._cli import (
 )
 
 
-def _print_inventory(title: str, summary) -> None:
+def _print_inventory(title: str, summary, *, preview_limit: int = 40) -> None:
     ext_table = Table(title=f"Inventory: {title}", header_style="bold cyan")
     ext_table.add_column("Extension", style="cyan")
     ext_table.add_column("Count", justify="right", style="green")
     for ext, count in sorted(summary.extension_counts.items()):
-        ext_table.add_row(ext, str(count))
-    ext_table.add_row("TOTAL", str(summary.total_files), style="bold")
+        ext_table.add_row(ext, f"{count:,}")
+    ext_table.add_row("TOTAL", f"{summary.total_files:,}", style="bold")
     out_console.print(ext_table)
 
-    meta_table = Table(title="Inferred Metadata Preview (first 40 files)", header_style="bold cyan")
-    meta_table.add_column("Relative Path")
-    meta_table.add_column("Project", style="cyan")
-    meta_table.add_column("Building", style="magenta")
-    meta_table.add_column("Phase", style="yellow")
-    meta_table.add_column("Category", style="green")
-    for item in summary.items[:40]:
+    items = summary.items if preview_limit <= 0 else summary.items[:preview_limit]
+    showing = (
+        f"all {len(items):,} files"
+        if len(items) == len(summary.items)
+        else f"first {len(items):,} of {len(summary.items):,} files"
+    )
+    out_console.print()
+    meta_table = Table(title=f"Inferred Metadata Preview ({showing})", header_style="bold cyan")
+    meta_table.add_column("Relative Path", no_wrap=True, overflow="ellipsis")
+    meta_table.add_column("Project", style="cyan", no_wrap=True)
+    meta_table.add_column("Building", style="magenta", no_wrap=True, overflow="ellipsis")
+    meta_table.add_column("Phase", style="yellow", no_wrap=True)
+    meta_table.add_column("Category", style="green", no_wrap=True)
+    for item in items:
         m = item.matched_metadata
         meta_table.add_row(
             item.relative_path,
@@ -48,9 +57,20 @@ def _print_inventory(title: str, summary) -> None:
             m.doc_category.value,
         )
     out_console.print(meta_table)
+    remaining = len(summary.items) - len(items)
+    if remaining > 0:
+        out_console.print(
+            f"[dim]... and {remaining:,} more files (pass --limit 0 to list all).[/dim]"
+        )
 
 
-def _print_report(processed_dir: Path, limitations_log: Path, *, as_json: bool = False) -> None:
+def _print_report(
+    processed_dir: Path,
+    limitations_log: Path,
+    *,
+    as_json: bool = False,
+    limit: int = 20,
+) -> None:
     etl = ETLRunner(
         markdown_out_dir=processed_dir / "markdown",
         json_out_dir=processed_dir / "json",
@@ -71,41 +91,99 @@ def _print_report(processed_dir: Path, limitations_log: Path, *, as_json: bool =
         sys.stdout.write(json.dumps(payload, indent=2, ensure_ascii=False) + "\n")
         return
 
-    table = Table(title="Extracted Documents Report", header_style="bold cyan")
-    table.add_column("Doc ID", style="cyan")
-    table.add_column("File Name")
-    table.add_column("Project", style="green")
-    table.add_column("Building", style="magenta")
-    table.add_column("Phase", style="yellow")
-    table.add_column("Sections", justify="right")
-    table.add_column("OCR?", justify="center")
-    for e in report["entries"]:
-        table.add_row(
-            e.doc_id,
-            e.file_name,
-            e.project or "-",
-            e.building or "-",
-            e.phase or "-",
-            str(e.section_count),
-            "YES" if e.needs_ocr else "-",
+    entries = report["entries"]
+    limitations = report["limitations"]
+    lim_by_type = Counter(rec.limitation_type for rec in limitations)
+    proj_counts = Counter(e.project or "(unspecified)" for e in entries)
+    unauth_count = lim_by_type.get("unauthorized_access", 0)
+
+    print_kv_table(
+        "Extraction & Audit Overview",
+        [
+            ("Extracted documents", f"{report['total_documents']:,}"),
+            ("Total pages", f"{report['total_pages']:,}"),
+            ("Total tables", f"{report['total_tables']:,}"),
+            ("Needs OCR (scanned/empty)", f"{report['needs_ocr_count']:,}"),
+            ("Unauthorized (401/403)", f"{unauth_count:,}"),
+            ("Total limitations logged", f"{len(limitations):,}"),
+        ],
+    )
+
+    if proj_counts:
+        out_console.print()
+        proj_table = Table(title="Documents by Project", header_style="bold cyan")
+        proj_table.add_column("Project", style="cyan", no_wrap=True)
+        proj_table.add_column("Docs", justify="right", style="green")
+        proj_table.add_column("Share", justify="right", style="dim")
+        total_docs = max(len(entries), 1)
+        shown_projects = proj_counts.most_common(15 if limit > 0 else None)
+        for proj, cnt in shown_projects:
+            label = f"[dim]{proj}[/dim]" if proj == "(unspecified)" else proj
+            proj_table.add_row(label, f"{cnt:,}", f"{(cnt / total_docs) * 100:.1f}%")
+        out_console.print(proj_table)
+        if len(proj_counts) > len(shown_projects):
+            out_console.print(
+                f"[dim]... and {len(proj_counts) - len(shown_projects):,} more projects.[/dim]"
+            )
+
+    if lim_by_type:
+        out_console.print()
+        lim_summary = Table(title="Limitations Breakdown", header_style="bold yellow")
+        lim_summary.add_column("Limitation Type", style="yellow", no_wrap=True)
+        lim_summary.add_column("Count", justify="right", style="red")
+        for ltype, cnt in lim_by_type.most_common():
+            lim_summary.add_row(ltype, f"{cnt:,}")
+        out_console.print(lim_summary)
+
+    shown_entries = entries if limit <= 0 else entries[:limit]
+    if shown_entries:
+        out_console.print()
+        entry_title = (
+            f"Extracted Documents (all {len(entries):,})"
+            if len(shown_entries) == len(entries)
+            else f"Extracted Documents (showing {len(shown_entries):,} of {len(entries):,})"
         )
-    out_console.print(table)
-    unauth_count = sum(
-        1 for rec in report["limitations"] if rec.limitation_type == "unauthorized_access"
-    )
-    out_console.print(
-        f"[bold]Totals:[/bold] {report['total_documents']} docs | "
-        f"{report['total_pages']} pages | {report['total_tables']} tables | "
-        f"{report['needs_ocr_count']} needs_ocr | {unauth_count} unauthorized | "
-        f"{len(report['limitations'])} limitations"
-    )
-    if report["limitations"]:
-        lim_table = Table(title="Logged Extraction Limitations", header_style="bold red")
-        lim_table.add_column("File Name", style="red")
-        lim_table.add_column("Type", style="yellow")
-        lim_table.add_column("Confidence", justify="right")
-        lim_table.add_column("Recommended Action")
-        for rec in report["limitations"]:
+        table = Table(title=entry_title, header_style="bold cyan")
+        table.add_column("Doc ID", style="cyan", no_wrap=True)
+        table.add_column("File Name", no_wrap=True, overflow="ellipsis", max_width=28)
+        table.add_column("Project", style="green", no_wrap=True)
+        table.add_column("Phase", style="yellow", no_wrap=True, overflow="ellipsis", max_width=14)
+        table.add_column("Sec.", justify="right", no_wrap=True)
+        table.add_column("OCR?", justify="center", no_wrap=True)
+        for e in shown_entries:
+            table.add_row(
+                e.doc_id[:10],
+                e.file_name,
+                e.project or "-",
+                e.phase or "-",
+                f"{e.section_count:,}",
+                "[yellow]YES[/yellow]" if e.needs_ocr else "[dim]-[/dim]",
+            )
+        out_console.print(table)
+        rem_docs = len(entries) - len(shown_entries)
+        if rem_docs > 0:
+            out_console.print(
+                f"[dim]... and {rem_docs:,} more documents (run `make report LIMIT=0` to show all).[/dim]"
+            )
+
+    shown_lims = limitations if limit <= 0 else limitations[:limit]
+    if shown_lims:
+        out_console.print()
+        lim_title = (
+            f"Logged Extraction Limitations (all {len(limitations):,})"
+            if len(shown_lims) == len(limitations)
+            else f"Logged Extraction Limitations (showing {len(shown_lims):,} of {len(limitations):,})"
+        )
+        lim_table = Table(title=lim_title, header_style="bold red")
+        lim_table.add_column(
+            "File Name", style="red", no_wrap=True, overflow="ellipsis", max_width=24
+        )
+        lim_table.add_column(
+            "Type", style="yellow", no_wrap=True, overflow="ellipsis", max_width=22
+        )
+        lim_table.add_column("Conf.", justify="right", no_wrap=True)
+        lim_table.add_column("Recommended Action", no_wrap=True, overflow="ellipsis", max_width=28)
+        for rec in shown_lims:
             lim_table.add_row(
                 rec.file_name,
                 rec.limitation_type,
@@ -113,6 +191,12 @@ def _print_report(processed_dir: Path, limitations_log: Path, *, as_json: bool =
                 rec.recommended_action,
             )
         out_console.print(lim_table)
+        rem_lims = len(limitations) - len(shown_lims)
+        if rem_lims > 0:
+            out_console.print(
+                f"[dim]... and {rem_lims:,} more limitations "
+                f"(inspect {limitations_log} or run `make report LIMIT=0`).[/dim]"
+            )
 
 
 def _main() -> None:
@@ -185,6 +269,12 @@ def _main() -> None:
         "--max-files", type=int, default=None, help="Cap SharePoint files streamed per site."
     )
     parser.add_argument(
+        "--limit",
+        type=int,
+        default=20,
+        help="Max preview rows for --report / --dry-run (default: 20; 0 = show all).",
+    )
+    parser.add_argument(
         "--device", type=str, default=settings.device, help="Device override (cuda/mps/cpu)."
     )
     parser.add_argument("--force", action="store_true", help="Force re-extraction/re-indexing.")
@@ -210,7 +300,12 @@ def _main() -> None:
     catalog = args.catalog or (settings.catalog_path if settings.catalog_path.exists() else None)
 
     if args.report:
-        _print_report(args.processed_dir, settings.limitations_report_path, as_json=args.as_json)
+        _print_report(
+            args.processed_dir,
+            settings.limitations_report_path,
+            as_json=args.as_json,
+            limit=args.limit,
+        )
         return
 
     if args.dry_run:
@@ -226,7 +321,9 @@ def _main() -> None:
             all_ext: dict[str, int] = {}
             total_files = 0
             unauthorized_sites: list[str] = []
+            site_rows: list[tuple[str, int, int, int, int, str]] = []
             for spec in sites:
+                site_label = f"{spec.hostname}{spec.site_path}"
                 try:
                     summary = etl.scan_sharepoint_inventory(
                         connector=base_sp.for_site(spec),
@@ -235,10 +332,23 @@ def _main() -> None:
                     total_files += summary.total_files
                     for ext, cnt in summary.extension_counts.items():
                         all_ext[ext] = all_ext.get(ext, 0) + cnt
+                    site_rows.append(
+                        (
+                            site_label,
+                            summary.total_files,
+                            summary.extension_counts.get(".pdf", 0),
+                            summary.extension_counts.get(".docx", 0),
+                            summary.extension_counts.get(".xlsx", 0),
+                            "[green]OK[/green]",
+                        )
+                    )
                     if not args.as_json:
-                        _print_inventory(f"SharePoint ({spec.hostname}{spec.site_path})", summary)
+                        _print_inventory(
+                            f"SharePoint ({site_label})", summary, preview_limit=args.limit
+                        )
                 except SharePointAuthError as auth_err:
-                    unauthorized_sites.append(f"{spec.hostname}{spec.site_path}")
+                    unauthorized_sites.append(site_label)
+                    site_rows.append((site_label, 0, 0, 0, 0, "[red]401/403[/red]"))
                     err_console.print(f"[yellow]Skipping unauthorized site:[/yellow] {auth_err}")
             if args.as_json:
                 sys.stdout.write(
@@ -253,6 +363,37 @@ def _main() -> None:
                     )
                     + "\n"
                 )
+            elif len(sites) > 1:
+                out_console.print()
+                rollup = Table(
+                    title=f"Multi-Site Dry-Run Rollup ({len(sites)} sites)",
+                    header_style="bold cyan",
+                )
+                rollup.add_column("Site", style="cyan", no_wrap=True, overflow="ellipsis")
+                rollup.add_column("Files", justify="right", style="green")
+                rollup.add_column("PDF", justify="right")
+                rollup.add_column("DOCX", justify="right")
+                rollup.add_column("XLSX", justify="right")
+                rollup.add_column("Status", justify="center")
+                for s_lbl, n_all, n_pdf, n_docx, n_xlsx, status in site_rows:
+                    rollup.add_row(
+                        s_lbl,
+                        f"{n_all:,}",
+                        f"{n_pdf:,}",
+                        f"{n_docx:,}",
+                        f"{n_xlsx:,}",
+                        status,
+                    )
+                rollup.add_section()
+                rollup.add_row(
+                    "[bold]TOTAL[/bold]",
+                    f"[bold]{total_files:,}[/bold]",
+                    f"[bold]{all_ext.get('.pdf', 0):,}[/bold]",
+                    f"[bold]{all_ext.get('.docx', 0):,}[/bold]",
+                    f"[bold]{all_ext.get('.xlsx', 0):,}[/bold]",
+                    f"[dim]{len(sites) - len(unauthorized_sites)}/{len(sites)} OK[/dim]",
+                )
+                out_console.print(rollup)
             return
         elif args.raw_dir is not None:
             summary = etl.scan_inventory(args.raw_dir)
@@ -270,7 +411,7 @@ def _main() -> None:
                     + "\n"
                 )
             else:
-                _print_inventory(title, summary)
+                _print_inventory(title, summary, preview_limit=args.limit)
             return
         else:
             parser.error("--dry-run requires --raw-dir or --from-sharepoint.")
@@ -351,16 +492,16 @@ def _main() -> None:
             return
 
         print_kv_table(
-            f"ETL Summary ({elapsed:.1f}s)",
+            f"ETL Summary ({format_duration(elapsed)})",
             [
-                ("Discovered", res.discovered_files),
-                ("Processed", res.processed_files),
-                ("Skipped (unchanged)", res.skipped_unchanged_files),
-                ("Scanned / empty (needs OCR)", res.scanned_empty_files),
-                ("Noisy callouts dropped", res.dropped_noisy_callouts),
-                ("Unauthorized (401/403)", res.unauthorized_count),
-                ("Failed", res.failed_files),
-                ("Limitations logged", res.limitations_logged),
+                ("Discovered", f"{res.discovered_files:,}"),
+                ("Processed", f"{res.processed_files:,}"),
+                ("Skipped (unchanged)", f"{res.skipped_unchanged_files:,}"),
+                ("Scanned / empty (needs OCR)", f"{res.scanned_empty_files:,}"),
+                ("Noisy callouts dropped", f"{res.dropped_noisy_callouts:,}"),
+                ("Unauthorized (401/403)", f"{res.unauthorized_count:,}"),
+                ("Failed", f"{res.failed_files:,}"),
+                ("Limitations logged", f"{res.limitations_logged:,}"),
             ],
         )
         if res.unauthorized_targets:
@@ -444,29 +585,29 @@ def _main() -> None:
         )
         return
 
-    timing_parts = [f"{k}={v:.1f}s" for k, v in stats.stage_timings.items()]
-    summary_rows: list[tuple[str, object]] = [("Total runtime", f"{elapsed:.1f}s")]
-    if timing_parts:
-        summary_rows.append(("Stage timings", " | ".join(timing_parts)))
+    summary_rows: list[tuple[str, object]] = [("Total runtime", format_duration(elapsed))]
+    for stage_name, stage_secs in stats.stage_timings.items():
+        label = stage_name.replace("_", " ").capitalize()
+        summary_rows.append((f"  Stage · {label}", format_duration(stage_secs)))
     summary_rows.extend(
         [
             (
                 "Discovered / loaded docs",
-                f"{stats.discovered_files or stats.total_docs} / {stats.total_docs}",
+                f"{stats.discovered_files or stats.total_docs:,} / {stats.total_docs:,}",
             ),
-            ("Newly indexed", stats.indexed_docs),
+            ("Newly indexed", f"{stats.indexed_docs:,}"),
             (
                 "Skipped (unchanged / duplicate / archive)",
-                f"{stats.skipped_unchanged} / {stats.skipped_duplicate} / {stats.skipped_archive}",
+                f"{stats.skipped_unchanged:,} / {stats.skipped_duplicate:,} / {stats.skipped_archive:,}",
             ),
-            ("Scanned / empty", f"{stats.scanned_empty_docs} / {stats.skipped_empty}"),
-            ("Unauthorized (401/403)", stats.unauthorized_count),
-            ("Failed", stats.failed_docs),
-            ("Noisy callouts dropped", stats.dropped_noisy_callouts),
-            ("New parent / child chunks", f"{stats.total_parents} / {stats.total_children}"),
+            ("Scanned / empty", f"{stats.scanned_empty_docs:,} / {stats.skipped_empty:,}"),
+            ("Unauthorized (401/403)", f"{stats.unauthorized_count:,}"),
+            ("Failed", f"{stats.failed_docs:,}"),
+            ("Noisy callouts dropped", f"{stats.dropped_noisy_callouts:,}"),
+            ("New parent / child chunks", f"{stats.total_parents:,} / {stats.total_children:,}"),
             (
                 f"Qdrant totals ({args.qdrant_path})",
-                f"{counts['documents']} docs / {counts['parent_chunks']} parents / {counts['child_chunks']} children",
+                f"{counts['documents']:,} docs / {counts['parent_chunks']:,} parents / {counts['child_chunks']:,} children",
             ),
         ]
     )

@@ -17,6 +17,7 @@ from scripts._cli import (
     clean_preview,
     ensure_qdrant_ready,
     err_console,
+    format_duration,
     out_console,
     run_cli,
     setup_cli_logging,
@@ -27,6 +28,15 @@ from scripts._cli import (
 def _mean_metric(results: list[dict], key: str) -> float | None:
     vals = [float(r[key]) for r in results if r.get(key) is not None]
     return (sum(vals) / len(vals)) if vals else None
+
+
+def _fmt_pct(val: float | None, *, bold: bool = False) -> str:
+    if val is None:
+        return "[dim]-[/dim]"
+    pct = f"{val * 100:.1f}%"
+    style = "green" if val >= 0.8 else ("yellow" if val >= 0.5 else "red")
+    prefix = f"bold {style}" if bold else style
+    return f"[{prefix}]{pct}[/{prefix}]"
 
 
 def _main() -> None:
@@ -104,32 +114,33 @@ def _main() -> None:
         )
         return
 
+    zero_cit = sum(1 for row in results if not row.get("citations"))
     tbl = Table(
-        title=f"Evaluation Results ({len(results)} questions in {elapsed:.1f}s)",
+        title=f"Evaluation Results ({len(results)} questions in {format_duration(elapsed)})",
         header_style="bold cyan",
     )
     tbl.add_column("#", justify="right", width=3)
-    tbl.add_column("Question")
+    tbl.add_column("Question", no_wrap=True, overflow="ellipsis")
     tbl.add_column("Citations", justify="right", width=9)
-    tbl.add_column("Precision", justify="right", style="green", width=10)
-    tbl.add_column("Recall", justify="right", style="cyan", width=10)
+    tbl.add_column("Precision", justify="right", width=10)
+    tbl.add_column("Recall", justify="right", width=10)
     for idx, row in enumerate(results, start=1):
-        prec = f"{row['citation_precision']:.2f}" if row["citation_precision"] is not None else "-"
-        rec = f"{row['source_recall']:.2f}" if row["source_recall"] is not None else "-"
+        n_cit = len(row["citations"])
+        cit_str = f"[red]{n_cit}[/red]" if n_cit == 0 else str(n_cit)
         tbl.add_row(
             str(idx),
             clean_preview(str(row["question"]), 60),
-            str(len(row["citations"])),
-            prec,
-            rec,
+            cit_str,
+            _fmt_pct(row["citation_precision"]),
+            _fmt_pct(row["source_recall"]),
         )
     tbl.add_section()
     tbl.add_row(
         "",
         "[bold]Mean[/bold]",
-        "",
-        f"[bold]{mean_prec:.2f}[/bold]" if mean_prec is not None else "-",
-        f"[bold]{mean_rec:.2f}[/bold]" if mean_rec is not None else "-",
+        f"[dim]{zero_cit} empty[/dim]" if zero_cit else "[green]all cited[/green]",
+        _fmt_pct(mean_prec, bold=True),
+        _fmt_pct(mean_rec, bold=True),
     )
     out_console.print(tbl)
     err_console.print(f"[dim]Saved detailed results -> {args.output}[/dim]")

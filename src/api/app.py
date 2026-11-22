@@ -32,15 +32,50 @@ async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
             _get_pipeline_and_repo.cache_clear()
 
 
-app = FastAPI(title="Ingenium RAG API", version="0.3.0", lifespan=_lifespan)
+_TAGS_METADATA = [
+    {
+        "name": "Health",
+        "description": "Service liveness check.",
+    },
+    {
+        "name": "RAG Query",
+        "description": "Hybrid dense + sparse retrieval, cross-encoder reranking, and citation-grounded answering.",
+    },
+]
+
+app = FastAPI(
+    title="Ingenium RAG API",
+    description=(
+        "Parent-Child Hybrid RAG service for engineering and construction documents "
+        "(`BAAI/bge-m3` dense + sparse RRF search, `BAAI/bge-reranker-v2-m3` reranking, "
+        "and metadata filtering on `project`, `building`, and `phase`)."
+    ),
+    version="0.3.0",
+    openapi_tags=_TAGS_METADATA,
+    lifespan=_lifespan,
+)
 
 
-@app.get("/health")
+@app.get(
+    "/health",
+    tags=["Health"],
+    summary="Health check",
+    description="Returns `{status: 'ok'}` when the FastAPI service is running.",
+)
 def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.post("/v1/query", response_model=QueryResponse)
+@app.post(
+    "/v1/query",
+    response_model=QueryResponse,
+    tags=["RAG Query"],
+    summary="Query the RAG index",
+    description=(
+        "Runs hybrid dense + sparse RRF retrieval over local Qdrant, reranks candidate "
+        "parent chunks with BGE-M3, and returns a grounded answer with document citations."
+    ),
+)
 def query(
     request: QueryRequest,
     pipeline: RAGPipeline = Depends(get_pipeline),

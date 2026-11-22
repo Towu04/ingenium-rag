@@ -90,6 +90,35 @@ def clean_preview(text: str, max_chars: int = 360) -> str:
     return f"{clipped or cleaned[:max_chars]}..."
 
 
+def format_duration(seconds: float) -> str:
+    """Format elapsed seconds into a compact human-readable duration."""
+    if seconds < 60:
+        return f"{seconds:.1f}s"
+    total = int(round(seconds))
+    hours, rem = divmod(total, 3600)
+    minutes, secs = divmod(rem, 60)
+    if hours:
+        return f"{hours}h {minutes:02d}m {secs:02d}s"
+    return f"{minutes}m {secs:02d}s"
+
+
+def format_page_ranges(pages: Sequence[int]) -> str:
+    """Collapse sorted page numbers into compact ranges (e.g. [1, 2, 3, 5] -> '1-3, 5')."""
+    unique = sorted({int(p) for p in pages})
+    if not unique:
+        return "-"
+    ranges: list[str] = []
+    start = prev = unique[0]
+    for p in unique[1:]:
+        if p == prev + 1:
+            prev = p
+        else:
+            ranges.append(f"{start}-{prev}" if start != prev else str(start))
+            start = prev = p
+    ranges.append(f"{start}-{prev}" if start != prev else str(start))
+    return ", ".join(ranges)
+
+
 def format_friendly_error(exc: BaseException) -> str:
     """Map expected user/environment exceptions to concise, actionable messages."""
     if isinstance(exc, CLIError):
