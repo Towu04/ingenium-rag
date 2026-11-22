@@ -16,3 +16,10 @@ build/
 Emergent_Test_Questions.xlsx
 
 raw_data/*
+.vscode/
+
+
+groundtruth.json
+placeholder_testquestions_contexts.json
+
+deploy_on_Azure.bicep
