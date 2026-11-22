@@ -102,9 +102,9 @@ def _write_parsed_doc_fixtures(base_dir: Path) -> Path:
         ],
         metadata=DocumentMetadata(
             source_path="General/05_Uitvoering/Brandpreventieverslag.pdf",
-            sharepoint_url="https://ingeniumnv.sharepoint.com/sites/06038004-INT/Brandpreventieverslag.pdf",
-            project="06038.004",
-            building="Blok P - Blok L - Spoed",
+            sharepoint_url="https://company.sharepoint.com/sites/12345001-INT/Brandpreventieverslag.pdf",
+            project="12345.001",
+            building="Blok A - Blok C - West Wing",
             phase="Uitvoering",
         ),
     )
@@ -130,7 +130,7 @@ def _write_parsed_doc_fixtures(base_dir: Path) -> Path:
         ],
         metadata=DocumentMetadata(
             source_path="General/02_Aanbesteding/Toestellenlijst_HVAC.xlsx",
-            project="06038.004",
+            project="12345.001",
             building="Blok A - Operatiekwartier",
             phase="Aanbesteding",
         ),
@@ -166,8 +166,8 @@ def test_end_to_end_pipeline_and_evaluation(tmp_path: Path) -> None:
 
         ans = rag.run(
             "Welke brandwerende deur is vereist naar het trappenhuis?",
-            project="06038.004",
-            building="Blok L",
+            project="12345.001",
+            building="Blok C",
             phase="Uitvoering",
         )
         assert "EI1 30" in ans.text
@@ -185,7 +185,7 @@ def test_end_to_end_pipeline_and_evaluation(tmp_path: Path) -> None:
             [
                 {
                     "question": "Welke brandwerende deur EI1 30 is vereist?",
-                    "building": "Blok L",
+                    "building": "Blok C",
                     "expected_sources": ["General/05_Uitvoering/Brandpreventieverslag.pdf"],
                 }
             ],
@@ -216,8 +216,8 @@ def test_fastapi_health_and_query_endpoint(tmp_path: Path) -> None:
                 "/v1/query",
                 json={
                     "query": "brandwerende deur EI1 30",
-                    "project": "06038.004",
-                    "building": "Blok L",
+                    "project": "12345.001",
+                    "building": "Blok C",
                 },
             )
             assert resp.status_code == 200
@@ -299,11 +299,11 @@ def test_retrieve_with_trace_reports_filters_funnel_and_child_text(tmp_path: Pat
             rerank_k=3,
         )
         trace = rag.retrieve_with_trace(
-            "Welke brandwerende deur EI1 30 in Blok L?",
+            "Welke brandwerende deur EI1 30 in Blok C?",
             auto_filter=True,
         )
-        assert trace.auto_filters.get("building") == "Blok L"
-        assert trace.applied_filters.get("building") == "Blok L"
+        assert trace.auto_filters.get("building") == "Blok C"
+        assert trace.applied_filters.get("building") == "Blok C"
         assert trace.hybrid_child_hits >= 1
         assert trace.deduplicated_parents >= 1
         assert trace.reranked_kept == len(trace.results)
@@ -428,3 +428,80 @@ def test_ingest_sharepoint_indexes_incrementally_per_site(tmp_path: Path, monkey
         assert site1_indexed_before_site2["value"] is True
         assert stats.indexed_docs == 2
         assert repo.collection_counts()["documents"] == 2
+
+
+def test_indexing_pipeline_deduplicates_identical_content_hash_across_paths() -> None:
+    doc_a = ParsedDoc(
+        document_id="copy-a",
+        content_hash="same-sha256-xyz",
+        markdown="Identical spec",
+        sections=[
+            ParsedSection(
+                text="Brandwerende deur EI1 30 volgens bestek HVAC.",
+                page_numbers=[1],
+                section_header="1. Deuren",
+            )
+        ],
+        metadata=DocumentMetadata(source_path="04_Prijsvraag/HVAC/Bestek.pdf", project="10001"),
+    )
+    doc_b = ParsedDoc(
+        document_id="copy-b",
+        content_hash="same-sha256-xyz",
+        markdown="Identical spec",
+        sections=[
+            ParsedSection(
+                text="Brandwerende deur EI1 30 volgens bestek HVAC.",
+                page_numbers=[1],
+                section_header="1. Deuren",
+            )
+        ],
+        metadata=DocumentMetadata(
+            source_path="04_Prijsvraag/publicatie/Bestek.pdf", project="10001"
+        ),
+    )
+    embedder = _FakeEmbedder()
+    chunker = ParentChildChunker(parent_size=200, child_size=80, child_overlap=10)
+
+    with LocalHybridRepository(path=":memory:") as repo:
+        indexer = IndexingPipeline(repository=repo, embedder=embedder, chunker=chunker)
+        stats = indexer.index_documents([doc_a, doc_b])
+        assert stats.indexed_docs == 1
+        assert stats.skipped_duplicate == 1
+        assert repo.collection_counts()["documents"] == 1
+
+        # A subsequent run with yet another copy of the same hash also skips via Qdrant check
+        doc_c = doc_b.model_copy(update={"document_id": "copy-c"})
+        stats2 = indexer.index_documents([doc_c])
+        assert stats2.indexed_docs == 0
+        assert stats2.skipped_duplicate == 1
+
+
+def test_rag_pipeline_low_memory_releases_embedder_before_loading_reranker(tmp_path: Path) -> None:
+    processed_dir = _write_parsed_doc_fixtures(tmp_path / "low_mem_processed")
+    embedder = _FakeEmbedder()
+    chunker = ParentChildChunker(parent_size=200, child_size=80, child_overlap=10)
+    events: list[str] = []
+
+    with LocalHybridRepository(path=":memory:") as repo:
+        IndexingPipeline(repository=repo, embedder=embedder, chunker=chunker).ingest_processed_dir(
+            processed_dir, use_manifest=False
+        )
+        searcher = Searcher(embedder=embedder, repository=repo)
+
+        def _make_reranker() -> _FakeReranker:
+            # Embedder must already be released before the reranker is constructed!
+            assert searcher.embedder is None
+            events.append("reranker_loaded_after_embedder_freed")
+            return _FakeReranker()
+
+        rag = RAGPipeline(
+            searcher=searcher,
+            reranker=None,
+            reranker_factory=_make_reranker,
+            low_memory=True,
+            generator=GroundedGenerator(llm=ExtractiveStubLLM()),
+        )
+        assert rag.reranker is None
+        trace = rag.retrieve_with_trace("brandwerende deur EI1 30")
+        assert events == ["reranker_loaded_after_embedder_freed"]
+        assert len(trace.results) >= 1

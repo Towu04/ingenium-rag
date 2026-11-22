@@ -14,9 +14,9 @@ def preload_real_tokenizer() -> None:
 @pytest.fixture
 def base_metadata() -> DocumentMetadata:
     return DocumentMetadata(
-        source_path="AZ_Sint-Jan/Blok_Noord/Uitvoering/HVAC_Bestek.pdf",
-        sharepoint_url="https://ingenium.sharepoint.com/sites/az-sint-jan/HVAC_Bestek.pdf",
-        project="PRJ-2026-AZSJ",
+        source_path="Campus_Noord/Blok_Noord/Uitvoering/HVAC_Bestek.pdf",
+        sharepoint_url="https://company.sharepoint.com/sites/campus-noord/HVAC_Bestek.pdf",
+        project="PRJ-2026-CN",
         building="Blok Noord",
         phase="Uitvoering",
         extra={"discipline": "HVAC"},
@@ -222,8 +222,8 @@ def test_oversized_single_table_row_is_subsplit_with_repeated_headers(
 def test_embedding_text_includes_file_stem_and_omits_excessive_buildings() -> None:
     meta_many = DocumentMetadata(
         source_path="General/05_Uitvoering/Campus_Overzicht_HVAC.pdf",
-        project="06038.004",
-        building="Blok A - Blok B - Blok L - Spoed",
+        project="12345.001",
+        building="Blok A - Blok B - Blok C - Zone Oost",
         phase="Uitvoering",
     )
     doc = ParsedDoc(
@@ -236,5 +236,120 @@ def test_embedding_text_includes_file_stem_and_omits_excessive_buildings() -> No
     _, children = ParentChildChunker().chunk(doc)
     emb_text = children[0].embedding_text or ""
     assert "File: Campus_Overzicht_HVAC" in emb_text
-    assert "Project: 06038.004" in emb_text
+    assert "Project: 12345.001" in emb_text
     assert "Building:" not in emb_text
+
+
+def test_wide_markdown_table_omits_child_header_repetition_to_prevent_explosion(
+    base_metadata: DocumentMetadata,
+) -> None:
+    cols = [f"M{i:02d}_EUR" for i in range(1, 27)]
+    header = "| " + " | ".join(cols) + " |"
+    sep = "| " + " | ".join([":---"] * len(cols)) + " |"
+    rows = ["| " + " | ".join(f"{r * 10 + c}" for c in range(1, 27)) + " |" for r in range(1, 41)]
+    table_md = "\n".join([header, sep, *rows])
+    doc = ParsedDoc(
+        document_id="doc-wide-xlsx",
+        content_hash="h-wide",
+        markdown=table_md,
+        sections=[
+            ParsedSection(
+                text=table_md,
+                page_numbers=[],
+                section_header="Posten (Rows 3-42)",
+                block_type="table",
+                sheet_name="Posten",
+            )
+        ],
+        metadata=base_metadata,
+    )
+    chunker = ParentChildChunker(
+        parent_size=1000, parent_overlap=0, child_size=250, child_overlap=40
+    )
+    parents, children = chunker.chunk(doc)
+
+    # Header (~200+ tokens) still fits comfortably in parent chunks (<= 400 tokens)
+    assert len(parents) >= 2
+    for p in parents:
+        assert p.text.splitlines()[:2] == [header, sep]
+
+    # Child chunks skip repeating the wide header so rows pack cleanly instead of exploding
+    assert len(children) < 30
+    assert any(not c.text.startswith(header) for c in children)
+
+
+def test_max_child_chunks_per_doc_truncates_cleanly_at_parent_boundary(
+    base_metadata: DocumentMetadata, caplog
+) -> None:
+    import logging
+
+    sections = [
+        ParsedSection(
+            text=("Brandwerende deuren EI1 30 moeten zelfsluitend zijn volgens het bestek. " * 25),
+            page_numbers=[i],
+            section_header=f"{i}. Afdeling {i}",
+        )
+        for i in range(1, 20)
+    ]
+    doc = ParsedDoc(
+        document_id="doc-capped",
+        content_hash="h-cap",
+        markdown="",
+        sections=sections,
+        metadata=base_metadata,
+    )
+    chunker = ParentChildChunker(
+        parent_size=250, child_size=80, child_overlap=10, max_child_chunks_per_doc=12
+    )
+    with caplog.at_level(logging.WARNING):
+        parents, children = chunker.chunk(doc)
+
+    assert len(parents) >= 1
+    assert len(children) <= 12
+    parent_ids = {p.id for p in parents}
+    child_ids = {c.id for c in children}
+    assert all(c.parent_id in parent_ids for c in children)
+    assert all(cid in child_ids for p in parents for cid in p.child_ids)
+    assert any("max_child_chunks_per_doc=12" in rec.message for rec in caplog.records)
+
+
+def test_fast_approx_token_chunking_stays_within_embedding_max_length(
+    base_metadata: DocumentMetadata,
+) -> None:
+    prose = (
+        "De luchtgroep LBK-02 levert een nominaal luchtdebiet van 18.500 m3/h met "
+        "warmteterugwinning (rendement minimaal 78%) en voldoet aan NBN EN 13779. " * 30
+    )
+    table = "\n".join(
+        [
+            "| Unit | Zone | Debiet (m3/h) | Drukval (Pa) |",
+            "| :--- | :--- | :--- | :--- |",
+            *[
+                f"| LBK-{i:02d} | Blok A | {10000 + i * 500} | {350 + i * 10} |"
+                for i in range(1, 30)
+            ],
+        ]
+    )
+    doc = ParsedDoc(
+        document_id="doc-fast-tok",
+        content_hash="h-fast",
+        markdown="",
+        sections=[
+            ParsedSection(text=prose, page_numbers=[1], section_header="1. Ventilatie"),
+            ParsedSection(
+                text=table,
+                page_numbers=[2],
+                section_header="2. Toestellenlijst",
+                block_type="table",
+            ),
+        ],
+        metadata=base_metadata,
+    )
+    chunker = ParentChildChunker(parent_size=1000, child_size=250, child_overlap=40)
+    _, children = chunker.chunk(doc)
+    # Chunking itself must not require loading the HuggingFace tokenizer
+    assert chunker._tokenizer is None
+    assert len(children) >= 4
+    # Verify real BGE-M3 token lengths stay comfortably under embedding_max_length=320
+    real_lens = [chunker._token_len(c.embedding_text or c.text) for c in children]
+    assert max(real_lens) <= 320

@@ -23,7 +23,7 @@ def test_docx_extractor_emits_parsed_doc_and_ignores_toc_lines(tmp_path: Path) -
     doc = docx.Document()
     doc.add_paragraph("1.\tPerceel HVAC\t4")
     doc.add_heading("1. Algemene Voorwaarden", level=1)
-    doc.add_paragraph("Technische specificaties voor AZ Sint-Jan Brugge.")
+    doc.add_paragraph("Technische specificaties voor Demo Project.")
     doc.add_heading("3.2 Luchtgroepen", level=2)
     table = doc.add_table(rows=2, cols=3)
     for idx, val in enumerate(["Unit ID", "Building", "Airflow (m3/h)"]):
@@ -34,7 +34,7 @@ def test_docx_extractor_emits_parsed_doc_and_ignores_toc_lines(tmp_path: Path) -
 
     parsed = DocxExtractor().extract(
         docx_path,
-        relative_path="PRJ_104_AZ_Sint_Jan/02_Aanbesteding/Blok_A/Bestek_HVAC_Blok_A.docx",
+        relative_path="PRJ_104_Demo_Project/02_Aanbesteding/Blok_A/Bestek_HVAC_Blok_A.docx",
     )
     assert isinstance(parsed, ParsedDoc)
     assert parsed.metadata.project == "PRJ_104"
@@ -50,13 +50,13 @@ def test_docx_extractor_emits_parsed_doc_and_ignores_toc_lines(tmp_path: Path) -
 
 
 def test_xlsx_extractor_separates_kv_preamble_and_skips_unused_wb_templates(tmp_path: Path) -> None:
-    xlsx_path = tmp_path / "06038.004_E_OVERZICHT_WIJZIGINGSBERICHTEN.xlsx"
+    xlsx_path = tmp_path / "12345.001_E_OVERZICHT_WIJZIGINGSBERICHTEN.xlsx"
     wb = openpyxl.Workbook()
     ws = wb.active
     assert ws is not None
     ws.title = "Samenvatting"
     ws.append(["Overzicht wijzigingsberichten"])
-    ws.append(["Projectnummer:", "6038004"])
+    ws.append(["Projectnummer:", "12345001"])
     ws.append(["Naam wijzigingsbericht", "Beschrijving", "Bedrag", "Advies ING"])
     ws.append(["WB E1", "Branddetectie werf", "855.59", "Goedgekeurd"])
     ws.append(["0", "0", "0", ""])
@@ -67,7 +67,7 @@ def test_xlsx_extractor_separates_kv_preamble_and_skips_unused_wb_templates(tmp_
     wb.save(xlsx_path)
 
     parsed = XlsxExtractor().extract(xlsx_path)
-    assert parsed.metadata.project == "06038.004"
+    assert parsed.metadata.project == "12345.001"
     sheets = {s.sheet_name for s in parsed.sections}
     assert "Samenvatting" in sheets
     assert "x17" not in sheets
@@ -90,7 +90,7 @@ def test_pdf_extractor_rejects_postal_code_heading_strips_footers_and_coalesces_
     p1 = doc.new_page(width=595, height=842)
     p1.insert_text(
         (50, 70),
-        "Stadsbestuur Brugge\n8000 Brugge\n1. Brandpreventie\nEerste paragraaf op pagina een.\nzijde 1 / 2",
+        "Stadsbestuur Stad\n8000 Stad\n1. Brandpreventie\nEerste paragraaf op pagina een.\nzijde 1 / 2",
         fontsize=11,
     )
     p2 = doc.new_page(width=595, height=842)
@@ -101,7 +101,7 @@ def test_pdf_extractor_rejects_postal_code_heading_strips_footers_and_coalesces_
     assert len(inspect_pdf_document(pdf_path)) == 2
     parsed = PdfExtractor().extract(pdf_path)
     headings = [s.section_header for s in parsed.sections]
-    assert "8000. Brugge" not in headings
+    assert "8000. Stad" not in headings
     assert all("zijde " not in s.text for s in parsed.sections)
 
     sec1 = next(s for s in parsed.sections if s.section_header == "1. Brandpreventie")
@@ -158,7 +158,7 @@ def test_docx_deduplicates_horizontally_merged_cells_and_infers_cover_building(
     docx_path = tmp_path / "Verslag_Algemeen.docx"
     doc = docx.Document()
     doc.add_heading("1. Projectomschrijving", level=1)
-    doc.add_paragraph("Project 12345.001 — Renovatie L-blok en Vleugel Noord.")
+    doc.add_paragraph("Project 12345.001 — Renovatie C-blok en Vleugel Noord.")
 
     table = doc.add_table(rows=4, cols=3)
     # Row 0: full-width merged title banner
@@ -168,7 +168,7 @@ def test_docx_deduplicates_horizontally_merged_cells_and_infers_cover_building(
     for idx, val in enumerate(["Unit", "Zone", "Debiet"]):
         table.rows[1].cells[idx].text = val
     # Row 2: normal row
-    for idx, val in enumerate(["LBK-01", "Blok L", "12500"]):
+    for idx, val in enumerate(["LBK-01", "Blok C", "12500"]):
         table.rows[2].cells[idx].text = val
     # Row 3: horizontally merged col 0+1
     merged_sub = table.rows[3].cells[0].merge(table.rows[3].cells[1])
@@ -177,7 +177,7 @@ def test_docx_deduplicates_horizontally_merged_cells_and_infers_cover_building(
     doc.save(str(docx_path))
 
     parsed = DocxExtractor().extract(docx_path, relative_path="General/05_Uitvoering/Verslag.docx")
-    assert parsed.metadata.buildings == ["Blok L", "Vleugel Noord"]
+    assert parsed.metadata.buildings == ["Blok C", "Vleugel Noord"]
     assert "cover_page_building" in parsed.metadata.extra["resolution_sources"]
 
     tables = [s for s in parsed.sections if s.block_type == "table"]
@@ -204,3 +204,32 @@ def test_pdf_digital_cover_page_building_fallback(tmp_path: Path) -> None:
     parsed = PdfExtractor().extract(pdf_path, relative_path="General/05_Uitvoering/Verslag.pdf")
     assert parsed.metadata.buildings == ["Blok A", "Gebouw 2"]
     assert "cover_page_building" in parsed.metadata.extra["resolution_sources"]
+
+
+def test_xlsx_extractor_truncates_large_sheet_early_and_logs_limitation(tmp_path: Path) -> None:
+    from etl.quality import QualityLogger
+
+    xlsx_path = tmp_path / "telemetry_readings.xlsx"
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    assert ws is not None
+    ws.title = "Kwartuurwaarden"
+    ws.append(["Timestamp", "ActivePower_kW", "ReactivePower_kvar"])
+    for i in range(1, 51):
+        ws.append([f"2024-01-01 00:{i:02d}", 100.0 + i, 12.5])
+    wb.save(xlsx_path)
+
+    parsed = XlsxExtractor(max_rows_per_sheet=10).extract(
+        xlsx_path, relative_path="General/00_Berekeningen/telemetry_readings.xlsx"
+    )
+    assert parsed.metadata.extra.get("xlsx_truncated_sheets") == ["Kwartuurwaarden"]
+    table_sec = next(s for s in parsed.sections if s.block_type == "table")
+    data_lines = [ln for ln in table_sec.text.splitlines() if ln.startswith("| 2024-01-01")]
+    assert len(data_lines) == 10
+    assert "truncated to the first 10 data rows" in table_sec.text
+
+    qlog = QualityLogger(report_path=tmp_path / "limitations.jsonl")
+    rec = qlog.evaluate_and_log(parsed)
+    assert rec is not None
+    assert rec.limitation_type == "xlsx_sheet_truncated"
+    assert qlog.read_records()[0].limitation_type == "xlsx_sheet_truncated"

@@ -122,23 +122,23 @@ def test_reranker_enables_fp16_on_mps_and_formats_file_tag(
         text="Spec tekst",
         section_header="3.1 Ventilatie",
         metadata=DocumentMetadata(
-            source_path="General/05_Uitvoering/Bestek_HVAC_BlokL.pdf",
-            project="06038.004",
-            building="Blok A - Blok B - Blok L - Spoed",
+            source_path="General/05_Uitvoering/Bestek_HVAC_BlokC.pdf",
+            project="12345.001",
+            building="Blok A - Blok B - Blok C - Zone Oost",
         ),
     )
     formatted = BGEM3Reranker._format_passage(
         SearchResult(parent_chunk=parent, matched_child_id="p-meta:c0", score=0.5)
     )
-    assert "File: Bestek_HVAC_BlokL" in formatted
+    assert "File: Bestek_HVAC_BlokC" in formatted
     assert "Building:" not in formatted
 
 
 def test_query_filter_extracts_natural_and_explicit_filters() -> None:
     f1 = extract_metadata_filters(
-        "Wat is het debiet voor project 06038.004 in Blok L tijdens uitvoering?"
+        "Wat is het debiet voor project 12345.001 in Blok C tijdens uitvoering?"
     )
-    assert f1 == {"project": "06038.004", "building": "Blok L", "phase": "Uitvoering"}
+    assert f1 == {"project": "12345.001", "building": "Blok C", "phase": "Uitvoering"}
 
     f2 = extract_metadata_filters(
         "project:PRJ-2021-104 building:Blok A phase:Aanbesteding luchtgroepen"

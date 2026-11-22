@@ -14,9 +14,9 @@ from etl import (
 )
 
 
-def test_flagship_az_sint_jan_sample_path() -> None:
+def test_flagship_sample_path_metadata_resolution() -> None:
     sample_path = (
-        "PRJ_104_AZ_Sint_Jan/02_Aanbesteding/Blok_B_Operatiekwartier/Bestek_HVAC_Ventilatie.pdf"
+        "PRJ_104_Demo_Project/02_Aanbesteding/Blok_B_Operatiekwartier/Bestek_HVAC_Ventilatie.pdf"
     )
     result = MetadataMatcher().match(sample_path)
     assert result.project == "PRJ_104"
@@ -31,11 +31,11 @@ def test_unresolved_defaults_are_none_and_sharepoint_url_resolves_project() -> N
     assert (unresolved.project, unresolved.building, unresolved.phase) == (None, None, None)
 
     sp_url = (
-        "https://ingeniumnv.sharepoint.com/sites/06038004-INT/Shared%20Documents/"
+        "https://company.sharepoint.com/sites/12345001-INT/Shared%20Documents/"
         "General/00_Info/17-341-1883%20-%20Data%20sheets.pdf"
     )
     matched = matcher.match("General/00_Info/17-341-1883 - Data sheets.pdf", sharepoint_url=sp_url)
-    assert matched.project == "06038.004"
+    assert matched.project == "12345.001"
     assert "layer2_5_sharepoint_site_project" in matched.resolution_sources
 
 
@@ -43,16 +43,16 @@ def test_project_catalog_csv_loading_and_matching(tmp_path: Path) -> None:
     catalog_csv = tmp_path / "projects_catalog.csv"
     catalog_csv.write_text(
         "project_id;project_name;folder_name;sharepoint_url;building\n"
-        "PRJ-2021-104;AZ Sint-Jan Brugge - Renovatie OK;PRJ_104_AZ_Sint_Jan;"
-        "https://ingenium.sharepoint.com/sites/azsintjan/Shared%20Documents/PRJ_104_AZ_Sint_Jan;Blok B\n",
+        "PRJ-2021-104;Campus Noord - Renovatie OK;PRJ_104_Campus_Noord;"
+        "https://company.sharepoint.com/sites/campus-noord/Shared%20Documents/PRJ_104_Campus_Noord;Blok B\n",
         encoding="utf-8",
     )
     matcher = MetadataMatcher(catalog=ProjectCatalog.from_file(catalog_csv))
     matched = matcher.match(
-        "PRJ_104_AZ_Sint_Jan/02_Aanbesteding/Blok_B_Operatiekwartier/Bestek_HVAC_Ventilatie.pdf"
+        "PRJ_104_Campus_Noord/02_Aanbesteding/Blok_B_Operatiekwartier/Bestek_HVAC_Ventilatie.pdf"
     )
     assert matched.project == "PRJ-2021-104"
-    assert matched.project_name == "AZ Sint-Jan Brugge - Renovatie OK"
+    assert matched.project_name == "Campus Noord - Renovatie OK"
     assert "layer2_catalog" in matched.resolution_sources
 
 
@@ -69,7 +69,7 @@ def test_document_register_layer1_overrides_heuristics(tmp_path: Path) -> None:
     assert len(reg_index.load_register_file(reg_file)) == 1
 
     matched = MetadataMatcher(register_index=reg_index).match(
-        "PRJ_104_AZ_Sint_Jan/02_Aanbesteding/Blok_B/Bestek_HVAC_Ventilatie.pdf"
+        "PRJ_104_Campus_Noord/02_Aanbesteding/Blok_B/Bestek_HVAC_Ventilatie.pdf"
     )
     assert matched.building == "Blok C - Intensieve Zorgen"
     assert matched.phase == "Definitief Ontwerp"
@@ -83,7 +83,7 @@ def test_excel_document_register_with_header_offset(tmp_path: Path) -> None:
     ws = wb.active
     assert ws is not None
     ws.append(["INGENIUM NV - DOCUMENTENLIJST"])
-    ws.append(["Project:", "PRJ-104 AZ Sint-Jan Brugge"])
+    ws.append(["Project:", "PRJ-104 Campus Noord"])
     ws.append([])
     ws.append(["Doc_Nr", "Bestandsnaam", "Omschrijving", "Gebouw", "Fase", "Rev"])
     ws.append(
@@ -104,7 +104,7 @@ def test_excel_document_register_with_header_offset(tmp_path: Path) -> None:
 
     _, _, meta = MetadataMatcher(register_index=reg_index).build_document_metadata(
         file_path=xlsx_path,
-        relative_file_path="PRJ_104_AZ_Sint_Jan/Meetstaat_Luchtgroepen_OK.xlsx",
+        relative_file_path="PRJ_104_Campus_Noord/Meetstaat_Luchtgroepen_OK.xlsx",
         extraction_method=ExtractionMethod.OPENPYXL_TABLE,
     )
     assert meta.buildings == ["Blok B", "Operatiekwartier"]

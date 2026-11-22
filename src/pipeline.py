@@ -5,6 +5,7 @@ This is the ONLY library module that imports across stages (`etl`, `chunking`,
 isolated and testable in complete independence.
 """
 
+import gc
 import logging
 import time
 from collections.abc import Callable, Iterable, Sequence
@@ -58,6 +59,18 @@ class RerankerProtocol(Protocol):
 ProgressCallback = Callable[[str, int, int, str], None]
 
 
+def _release_memory() -> None:
+    """Reclaim Python objects and release cached Apple Silicon MPS memory between batches."""
+    gc.collect()
+    try:
+        import torch
+
+        if torch.backends.mps.is_available():
+            torch.mps.empty_cache()
+    except Exception:
+        pass
+
+
 @dataclass
 class IndexingStats:
     """Execution summary for an `IndexingPipeline` run."""
@@ -66,6 +79,8 @@ class IndexingStats:
     total_docs: int = 0
     indexed_docs: int = 0
     skipped_unchanged: int = 0
+    skipped_duplicate: int = 0
+    skipped_archive: int = 0
     skipped_empty: int = 0
     scanned_empty_docs: int = 0
     dropped_noisy_callouts: int = 0
@@ -142,6 +157,7 @@ class IndexingPipeline:
                 child_size=self._settings.child_size,
                 child_overlap=self._settings.child_overlap,
                 tokenizer=getattr(self._embedder, "tokenizer", None),
+                max_child_chunks_per_doc=self._settings.max_child_chunks_per_doc,
             )
         return self._chunker
 
@@ -165,6 +181,13 @@ class IndexingPipeline:
             on_progress("stage_start", chunk_stage, total_stages, "Chunking")
         t_chunk0 = time.perf_counter()
         pending_bundles: list[tuple[ParsedDoc, list[ParentChunk], list[ChildChunk]]] = []
+        indexed_hashes: set[str] = set()
+        if not force:
+            iter_docs = getattr(self.repository, "iter_documents", None)
+            if callable(iter_docs):
+                indexed_hashes = {
+                    str(d["content_hash"]) for d in iter_docs() if d.get("content_hash")
+                }
         if on_progress and docs_list:
             on_progress("bar_start", 0, len(docs_list), "Chunking documents")
 
@@ -190,6 +213,22 @@ class IndexingPipeline:
                         )
                     continue
 
+                if not force and doc.content_hash and doc.content_hash in indexed_hashes:
+                    stats.skipped_duplicate += 1
+                    logger.debug(
+                        "Skipping byte-identical duplicate '%s' (%s).",
+                        doc.metadata.source_path,
+                        doc.document_id,
+                    )
+                    if on_progress:
+                        on_progress(
+                            "bar_advance",
+                            idx,
+                            len(docs_list),
+                            f"duplicate {Path(doc.metadata.source_path).name}",
+                        )
+                    continue
+
                 parents, children = self.chunker.chunk(doc)
                 if not parents or not children:
                     stats.skipped_empty += 1
@@ -209,6 +248,8 @@ class IndexingPipeline:
                         )
                     continue
 
+                if doc.content_hash:
+                    indexed_hashes.add(doc.content_hash)
                 pending_bundles.append((doc, parents, children))
             except Exception:
                 stats.failed_docs += 1
@@ -326,6 +367,7 @@ class IndexingPipeline:
                 )
             buffer.clear()
             buffered_children = 0
+            _release_memory()
 
         for bundle in pending_bundles:
             buffer.append(bundle)
@@ -399,6 +441,7 @@ class IndexingPipeline:
         force_etl: bool = False,
         force_index: bool = False,
         drop_noisy_callouts: bool = True,
+        skip_archive_folders: bool | None = None,
         workers: int | None = None,
         on_progress: ProgressCallback | None = None,
     ) -> IndexingStats:
@@ -411,6 +454,7 @@ class IndexingPipeline:
             json_out_dir=out_base / "json",
             manifest_path=out_base / "manifest.json",
             drop_noisy_callouts=drop_noisy_callouts,
+            skip_archive_folders=skip_archive_folders,
         )
         if on_progress:
             on_progress("stage_start", 1, 4, "Discovery & Local Sync")
@@ -431,7 +475,7 @@ class IndexingPipeline:
                 4,
                 f"ETL Extraction done in {etl_elapsed:.1f}s "
                 f"({etl_res.processed_files} parsed, {etl_res.scanned_empty_files} scanned/empty, "
-                f"{etl_res.skipped_unchanged_files} unchanged)",
+                f"{etl_res.skipped_unchanged_files} unchanged, {etl_res.skipped_archive_files} archive)",
             )
         stats = self.ingest_processed_dir(
             out_base,
@@ -441,6 +485,7 @@ class IndexingPipeline:
             total_stages=4,
         )
         stats.discovered_files = etl_res.discovered_files
+        stats.skipped_archive = etl_res.skipped_archive_files
         stats.scanned_empty_docs = max(stats.scanned_empty_docs, etl_res.scanned_empty_files)
         stats.dropped_noisy_callouts = max(
             stats.dropped_noisy_callouts, etl_res.dropped_noisy_callouts
@@ -459,6 +504,7 @@ class IndexingPipeline:
         max_files: int | None = None,
         folder_prefix: str | None = None,
         drop_noisy_callouts: bool = True,
+        skip_archive_folders: bool | None = None,
         workers: int | None = None,
         on_progress: ProgressCallback | None = None,
     ) -> IndexingStats:
@@ -483,6 +529,7 @@ class IndexingPipeline:
             json_out_dir=out_base / "json",
             manifest_path=out_base / "manifest.json",
             drop_noisy_callouts=drop_noisy_callouts,
+            skip_archive_folders=skip_archive_folders,
         )
         base_connector = SharePointConnector.from_env(json_out_dir=out_base / "json")
         namespace_by_site = len(site_list) > 1
@@ -532,6 +579,7 @@ class IndexingPipeline:
             t_etl_total += site_etl_elapsed
 
             total_stats.discovered_files += etl_res.discovered_files
+            total_stats.skipped_archive += etl_res.skipped_archive_files
             total_scanned_empty += etl_res.scanned_empty_files
             total_dropped_callouts += etl_res.dropped_noisy_callouts
             total_stats.unauthorized_count += etl_res.unauthorized_count
@@ -544,7 +592,8 @@ class IndexingPipeline:
                     4,
                     f"Site [{s_idx}/{len(site_list)}] ETL done in {site_etl_elapsed:.1f}s "
                     f"({etl_res.processed_files} parsed, {etl_res.scanned_empty_files} scanned/empty, "
-                    f"{etl_res.skipped_unchanged_files} unchanged, {etl_res.unauthorized_count} unauthorized)",
+                    f"{etl_res.skipped_unchanged_files} unchanged, {etl_res.skipped_archive_files} archive, "
+                    f"{etl_res.unauthorized_count} unauthorized)",
                 )
 
             # Incrementally index this site's ParsedDocs right after ETL completes
@@ -571,6 +620,7 @@ class IndexingPipeline:
                 total_stats.total_docs += site_idx_stats.total_docs
                 total_stats.indexed_docs += site_idx_stats.indexed_docs
                 total_stats.skipped_unchanged += site_idx_stats.skipped_unchanged
+                total_stats.skipped_duplicate += site_idx_stats.skipped_duplicate
                 total_stats.skipped_empty += site_idx_stats.skipped_empty
                 total_stats.scanned_empty_docs += site_idx_stats.scanned_empty_docs
                 total_stats.dropped_noisy_callouts += site_idx_stats.dropped_noisy_callouts
@@ -581,6 +631,8 @@ class IndexingPipeline:
                     total_stats.stage_timings[k] = round(
                         total_stats.stage_timings.get(k, 0.0) + v, 2
                     )
+            del site_docs
+            _release_memory()
 
         total_stats.scanned_empty_docs = max(total_stats.scanned_empty_docs, total_scanned_empty)
         total_stats.dropped_noisy_callouts = max(
@@ -598,19 +650,29 @@ class RAGPipeline:
         searcher: Searcher,
         reranker: RerankerProtocol | None = None,
         generator: GroundedGenerator | None = None,
-        retrieve_k: int = 15,
+        retrieve_k: int = 10,
         child_candidate_limit: int = 80,
         rerank_k: int = 5,
+        *,
+        reranker_factory: Callable[[], RerankerProtocol] | None = None,
+        low_memory: bool = False,
     ) -> None:
         settings = get_settings()
         self.searcher = searcher
-        self.reranker: RerankerProtocol = reranker or BGEM3Reranker(
-            model_name=settings.reranker_model,
-            device=settings.device,
-            batch_size=settings.reranker_batch_size,
-            max_length=settings.reranker_max_length,
-            min_score=settings.reranker_min_score,
-        )
+        self._reranker_factory = reranker_factory
+        self._low_memory = low_memory
+        if reranker is not None:
+            self.reranker: RerankerProtocol | None = reranker
+        elif reranker_factory is not None:
+            self.reranker = None
+        else:
+            self.reranker = BGEM3Reranker(
+                model_name=settings.reranker_model,
+                device=settings.device,
+                batch_size=settings.reranker_batch_size,
+                max_length=settings.reranker_max_length,
+                min_score=settings.reranker_min_score,
+            )
         self.generator = generator or GroundedGenerator()
         self.retrieve_k = retrieve_k
         self.child_candidate_limit = child_candidate_limit
@@ -668,11 +730,19 @@ class RAGPipeline:
             fallback_unfiltered=used_only_inferred,
         )
 
+        if self._low_memory and candidates and self.reranker is None and self._reranker_factory:
+            # Release embedder before loading the 568M reranker so both models never share 8 GB RAM.
+            self.searcher.embedder = None  # type: ignore[assignment]
+            _release_memory()
+            self.reranker = self._reranker_factory()
+
         eff_min_score = (
             min_score if min_score is not None else float(getattr(self.reranker, "min_score", 0.0))
         )
         if not candidates:
             all_kept: list[SearchResult] = []
+        elif self.reranker is None:
+            all_kept = list(candidates)
         elif min_score is not None:
             all_kept = self.reranker.rerank(
                 query, candidates, top_k=len(candidates), min_score=min_score
@@ -763,8 +833,13 @@ def build_rag_pipeline(
     device: str | None = None,
     settings: Settings | None = None,
     on_progress: ProgressCallback | None = None,
+    low_memory: bool = False,
 ) -> tuple[RAGPipeline, LocalHybridRepository]:
-    """Build a ready-to-use `(RAGPipeline, LocalHybridRepository)` pair (caller should close repo)."""
+    """Build a ready-to-use `(RAGPipeline, LocalHybridRepository)` pair (caller should close repo).
+
+    When `low_memory=True` (used by one-shot CLI queries), `BGEM3Reranker` is loaded lazily only
+    after the query embedder has been released so both 568M models never coexist in 8 GB RAM.
+    """
     cfg = settings or get_settings()
     eff_dev = detect_device(device or cfg.device)
     repo = LocalHybridRepository(path=str(qdrant_path or cfg.qdrant_path))
@@ -786,27 +861,32 @@ def build_rag_pipeline(
             f"{cfg.embedding_model} ready on {eff_dev} in {time.perf_counter() - t0:.1f}s",
         )
 
-    if on_progress:
-        on_progress("model_load_start", 0, 0, f"Loading {cfg.reranker_model} on {eff_dev}...")
-    t1 = time.perf_counter()
-    reranker = BGEM3Reranker(
-        model_name=cfg.reranker_model,
-        device=eff_dev,
-        batch_size=cfg.reranker_batch_size,
-        max_length=cfg.reranker_max_length,
-        min_score=cfg.reranker_min_score,
-    )
-    if on_progress:
-        on_progress(
-            "model_load_done",
-            0,
-            0,
-            f"{cfg.reranker_model} ready on {eff_dev} in {time.perf_counter() - t1:.1f}s",
+    def _load_reranker() -> BGEM3Reranker:
+        if on_progress:
+            on_progress("model_load_start", 0, 0, f"Loading {cfg.reranker_model} on {eff_dev}...")
+        t1 = time.perf_counter()
+        rr = BGEM3Reranker(
+            model_name=cfg.reranker_model,
+            device=eff_dev,
+            batch_size=cfg.reranker_batch_size,
+            max_length=cfg.reranker_max_length,
+            min_score=cfg.reranker_min_score,
         )
+        if on_progress:
+            on_progress(
+                "model_load_done",
+                0,
+                0,
+                f"{cfg.reranker_model} ready on {eff_dev} in {time.perf_counter() - t1:.1f}s",
+            )
+        return rr
 
+    reranker = None if low_memory else _load_reranker()
     pipeline = RAGPipeline(
         searcher=Searcher(embedder=embedder, repository=repo),
         reranker=reranker,
+        reranker_factory=_load_reranker if low_memory else None,
+        low_memory=low_memory,
         generator=GroundedGenerator(llm=build_llm_client(cfg)),
         retrieve_k=cfg.retrieve_k,
         child_candidate_limit=cfg.child_candidate_limit,

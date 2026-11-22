@@ -1,5 +1,6 @@
-"""Token-accurate, table-aware Parent-Child chunker aligned with BAAI/bge-m3."""
+"""Fast, table-aware Parent-Child chunker calibrated for BAAI/bge-m3."""
 
+import logging
 import re
 from collections.abc import Sequence
 from functools import lru_cache
@@ -8,9 +9,19 @@ from pathlib import Path
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from transformers import AutoTokenizer, PreTrainedTokenizerBase
 
+from config import get_settings
 from domain import ChildChunk, ParentChunk, ParsedDoc, ParsedSection
 
+logger = logging.getLogger(__name__)
+
 _MD_TABLE_SEP_RE = re.compile(r"^\|\s*:?-{2,}:?\s*(?:\|\s*:?-{2,}:?\s*)+\|?$")
+
+
+def approx_token_len(text: str) -> int:
+    """Fast pure-Python token-length estimate calibrated for BGE-M3 prose and Markdown tables."""
+    if not text:
+        return 0
+    return max(1, (len(text) + 2) // 3 + text.count("|"))
 
 
 @lru_cache(maxsize=2)
@@ -40,32 +51,46 @@ class ParentChildChunker:
         child_size: int = 250,
         child_overlap: int = 40,
         tokenizer: PreTrainedTokenizerBase | None = None,
+        max_child_chunks_per_doc: int | None = None,
     ) -> None:
         if parent_size <= 0 or child_size <= 0 or child_size > parent_size:
             raise ValueError("Chunk sizes must be positive and child_size <= parent_size.")
         if parent_overlap >= parent_size or child_overlap >= child_size:
             raise ValueError("Overlap must be strictly smaller than the respective chunk size.")
 
-        self.tokenizer = tokenizer or load_tokenizer(model_name)
+        self.model_name = model_name
+        self._tokenizer: PreTrainedTokenizerBase | None = tokenizer
         self.parent_size = parent_size
         self.parent_overlap = parent_overlap
         self.child_size = child_size
         self.child_overlap = child_overlap
+        self.max_child_chunks_per_doc = (
+            max_child_chunks_per_doc
+            if max_child_chunks_per_doc is not None
+            else get_settings().max_child_chunks_per_doc
+        )
 
-        self._parent_splitter = RecursiveCharacterTextSplitter.from_huggingface_tokenizer(
-            self.tokenizer,
+        self._parent_splitter = RecursiveCharacterTextSplitter(
             chunk_size=parent_size,
             chunk_overlap=parent_overlap,
+            length_function=approx_token_len,
             keep_separator=True,
             separators=["\n# ", "\n## ", "\n### ", "\n\n", "\n", ". ", " ", ""],
         )
-        self._child_splitter = RecursiveCharacterTextSplitter.from_huggingface_tokenizer(
-            self.tokenizer,
+        self._child_splitter = RecursiveCharacterTextSplitter(
             chunk_size=child_size,
             chunk_overlap=child_overlap,
+            length_function=approx_token_len,
             keep_separator=False,
             separators=["\n\n", "\n", ". ", " ", ""],
         )
+
+    @property
+    def tokenizer(self) -> PreTrainedTokenizerBase:
+        """Lazily load and cache the HuggingFace tokenizer when exact token counts are requested."""
+        if self._tokenizer is None:
+            self._tokenizer = load_tokenizer(self.model_name)
+        return self._tokenizer
 
     def _token_len(self, text: str) -> int:
         return len(self.tokenizer.encode(text, add_special_tokens=False))
@@ -104,7 +129,7 @@ class ParentChildChunker:
             if (
                 curr_is_prose
                 and i + 1 < len(cleaned)
-                and self._is_short_heading_or_intro(curr.text, self._token_len(curr.text))
+                and self._is_short_heading_or_intro(curr.text, approx_token_len(curr.text))
             ):
                 nxt = cleaned[i + 1]
                 nxt_is_table = nxt.block_type == "table" or _is_markdown_table(nxt.text)
@@ -145,7 +170,7 @@ class ParentChildChunker:
         last_tokens = 0
         for sec in attached:
             is_prose = sec.block_type == "text" and not _is_markdown_table(sec.text)
-            sec_tokens = self._token_len(sec.text) if is_prose else self.parent_size + 1
+            sec_tokens = approx_token_len(sec.text) if is_prose else self.parent_size + 1
             if packed and is_prose:
                 prev = packed[-1]
                 prev_is_prose = prev.block_type == "text" and not _is_markdown_table(prev.text)
@@ -162,7 +187,7 @@ class ParentChildChunker:
                         block_type="text",
                         sheet_name=prev.sheet_name or sec.sheet_name,
                     )
-                    last_tokens = self._token_len(merged_text)
+                    last_tokens = approx_token_len(merged_text)
                     continue
             packed.append(sec)
             last_tokens = sec_tokens
@@ -175,14 +200,20 @@ class ParentChildChunker:
         max_tokens: int,
         overlap_rows: int = 0,
     ) -> list[str]:
-        """Split a Markdown table by row boundaries while repeating the 2-line header in every slice."""
+        """Split a Markdown table by row boundaries, repeating the header unless it is too wide."""
         lines = [line.strip() for line in table_text.splitlines() if line.strip()]
-        if len(lines) <= 2 or self._token_len(table_text) <= max_tokens:
+        if len(lines) <= 2 or approx_token_len(table_text) <= max_tokens:
             return [table_text]
 
         header_block = f"{lines[0]}\n{lines[1]}"
         body_rows = lines[2:]
-        header_tokens = self._token_len(header_block)
+        header_tokens = approx_token_len(header_block)
+
+        # Guard against wide Excel tables (e.g. 25+ columns) whose header consumes >40% of
+        # max_tokens, which would otherwise force every row into header-dominated micro-chunks.
+        repeat_header = header_tokens <= max(45, int(max_tokens * 0.4))
+        effective_header = header_block if repeat_header else ""
+        effective_header_tokens = header_tokens if repeat_header else 0
 
         chunks: list[str] = []
         idx = 0
@@ -190,12 +221,12 @@ class ParentChildChunker:
 
         while idx < total_rows:
             current_rows: list[str] = []
-            current_tokens = header_tokens
+            current_tokens = effective_header_tokens
             start_idx = idx
 
             while idx < total_rows:
                 row = body_rows[idx]
-                row_tokens = self._token_len(row) + 1
+                row_tokens = approx_token_len(row) + 1
                 if current_rows and (current_tokens + row_tokens) > max_tokens:
                     break
                 current_rows.append(row)
@@ -203,21 +234,26 @@ class ParentChildChunker:
                 idx += 1
 
             if len(current_rows) == 1 and current_tokens > max_tokens:
-                row_budget = max(20, max_tokens - header_tokens - 2)
+                row_budget = max(20, max_tokens - effective_header_tokens - 2)
                 row_overlap = min(self.child_overlap, row_budget // 4) if overlap_rows > 0 else 0
-                row_splitter = RecursiveCharacterTextSplitter.from_huggingface_tokenizer(
-                    self.tokenizer,
+                row_splitter = RecursiveCharacterTextSplitter(
                     chunk_size=row_budget,
                     chunk_overlap=row_overlap,
+                    length_function=approx_token_len,
                     keep_separator=False,
                     separators=[" | ", "; ", ". ", " ", ""],
                 )
                 for sub_row in row_splitter.split_text(current_rows[0]):
                     sub_clean = sub_row.strip()
                     if sub_clean:
-                        chunks.append(f"{header_block}\n{sub_clean}")
+                        chunks.append(
+                            f"{effective_header}\n{sub_clean}" if effective_header else sub_clean
+                        )
             else:
-                chunks.append(header_block + "\n" + "\n".join(current_rows))
+                body_block = "\n".join(current_rows)
+                chunks.append(
+                    f"{effective_header}\n{body_block}" if effective_header else body_block
+                )
                 if idx < total_rows and overlap_rows > 0 and len(current_rows) > overlap_rows:
                     idx = max(start_idx + 1, idx - overlap_rows)
 
@@ -230,8 +266,12 @@ class ParentChildChunker:
         raw_sections = document.sections or [ParsedSection(text=document.markdown)]
         sections = self._pack_sections(raw_sections)
         parent_idx = 0
+        cap = self.max_child_chunks_per_doc
+        capped = False
 
         for section in sections:
+            if capped:
+                break
             raw_text = section.text.replace("\r\n", "\n").strip()
             if not raw_text:
                 continue
@@ -262,6 +302,7 @@ class ParentChildChunker:
                 else:
                     child_texts = self._child_splitter.split_text(p_text)
 
+                new_children: list[ChildChunk] = []
                 current_child_ids: list[str] = []
                 for child_idx, c_text in enumerate(child_texts):
                     c_text = c_text.strip()
@@ -270,7 +311,7 @@ class ParentChildChunker:
 
                     child_id = f"{parent_id}:c{child_idx}"
                     current_child_ids.append(child_id)
-                    children.append(
+                    new_children.append(
                         ChildChunk(
                             id=child_id,
                             parent_id=parent_id,
@@ -289,6 +330,20 @@ class ParentChildChunker:
                 if not current_child_ids:
                     continue
 
+                if cap > 0 and parents and (len(children) + len(new_children)) > cap:
+                    logger.warning(
+                        "Document '%s' (%s) reached max_child_chunks_per_doc=%d "
+                        "(kept %d parents / %d children); truncating remaining sections.",
+                        document.metadata.source_path,
+                        document.document_id,
+                        cap,
+                        len(parents),
+                        len(children),
+                    )
+                    capped = True
+                    break
+
+                children.extend(new_children)
                 parents.append(
                     ParentChunk(
                         id=parent_id,

@@ -226,7 +226,7 @@ def strip_unknown_sentinel(value: str | None) -> str | None:
 
 
 def normalize_project(value: str | None) -> str | None:
-    """Normalize project identifiers (e.g. `1234.001`, `22071-002A` -> `22071.002A`)."""
+    """Normalize project identifiers (e.g. `1234.001`, `12345-002A` -> `12345.002A`)."""
     cleaned = strip_unknown_sentinel(value)
     if cleaned is None:
         return None

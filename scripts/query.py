@@ -221,7 +221,10 @@ def _main() -> None:
             )
         else:
             pipeline, repo = build_rag_pipeline(
-                qdrant_path=args.qdrant_path, device=args.device, on_progress=prog
+                qdrant_path=args.qdrant_path,
+                device=args.device,
+                on_progress=prog,
+                low_memory=True,
             )
 
         with repo:

@@ -90,6 +90,22 @@ class Settings(BaseSettings):
     default_project_name: str | None = None
     building_aliases: dict[str, str] = {}
     etl_workers: int = 4
+    skip_archive_folders: bool = True
+    archive_folder_names: tuple[str, ...] = (
+        "oud",
+        "old",
+        "archief",
+        "archive",
+        "draft",
+        "drafts",
+        "klad",
+        "vervallen",
+        "backup",
+        "obsolete",
+        "afgekeurd",
+        "on hold",
+    )
+    max_xlsx_rows_per_sheet: int = 300
     min_digital_text_chars_per_page: int = 50
     oversized_page_min_dimension_pt: float = 1250.0
     high_vector_drawings_threshold: int = 250
@@ -102,20 +118,21 @@ class Settings(BaseSettings):
     parent_overlap: int = 0
     child_size: int = 250
     child_overlap: int = 40
+    max_child_chunks_per_doc: int = 1500
 
     # --- Embedding & Cross-Encoder Reranking ---
     embedding_model: str = "BAAI/bge-m3"
-    embedding_batch_size: int = 32
-    embedding_max_length: int = 512
+    embedding_batch_size: int = 8
+    embedding_max_length: int = 320
     embed_batch_buffer_size: int = 256
     reranker_model: str = "BAAI/bge-reranker-v2-m3"
     reranker_batch_size: int = 16
-    reranker_max_length: int = 2048
+    reranker_max_length: int = 1024
     reranker_min_score: float = 0.0
     device: str | None = None
 
     # --- Retrieval ---
-    retrieve_k: int = 15
+    retrieve_k: int = 10
     child_candidate_limit: int = 80
     rerank_k: int = 5
 
@@ -264,7 +281,32 @@ def load_sharepoint_sites(
                 proj_code, raw_url = None, parts[0].strip()
             else:
                 proj_code, raw_url = parts[0].strip() or None, parts[1].strip()
-            if not raw_url or raw_url.lower() in {"url", "sharepoint_url", "site_url", "site_path"}:
+            if (
+                not raw_url
+                or raw_url.lower()
+                in {
+                    "url",
+                    "sharepoint_url",
+                    "site_url",
+                    "site_path",
+                    "document library",
+                    "document_library",
+                    "library",
+                    "link",
+                }
+                or (
+                    proj_code
+                    and proj_code.lower()
+                    in {
+                        "project",
+                        "project_code",
+                        "projectnumber",
+                        "project_number",
+                        "project_id",
+                        "dossier",
+                    }
+                )
+            ):
                 continue
             specs.append(
                 parse_sharepoint_site_spec(

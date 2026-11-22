@@ -49,21 +49,59 @@ Every stage under `src/` is isolated and communicates exclusively through canoni
 
 ---
 
-## Quickstart & Configuration
+## Teammate Quickstart & Configuration
 
 ### Prerequisites
-- **Python 3.11+**
+- **Python 3.11+** (macOS, Linux, or Windows)
 - **Hardware:** Auto-detects `cuda` > Apple Silicon `mps` > `cpu` (FP16 enabled automatically on CUDA and MPS).
 
-### 1. Install & Pre-Download Models
+### 1. Clone, Install & Pre-Download Models
 ```bash
+git clone <repo-url>
+cd ingenium-rag
 python3 -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate       # Windows: .venv\Scripts\activate
 make install
-make download-models   # caches BAAI/bge-m3 and BAAI/bge-reranker-v2-m3 locally
+cp .env.example .env            # fill in SharePoint / LLM values if needed
+make download-models            # caches BAAI/bge-m3 and BAAI/bge-reranker-v2-m3 locally
 ```
 
-### 2. Configure `.env`
+### 2. Verify Offline Setup
+```bash
+make check                      # ruff lint + full offline pytest & architecture checks
+```
+
+### 3. Get Started Immediately (Choose Option A or B)
+
+**Option A — Fastest (Use a Shared Index):**
+Drop a shared `qdrant_poc/` folder from your team into `data/qdrant_poc/` and query immediately (no SharePoint credentials required):
+```bash
+make inspect
+make query Q="Wat zijn de eisen voor brandwerende deuren?" DEBUG=1
+make api                        # starts FastAPI on http://127.0.0.1:8000
+```
+
+**Option B — Run Multi-Site Ingestion Yourself:**
+Create a gitignored `data/sharepoint_sites.tsv` file (tab-separated, blank URLs skipped, duplicate site URLs deduplicated):
+```tsv
+ProjectNumber	Document library
+12345.001	https://company.sharepoint.com/sites/12345001-INT/Shared%20Documents/General
+12345.002A	https://company.sharepoint.com/sites/12345002A-INT/Shared%20Documents/General
+```
+Then preview or run the pipeline:
+```bash
+make ingest-dry-run MODE=sharepoint SITES_FILE=data/sharepoint_sites.tsv
+make ingest MODE=sharepoint SITES_FILE=data/sharepoint_sites.tsv
+```
+
+### 4. Plugging in a Local LLM (Ollama / vLLM)
+By default, `make query` and `make api` run with the deterministic `ExtractiveStubLLM`. To enable full LLM synthesis, uncomment in `.env`:
+```dotenv
+LLM_BASE_URL=http://localhost:11434/v1
+LLM_MODEL=qwen2.5:14b
+```
+
+### Environment Variables (`.env`)
 Copy `.env.example` to `.env` in the repository root (gitignored). SharePoint variables are only needed for `MODE=sharepoint`; local file ingestion works without them.
 
 | Variable | Required? | Default | Description |
@@ -78,14 +116,18 @@ Copy `.env.example` to `.env` in the repository root (gitignored). SharePoint va
 | `SHAREPOINT_DRIVE_NAME` | No | `Documents` | Document library name. |
 | `TEMP_BEARER_TOKEN` | No | `""` | Optional Microsoft Graph Explorer token for quick testing without App Registration. |
 | `ETL_WORKERS` | No | `4` | Concurrent worker threads for SharePoint sync and local ETL. |
+| `SKIP_ARCHIVE_FOLDERS` | No | `true` | Skip archive/draft/rejected folders (`oud`, `old`, `archief`, `draft`, `afgekeurd`, `on hold`) during ETL (`--include-archives` overrides). |
+| `MAX_XLSX_ROWS_PER_SHEET` | No | `300` | Early-stop row cap per Excel worksheet to prevent raw telemetry sheet explosion (logged as `xlsx_sheet_truncated`). |
+| `MAX_CHILD_CHUNKS_PER_DOC` | No | `1500` | Per-document child chunk safety cap (truncates cleanly at a parent boundary). |
 | `DEVICE` | No | auto | Override compute device (`cuda`, `mps`, or `cpu`). |
 | `EMBEDDING_MODEL` | No | `BAAI/bge-m3` | Dense + sparse embedding model ID. |
-| `EMBEDDING_BATCH_SIZE` | No | `32` | Per-forward-pass embedding batch size. |
-| `EMBEDDING_MAX_LENGTH` | No | `512` | Max token length for child chunk encoding. |
+| `EMBEDDING_BATCH_SIZE` | No | `8` | Per-forward-pass embedding batch size (tuned for 8 GB laptops). |
+| `EMBEDDING_MAX_LENGTH` | No | `320` | Max token length for child chunk encoding. |
 | `EMBED_BATCH_BUFFER_SIZE` | No | `256` | Cross-document child buffer size before length-sorted embedding. |
 | `RERANKER_MODEL` | No | `BAAI/bge-reranker-v2-m3` | Cross-encoder reranker model ID. |
+| `RERANKER_MAX_LENGTH` | No | `1024` | Max token length for cross-encoder reranking. |
 | `RERANKER_MIN_SCORE` | No | `0.0` | Minimum normalized reranker score cutoff (override per query via `MIN_SCORE=...`). |
-| `RETRIEVE_K` / `RERANK_K` | No | `15` / `5` | Pre-rerank parent pool size and final top-k results. |
+| `RETRIEVE_K` / `RERANK_K` | No | `10` / `5` | Pre-rerank parent pool size and final top-k results. |
 | `CHILD_CANDIDATE_LIMIT` | No | `80` | Raw hybrid child hits fetched before parent deduplication. |
 | `DEFAULT_PROJECT_NAME` | No | `None` | Optional fallback project display name. |
 | `BUILDING_ALIASES` | No | `{}` | Optional JSON map of project-specific zone aliases (e.g. `{"west-wing":"West Wing"}`). |
@@ -239,5 +281,6 @@ The test suite runs completely offline using deterministic fakes for model weigh
 
 - **Scanned / image-only PDFs:** Detected and logged to `data/logs/limitations_report.jsonl` (`needs_ocr=True`) rather than running heavy VLM/OCR pipelines; external OCR (e.g., Docling/Tesseract) can be plugged in before re-ingestion.
 - **Supported formats:** `.pdf`, `.docx`, and `.xlsx` are extracted; legacy binary `.xls`/`.doc`, CAD (`.dwg`), images, and `.zip` archives are skipped.
-- **Single-process local Qdrant:** Local disk mode (`data/qdrant_poc`) locks the storage directory to one process at a time; migrating to a Qdrant server requires only changing `QdrantClient(url=...)` in `src/storage/qdrant.py`.
+- **Hardware & Scale Note:** Embedded local Qdrant (`data/qdrant_poc`) stays fast (<1s open, ~25s cold query on Apple Silicon) under **~20,000 child chunks**. On 8 GB laptops, use scoped 2–5 project TSVs (`make query` automatically runs in `low_memory=True` mode so the embedder and reranker never share RAM); for full multi-decade corpus backfills (100k+ chunks), use a CUDA GPU machine and/or a Qdrant server (`QdrantClient(url=...)`).
+- **Single-process local Qdrant:** Local disk mode (`data/qdrant_poc`) locks the storage directory to one process at a time; close `make api` before running `make ingest` or `make query`.
 - **In progress:** Connecting a hosted/local OpenAI-compatible LLM (`LLM_BASE_URL` + `LLM_MODEL`) and expanding RAGAS end-to-end evaluation datasets using `make export-chunks`.

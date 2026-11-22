@@ -1,14 +1,18 @@
 """Excel (`.xlsx`) extractor emitting `domain.ParsedDoc` directly."""
 
+import logging
 import re
 from pathlib import Path
 
 import openpyxl
 
+from config import get_settings
 from domain import DocCategory, ExtractionMethod, ParsedDoc, ParsedSection
 from etl.catalog import is_document_register_file
 from etl.extractors.common import build_markdown_table, clean_cell_text, finalize_sections
 from etl.metadata import MetadataMatcher
+
+logger = logging.getLogger(__name__)
 
 _NUMERIC_CELL_RE = re.compile(r"^[+-]?\d+(?:[.,]\d+)?%?$")
 _PLACEHOLDER_SHEET_RE = re.compile(r"^(?:x\d+|template\d*|sjabloon\d*)$", re.IGNORECASE)
@@ -57,8 +61,18 @@ def _detect_table_header_index(non_empty_rows: list[tuple[int, list[str]]]) -> i
 class XlsxExtractor:
     """Parses Excel workbooks into per-worksheet Markdown table sections in `ParsedDoc`."""
 
-    def __init__(self, metadata_matcher: MetadataMatcher | None = None) -> None:
+    def __init__(
+        self,
+        metadata_matcher: MetadataMatcher | None = None,
+        *,
+        max_rows_per_sheet: int | None = None,
+    ) -> None:
         self.metadata_matcher = metadata_matcher or MetadataMatcher()
+        self.max_rows_per_sheet = (
+            max_rows_per_sheet
+            if max_rows_per_sheet is not None
+            else get_settings().max_xlsx_rows_per_sheet
+        )
 
     def extract(
         self,
@@ -74,14 +88,22 @@ class XlsxExtractor:
 
         wb = openpyxl.load_workbook(path, data_only=True, read_only=True)
         raw_sections: list[ParsedSection] = []
+        truncated_sheets: list[str] = []
+        row_cap = self.max_rows_per_sheet
+        # Allow up to 16 preamble + header rows before enforcing early stop on raw sheet scan.
+        scan_cap = (row_cap + 16) if row_cap > 0 else 0
         try:
             for sheet_name in wb.sheetnames:
                 non_empty_rows: list[tuple[int, list[str]]] = []
+                hit_scan_cap = False
                 for row_idx, row in enumerate(wb[sheet_name].iter_rows(values_only=True), start=1):
                     cleaned = [clean_cell_text(c) for c in row]
                     while cleaned and not cleaned[-1]:
                         cleaned.pop()
                     if any(cleaned):
+                        if scan_cap and len(non_empty_rows) >= scan_cap:
+                            hit_scan_cap = True
+                            break
                         non_empty_rows.append((row_idx, cleaned))
 
                 if not non_empty_rows:
@@ -118,6 +140,11 @@ class XlsxExtractor:
                     )
 
                 filtered_data_rows = [r for r in raw_data_rows if not _is_placeholder_row(r)]
+                sheet_truncated = hit_scan_cap
+                if row_cap > 0 and len(filtered_data_rows) > row_cap:
+                    filtered_data_rows = filtered_data_rows[:row_cap]
+                    sheet_truncated = True
+
                 all_kept = [table_rows[0][1]] + filtered_data_rows
                 max_cols = max(len(r) for r in all_kept)
                 header_cells = list(table_rows[0][1])
@@ -126,6 +153,12 @@ class XlsxExtractor:
 
                 md_table, _ = build_markdown_table(header_cells, filtered_data_rows)
                 if md_table:
+                    if sheet_truncated:
+                        truncated_sheets.append(sheet_name)
+                        md_table += (
+                            f"\n\n> [Note: Worksheet '{sheet_name}' exceeded {row_cap} rows "
+                            f"and was truncated to the first {len(filtered_data_rows)} data rows.]"
+                        )
                     raw_sections.append(
                         ParsedSection(
                             text=md_table,
@@ -141,13 +174,25 @@ class XlsxExtractor:
         sections, _ = finalize_sections(
             raw_sections, coalesce_prose=True, drop_noisy_callouts=drop_noisy_callouts
         )
+        warnings: list[str] = []
+        if truncated_sheets:
+            msg = (
+                f"Truncated {len(truncated_sheets)} large Excel sheet(s) at {row_cap} rows: "
+                f"{', '.join(truncated_sheets[:5])}"
+            )
+            warnings.append(msg)
+            logger.info("'%s': %s", rel_path.name, msg)
+
         doc_id, content_hash, metadata = self.metadata_matcher.build_document_metadata(
             file_path=path,
             relative_file_path=rel_path,
             extraction_method=ExtractionMethod.OPENPYXL_TABLE,
             extraction_confidence=1.0 if sections else 0.2,
+            quality_warnings=warnings,
             sharepoint_url=sharepoint_url,
         )
+        if truncated_sheets:
+            metadata.extra["xlsx_truncated_sheets"] = truncated_sheets
         if is_register and metadata.extra.get("doc_category") == DocCategory.UNKNOWN.value:
             metadata.extra["doc_category"] = DocCategory.DOCUMENT_REGISTER.value
 

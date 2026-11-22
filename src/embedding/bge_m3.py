@@ -22,8 +22,8 @@ class BGEM3Embedder:
         self,
         model_name: str = "BAAI/bge-m3",
         device: str | None = None,
-        batch_size: int = 32,
-        max_length: int = 512,
+        batch_size: int = 8,
+        max_length: int = 320,
     ) -> None:
         self.device = detect_device(device)
         self.batch_size = batch_size

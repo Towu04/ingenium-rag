@@ -123,6 +123,7 @@ class QualityLogger:
         is_scanned = bool(extra.get("is_scanned", False))
         is_hvac_diagram = bool(extra.get("is_hvac_diagram", False))
         needs_ocr = bool(extra.get("needs_ocr", False))
+        truncated_sheets: list[str] = list(extra.get("xlsx_truncated_sheets") or [])
 
         if is_empty:
             confidence = min(confidence, 0.2)
@@ -131,15 +132,20 @@ class QualityLogger:
                 needs_ocr = True
                 extra["needs_ocr"] = True
 
-        if confidence >= self.confidence_threshold and not needs_ocr:
+        if confidence >= self.confidence_threshold and not needs_ocr and not truncated_sheets:
             return None
 
-        limitation_type, action, msg = _classify_limitation(
-            is_empty=is_empty,
-            is_scanned=is_scanned,
-            is_hvac_diagram=is_hvac_diagram,
-            needs_ocr=needs_ocr,
-        )
+        if confidence >= self.confidence_threshold and not needs_ocr and truncated_sheets:
+            limitation_type = "xlsx_sheet_truncated"
+            action = "Large spreadsheet truncated at row cap; inspect original workbook or summary tab for full data."
+            msg = f"Truncated Excel sheet(s): {', '.join(truncated_sheets[:5])}"
+        else:
+            limitation_type, action, msg = _classify_limitation(
+                is_empty=is_empty,
+                is_scanned=is_scanned,
+                is_hvac_diagram=is_hvac_diagram,
+                needs_ocr=needs_ocr,
+            )
         if limitation_type == "scanned_pdf_needs_ocr":
             logger.warning(
                 "Scanned PDF '%s' (doc_id=%s) yielded 0 sections; flagged needs_ocr=True.",

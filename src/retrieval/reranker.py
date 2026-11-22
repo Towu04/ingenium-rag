@@ -22,7 +22,7 @@ class BGEM3Reranker:
         model_name: str = "BAAI/bge-reranker-v2-m3",
         device: str | None = None,
         batch_size: int = 16,
-        max_length: int = 2048,
+        max_length: int = 1024,
         min_score: float = 0.0,
     ) -> None:
         self.device = detect_device(device)

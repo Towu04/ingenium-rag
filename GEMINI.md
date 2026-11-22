@@ -32,15 +32,15 @@ Answer (text + Citation[] + retrieved_results)
 - `src/domain.py` — Zero-dependency canonical Pydantic contracts (`DocumentMetadata`, `ParsedSection`, `ParsedDoc`, `ParentChunk`, `ChildChunk`, `SearchResult`, `Citation`, `Answer`), `EmbeddedChildBatch`, `EncodedQuery`, and pure metadata normalization/taxonomy helpers.
 - `src/config.py` — Single centralized `Settings` (`pydantic-settings` + `.env`), paths, thresholds, model defaults, and `detect_device()` (CUDA > MPS > CPU).
 - `src/pipeline.py` — Thin top-level orchestrator (`IndexingPipeline`, `RAGPipeline`, `build_rag_pipeline`, `build_llm_client`).
-- `src/etl/` — `extractors/{pdf,docx,xlsx,common}.py`, `catalog.py`, `metadata.py`, `quality.py`, `sharepoint.py`, `runner.py`. Emits and persists `domain.ParsedDoc` JSON directly.
-- `src/chunking/` — `parent_child.py` (`ParentChildChunker`: repeats Markdown table headers across split chunks).
-- `src/embedding/` — `bge_m3.py` (`BGEM3Embedder`).
+- `src/etl/` — `extractors/{pdf,docx,xlsx,common}.py`, `catalog.py`, `metadata.py`, `quality.py`, `sharepoint.py`, `runner.py`. Emits and persists `domain.ParsedDoc` JSON directly; caps oversized Excel sheets early at `max_xlsx_rows_per_sheet=300` (`xlsx_sheet_truncated`), skips archive/rejected folders (`oud`, `archief`, `draft`, `afgekeurd`, `on hold`), and handles `401` SAS fallback + parallel Graph discovery.
+- `src/chunking/` — `parent_child.py` (`ParentChildChunker`: fast pure-Python `approx_token_len`, table header repetition with wide-table explosion guard, and `max_child_chunks_per_doc=1500` parent-boundary cap).
+- `src/embedding/` — `bge_m3.py` (`BGEM3Embedder`: defaults `batch_size=8`, `max_length=320`).
 - `src/storage/` — `qdrant.py` (`LocalHybridRepository` over `./data/qdrant_poc`, collections: `documents`, `parent_chunks`, `child_chunks`).
-- `src/retrieval/` — `query_filter.py`, `searcher.py` (`QueryEncoder` / `ParentStore` protocols), `reranker.py` (`BGEM3Reranker`).
+- `src/retrieval/` — `query_filter.py`, `searcher.py` (`QueryEncoder` / `ParentStore` protocols), `reranker.py` (`BGEM3Reranker`: defaults `retrieve_k=10`, `reranker_max_length=1024`).
 - `src/generation/` — `prompts.py`, `citations.py`, `generator.py` (`LLMClient` protocol, `ExtractiveStubLLM` default, `OpenAICompatibleLLM` for local Ollama/vLLM).
 - `src/evaluation/` — `metrics.py` (`citation_precision`, `source_recall`), `runner.py`.
-- `src/api/` — FastAPI HTTP layer (`GET /health`, `POST /v1/query`).
-- `scripts/` — Thin CLI entry points + shared Rich CLI helper (`_cli.py`): `ingest.py` (`ingenium-ingest`), `query.py` (`ingenium-query`), `inspect_rag.py` (`ingenium-inspect`), `eval.py` (`ingenium-eval`).
+- `src/api/` — FastAPI HTTP layer (`GET /health`, `POST /v1/query`, lifespan `repo.close()` cleanup).
+- `scripts/` — Thin CLI entry points + shared Rich CLI helper (`_cli.py`): `ingest.py` (`ingenium-ingest`), `query.py` (`ingenium-query`, uses `low_memory=True` to release embedder before loading reranker), `inspect_rag.py` (`ingenium-inspect`), `eval.py` (`ingenium-eval`).
 - `tests/` — Stage-mirrored test suite + `test_architecture.py` (enforces zero cross-stage imports and zero `print()` inside `src/`).
 
 ## Key Invariants & Conventions

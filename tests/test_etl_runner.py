@@ -40,7 +40,7 @@ def _build_pdf_bytes() -> bytes:
     doc = fitz.open()
     p1 = doc.new_page(width=595, height=842)
     p1.insert_text(
-        (50, 70), "1. Algemene Voorwaarden\nTechnische specificatie HVAC AZ Sint-Jan.", fontsize=11
+        (50, 70), "1. Algemene Voorwaarden\nTechnische specificatie HVAC Campus Noord.", fontsize=11
     )
     pdf_bytes = doc.tobytes()
     doc.close()
@@ -132,7 +132,7 @@ def test_sharepoint_streaming_two_pass_and_ephemeral_cleanup(
     def fake_get(
         url: str, headers: Any = None, stream: bool = False, timeout: int = 60
     ) -> _FakeGraphResponse:
-        if "/sites/ingenium.sharepoint.com:/sites/06038004-INT" in url:
+        if "/sites/company.sharepoint.com:/sites/12345001-INT" in url:
             return _FakeGraphResponse({"id": "site-1"})
         if url.endswith("/sites/site-1/drives"):
             return _FakeGraphResponse({"value": [{"id": "drive-1", "name": "Documents"}]})
@@ -144,7 +144,7 @@ def test_sharepoint_streaming_two_pass_and_ephemeral_cleanup(
                             "id": "item-reg-1",
                             "name": "00_Documentenlijst_HVAC.xlsx",
                             "eTag": "etag-reg",
-                            "webUrl": "https://ingenium.sharepoint.com/sites/06038004-INT/00_Documentenlijst_HVAC.xlsx",
+                            "webUrl": "https://company.sharepoint.com/sites/12345001-INT/00_Documentenlijst_HVAC.xlsx",
                             "parentReference": {"path": "/drives/drive-1/root:"},
                             "file": {"hashes": {"quickXorHash": "qx-reg"}},
                         },
@@ -152,7 +152,7 @@ def test_sharepoint_streaming_two_pass_and_ephemeral_cleanup(
                             "id": "item-pdf-2",
                             "name": "Bestek_HVAC_Ventilatie.pdf",
                             "eTag": "etag-pdf",
-                            "webUrl": "https://ingenium.sharepoint.com/sites/06038004-INT/Bestek_HVAC_Ventilatie.pdf",
+                            "webUrl": "https://company.sharepoint.com/sites/12345001-INT/Bestek_HVAC_Ventilatie.pdf",
                             "parentReference": {"path": "/drives/drive-1/root:"},
                             "file": {"hashes": {"quickXorHash": "qx-pdf"}},
                         },
@@ -160,7 +160,7 @@ def test_sharepoint_streaming_two_pass_and_ephemeral_cleanup(
                             "id": "item-bad-3",
                             "name": "Corrupt.pdf",
                             "eTag": "etag-bad",
-                            "webUrl": "https://ingenium.sharepoint.com/sites/06038004-INT/Corrupt.pdf",
+                            "webUrl": "https://company.sharepoint.com/sites/12345001-INT/Corrupt.pdf",
                             "parentReference": {"path": "/drives/drive-1/root:"},
                             "file": {"hashes": {"quickXorHash": "qx-bad"}},
                         },
@@ -181,8 +181,8 @@ def test_sharepoint_streaming_two_pass_and_ephemeral_cleanup(
             tenant_id="t",
             client_id="c",
             client_secret="s",
-            hostname="ingenium.sharepoint.com",
-            site_path="/sites/06038004-INT",
+            hostname="company.sharepoint.com",
+            site_path="/sites/12345001-INT",
             staging_dir=staging_dir,
             json_out_dir=processed / "json",
         ),
@@ -204,7 +204,7 @@ def test_sharepoint_streaming_two_pass_and_ephemeral_cleanup(
     pdf_doc = ParsedDoc.model_validate_json(
         (processed / "json" / f"{compute_doc_id('Bestek_HVAC_Ventilatie.pdf')}.json").read_text()
     )
-    assert pdf_doc.metadata.project == "06038.004"
+    assert pdf_doc.metadata.project == "12345.001"
     assert pdf_doc.metadata.buildings == ["Blok C", "Intensieve Zorgen"]
     assert pdf_doc.metadata.phase == "Definitief Ontwerp"
     assert pdf_doc.metadata.extra["doc_category"] == DocCategory.SPECIFICATION.value
@@ -222,20 +222,21 @@ def test_load_sharepoint_sites_tsv_dedup_and_blank_urls(tmp_path: Path) -> None:
     tsv = tmp_path / "sites.tsv"
     tsv.write_text(
         "# comment line\n"
+        "ProjectNumber\tDocument library\n"
         "project_code\turl\n"
-        "22071.002A\thttps://company.sharepoint.com/sites/22071002A-INT/Shared Documents/General\n"
+        "12345.002A\thttps://company.sharepoint.com/sites/12345002A-INT/Shared Documents/General\n"
         "EMPTY_URL\t\n"
-        "22071.002A\thttps://company.sharepoint.com/sites/22071002A-INT/Shared%20Documents/General\n"
-        "24041.001B\t/sites/24041001B-INT\n",
+        "12345.002A\thttps://company.sharepoint.com/sites/12345002A-INT/Shared%20Documents/General\n"
+        "67890.001B\t/sites/67890001B-INT\n",
         encoding="utf-8",
     )
     cfg = Settings(sharepoint_hostname="company.sharepoint.com")
     specs = load_sharepoint_sites(sites_file=tsv, settings=cfg)
     assert len(specs) == 2
-    assert specs[0].project_code == "22071.002A"
-    assert specs[0].site_path == "/sites/22071002A-INT"
+    assert specs[0].project_code == "12345.002A"
+    assert specs[0].site_path == "/sites/12345002A-INT"
     assert specs[0].folder_prefix == "General"
-    assert specs[1].project_code == "24041.001B"
+    assert specs[1].project_code == "67890.001B"
     assert specs[1].hostname == "company.sharepoint.com"
 
     override = load_sharepoint_sites(site_override="/sites/99999001-INT", settings=cfg)
@@ -392,25 +393,125 @@ def test_multi_site_namespacing_prevents_doc_id_collision_and_skips_pre_download
         manifest_path=processed / "manifest.json",
         limitations_report_path=tmp_path / "lim_multi.jsonl",
     )
-    sp_a = _make_site_connector("22071002A-INT", pdf_a)
-    sp_b = _make_site_connector("24041001B-INT", pdf_b)
+    sp_a = _make_site_connector("12345002A-INT", pdf_a)
+    sp_b = _make_site_connector("67890001B-INT", pdf_b)
 
     res_a = runner.run_sharepoint(
-        connector=sp_a, workers=2, project_override="22071.002A", namespace_by_site=True
+        connector=sp_a, workers=2, project_override="12345.002A", namespace_by_site=True
     )
     res_b = runner.run_sharepoint(
-        connector=sp_b, workers=2, project_override="24041.001B", namespace_by_site=True
+        connector=sp_b, workers=2, project_override="67890.001B", namespace_by_site=True
     )
     assert res_a.processed_files == 1 and res_b.processed_files == 1
     loaded = load_processed_docs(processed)
     assert len(loaded) == 2
-    assert {d.metadata.project for d in loaded} == {"22071.002A", "24041.001B"}
+    assert {d.metadata.project for d in loaded} == {"12345.002A", "67890.001B"}
     assert len({d.document_id for d in loaded}) == 2
 
     # Re-run skips both before downloading any bytes
     downloads.clear()
     res_a2 = runner.run_sharepoint(
-        connector=sp_a, workers=2, project_override="22071.002A", namespace_by_site=True
+        connector=sp_a, workers=2, project_override="12345.002A", namespace_by_site=True
     )
     assert res_a2.skipped_unchanged_files == 1
     assert downloads == []
+
+
+def test_sharepoint_401_expired_download_url_falls_back_to_graph_content(tmp_path: Path) -> None:
+    from etl.sharepoint import RemoteDriveItem
+
+    calls: list[tuple[str, bool]] = []
+
+    class _Resp:
+        def __init__(self, status: int, data: Any = None, content: bytes = b"") -> None:
+            self.status_code = status
+            self._data = data or {}
+            self._content = content
+            self.headers: dict[str, str] = {}
+
+        def json(self) -> Any:
+            return self._data
+
+        def iter_content(self, chunk_size: int = 65536):
+            yield self._content
+
+        def raise_for_status(self) -> None:
+            if self.status_code >= 400:
+                raise RuntimeError(f"HTTP {self.status_code}")
+
+    class _FakeSession:
+        def get(self, url: str, **kwargs: Any) -> _Resp:
+            has_auth = "Authorization" in (kwargs.get("headers") or {})
+            calls.append((url, has_auth))
+            if "expired-sas.example.com" in url:
+                return _Resp(401)
+            if "/drives/drv-1/items/it-1/content" in url:
+                assert has_auth is True
+                return _Resp(200, content=b"fresh-content-bytes")
+            raise AssertionError(f"Unexpected URL: {url}")
+
+    cfg = SharePointConfig(
+        tenant_id="t",
+        client_id="c",
+        client_secret="s",
+        hostname="tenant.sharepoint.com",
+        site_path="/sites/12345001-INT",
+        temp_bearer_token="tok-123",
+        staging_dir=tmp_path / "staging",
+        json_out_dir=tmp_path / "json",
+    )
+    sp = SharePointConnector(sp_config=cfg, session=_FakeSession())  # type: ignore[arg-type]
+    sp._site_id = "site-1"
+    sp._drive_id = "drv-1"
+
+    item = RemoteDriveItem(
+        item_id="it-1",
+        name="Spec.pdf",
+        relative_path="General/05_Uitvoering/Spec.pdf",
+        download_url="https://expired-sas.example.com/file?sig=old",
+    )
+    local_path = sp.download_file(item)
+    assert local_path.read_bytes() == b"fresh-content-bytes"
+    assert any("expired-sas.example.com" in u for u, _ in calls)
+    assert any("/drives/drv-1/items/it-1/content" in u and auth for u, auth in calls)
+    sp.cleanup_local_file(local_path)
+    assert not local_path.exists()
+
+
+def test_archive_folder_exclusion_skips_oud_and_draft_folders(tmp_path: Path) -> None:
+    raw = tmp_path / "raw"
+    pdf_bytes = _build_pdf_bytes()
+    for rel in (
+        "05_Uitvoering/Active_Spec.pdf",
+        "05_Uitvoering/Onderhoud/Maintenance_Plan.pdf",
+        "05_Uitvoering/oud/Old_Spec.pdf",
+        "03_Ontwerp/Draft/Draft_Spec.pdf",
+        "05_Uitvoering/Technische fiches/afgekeurd - on hold/Rejected_TF.pdf",
+    ):
+        p = raw / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_bytes(pdf_bytes)
+
+    proc_skip = tmp_path / "proc_skip"
+    runner_skip = ETLRunner(
+        markdown_out_dir=proc_skip / "markdown",
+        json_out_dir=proc_skip / "json",
+        manifest_path=proc_skip / "manifest.json",
+        limitations_report_path=tmp_path / "lim1.jsonl",
+        skip_archive_folders=True,
+    )
+    res_skip = runner_skip.run_local(raw)
+    assert res_skip.processed_files == 2  # Active_Spec + Onderhoud (must not false-match 'oud')
+    assert res_skip.skipped_archive_files == 3
+
+    proc_all = tmp_path / "proc_all"
+    runner_all = ETLRunner(
+        markdown_out_dir=proc_all / "markdown",
+        json_out_dir=proc_all / "json",
+        manifest_path=proc_all / "manifest.json",
+        limitations_report_path=tmp_path / "lim2.jsonl",
+        skip_archive_folders=False,
+    )
+    res_all = runner_all.run_local(raw)
+    assert res_all.processed_files == 5
+    assert res_all.skipped_archive_files == 0

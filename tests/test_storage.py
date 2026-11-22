@@ -154,8 +154,8 @@ class TestHybridSearchAndFiltering:
         repo.upsert_document_bundle(
             *make_bundle(
                 doc_id="doc-multi",
-                project="06038.004",
-                building="Blok P - Blok L - Spoed",
+                project="12345.001",
+                building="Blok A - Blok C - West Wing",
                 phase="Uitvoering",
                 dominant_dim_offset=0,
             )
@@ -164,13 +164,13 @@ class TestHybridSearchAndFiltering:
         assert [r.parent_chunk.document_id for r in repo.search_parents(q, project="Alpha")] == [
             "doc-a"
         ]
-        assert [r.parent_chunk.document_id for r in repo.search_parents(q, building="Blok L")] == [
+        assert [r.parent_chunk.document_id for r in repo.search_parents(q, building="Blok C")] == [
             "doc-multi"
         ]
-        assert [r.parent_chunk.document_id for r in repo.search_parents(q, building="Spoed")] == [
-            "doc-multi"
-        ]
-        assert repo.search_parents(q, project="Alpha", building="Blok L") == []
+        assert [
+            r.parent_chunk.document_id for r in repo.search_parents(q, building="West Wing")
+        ] == ["doc-multi"]
+        assert repo.search_parents(q, project="Alpha", building="Blok C") == []
 
     def test_stores_child_text_and_supports_inspection_iterators(
         self, repo: LocalHybridRepository

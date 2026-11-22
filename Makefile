@@ -3,10 +3,10 @@
 # =============================================================================
 # Toolchain & Environment
 # =============================================================================
-VENV_BIN := $(if $(wildcard .venv/bin/python),.venv/bin,)
+VENV_BIN := $(if $(wildcard .venv/bin/python),.venv/bin,$(if $(wildcard .venv/Scripts/python.exe),.venv/Scripts,))
 PYTHON   := $(if $(VENV_BIN),$(VENV_BIN)/python,python3)
 PIP      := $(PYTHON) -m pip
-RUFF     := $(if $(wildcard .venv/bin/ruff),.venv/bin/ruff,ruff)
+RUFF     := $(if $(wildcard $(VENV_BIN)/ruff*),$(VENV_BIN)/ruff,ruff)
 
 # Default to online so fresh machines download HF models on first run;
 # override with `HF_HUB_OFFLINE=1` for strict offline execution.
@@ -135,7 +135,7 @@ ingest-dry-run: ## Preview file inventory and metadata without extracting (MODE=
 	$(PY_ENV) $(PYTHON) scripts/ingest.py "$$@" $(CLI_FLAGS)
 
 report: ## Print processed documents summary and scanned-PDF/limitations audit report
-	$(PY_ENV) $(PYTHON) scripts/ingest.py --report --processed-dir "$(ETL_DIR)" $(CLI_FLAGS)
+	@$(PY_ENV) $(PYTHON) scripts/ingest.py --report --processed-dir "$(ETL_DIR)" $(CLI_FLAGS)
 
 query: ## Run hybrid search + rerank (Q="...", optional PROJECT/BUILDING/PHASE/DEBUG/JSON/VERBOSE/QUIET/MIN_SCORE/RETRIEVAL_ONLY/NO_RERANK)
 	@if [ -z "$(Q)" ]; then \

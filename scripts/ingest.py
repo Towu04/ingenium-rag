@@ -191,6 +191,11 @@ def _main() -> None:
     parser.add_argument(
         "--keep-noisy-callouts", action="store_true", help="Disable diagram callout quarantine."
     )
+    parser.add_argument(
+        "--include-archives",
+        action="store_true",
+        help="Include archive/draft folders (oud, old, archief, draft) that are skipped by default.",
+    )
     add_common_args(parser, default_qdrant_path=settings.qdrant_path)
 
     args = parser.parse_args()
@@ -280,6 +285,7 @@ def _main() -> None:
             json_out_dir=args.processed_dir / "json",
             manifest_path=args.processed_dir / "manifest.json",
             drop_noisy_callouts=not args.keep_noisy_callouts,
+            skip_archive_folders=False if args.include_archives else None,
         )
         with PipelineProgress(quiet=args.quiet, json_mode=args.as_json) as prog:
             if args.from_sharepoint:
@@ -390,6 +396,7 @@ def _main() -> None:
                 max_files=args.max_files,
                 folder_prefix=args.folder_prefix,
                 drop_noisy_callouts=not args.keep_noisy_callouts,
+                skip_archive_folders=False if args.include_archives else None,
                 workers=args.workers,
                 on_progress=prog,
             )
@@ -401,6 +408,7 @@ def _main() -> None:
                 force_etl=args.force,
                 force_index=args.force,
                 drop_noisy_callouts=not args.keep_noisy_callouts,
+                skip_archive_folders=False if args.include_archives else None,
                 workers=args.workers,
                 on_progress=prog,
             )
@@ -418,6 +426,8 @@ def _main() -> None:
                     "total_docs": stats.total_docs,
                     "indexed_docs": stats.indexed_docs,
                     "skipped_unchanged": stats.skipped_unchanged,
+                    "skipped_duplicate": stats.skipped_duplicate,
+                    "skipped_archive": stats.skipped_archive,
                     "skipped_empty": stats.skipped_empty,
                     "scanned_empty_docs": stats.scanned_empty_docs,
                     "dropped_noisy_callouts": stats.dropped_noisy_callouts,
@@ -445,7 +455,10 @@ def _main() -> None:
                 f"{stats.discovered_files or stats.total_docs} / {stats.total_docs}",
             ),
             ("Newly indexed", stats.indexed_docs),
-            ("Skipped (unchanged hash)", stats.skipped_unchanged),
+            (
+                "Skipped (unchanged / duplicate / archive)",
+                f"{stats.skipped_unchanged} / {stats.skipped_duplicate} / {stats.skipped_archive}",
+            ),
             ("Scanned / empty", f"{stats.scanned_empty_docs} / {stats.skipped_empty}"),
             ("Unauthorized (401/403)", stats.unauthorized_count),
             ("Failed", stats.failed_docs),

@@ -22,9 +22,9 @@ from domain import (
 def test_normalize_project_phase_and_buildings() -> None:
     assert normalize_project("UNKNOWN_PROJECT") is None
     assert normalize_project("  ") is None
-    assert normalize_project("6038.004") == "06038.004"
-    assert normalize_project("06038-004") == "06038.004"
-    assert normalize_project("22071-002a") == "22071.002A"
+    assert normalize_project("1234.001") == "01234.001"
+    assert normalize_project("01234-001") == "01234.001"
+    assert normalize_project("12345-002a") == "12345.002A"
     assert normalize_project("PRJ-2021-104") == "PRJ-2021-104"
 
     assert normalize_phase("UNKNOWN_PHASE") is None
@@ -38,14 +38,14 @@ def test_normalize_project_phase_and_buildings() -> None:
 
     assert split_buildings("UNKNOWN_BUILDING") == []
     assert split_buildings("Blok Peil") == []
-    assert split_buildings("Blok P - Blok L - West Wing - Blok L") == [
-        "Blok P",
-        "Blok L",
+    assert split_buildings("Blok A - Blok C - West Wing - Blok C") == [
+        "Blok A",
+        "Blok C",
         "West Wing",
     ]
-    assert normalize_building("Blok P - Blok L") == "Blok P - Blok L"
-    assert normalize_building("blok l") == "Blok L"
-    assert infer_building("Renovatie L-blok en Vleugel Noord") == "Blok L - Vleugel Noord"
+    assert normalize_building("Blok A - Blok C") == "Blok A - Blok C"
+    assert normalize_building("blok c") == "Blok C"
+    assert infer_building("Renovatie C-blok en Vleugel Noord") == "Blok C - Vleugel Noord"
     assert infer_building("Campus Oost en Gebouw 2") == "Gebouw 2 - Campus Oost"
     assert (
         infer_building(
@@ -59,14 +59,14 @@ def test_normalize_project_phase_and_buildings() -> None:
 def test_document_metadata_strips_sentinels_and_syncs_buildings() -> None:
     meta = DocumentMetadata(
         source_path="General/05_Uitvoering/Spec.pdf",
-        project="6038.004",
-        building="Blok P - Blok L - Spoed",
+        project="1234.001",
+        building="Blok A - Blok C - West Wing",
         phase="Uitvoering (Execution)",
     )
-    assert meta.project == "06038.004"
+    assert meta.project == "01234.001"
     assert meta.phase == "Uitvoering"
-    assert meta.buildings == ["Blok P", "Blok L", "Spoed"]
-    assert meta.building == "Blok P - Blok L - Spoed"
+    assert meta.buildings == ["Blok A", "Blok C", "West Wing"]
+    assert meta.building == "Blok A - Blok C - West Wing"
 
     unknown = DocumentMetadata(
         source_path="General/a.pdf",
@@ -83,28 +83,28 @@ def test_document_metadata_strips_sentinels_and_syncs_buildings() -> None:
 def test_taxonomy_heuristics_and_false_positive_guards() -> None:
     assert (
         infer_project_id_from_sharepoint_url(
-            "https://ingeniumnv.sharepoint.com/sites/06038004-INT/Shared%20Documents/a.pdf"
+            "https://company.sharepoint.com/sites/12345001-INT/Shared%20Documents/a.pdf"
         )
-        == "06038.004"
+        == "12345.001"
     )
     assert (
         infer_project_id_from_sharepoint_url(
-            "https://company.sharepoint.com/sites/22071002A-INT/Shared%20Documents/General/a.pdf"
+            "https://company.sharepoint.com/sites/12345002A-INT/Shared%20Documents/General/a.pdf"
         )
-        == "22071.002A"
+        == "12345.002A"
     )
     assert (
         infer_project_id_from_sharepoint_url(
-            "https://company.sharepoint.com/sites/24041001B-INT/Shared%20Documents/a.pdf"
+            "https://company.sharepoint.com/sites/67890001B-INT/Shared%20Documents/a.pdf"
         )
-        == "24041.001B"
+        == "67890.001B"
     )
     assert infer_project_id_from_path("General/00_Info/17-341-1883 - Data sheets.pdf") is None
     assert infer_project_id_from_path("General/00_Info/1003-004 lijst IGEG's _001.pdf") is None
-    assert infer_project_id_from_path("PRJ_104_AZ_Sint_Jan/Spec.pdf") == "PRJ_104"
+    assert infer_project_id_from_path("PRJ_104_Campus_Noord/Spec.pdf") == "PRJ_104"
 
     assert infer_building("BLOK\nPEIL\nPLAN NR") is None
-    assert infer_building("BLOK K\nBLOK L") == "Blok K - Blok L"
+    assert infer_building("BLOK B\nBLOK C") == "Blok B - Blok C"
 
     assert infer_phase("General/04_Prijsvraag/ALG/Bestek.pdf") == "Aanbesteding"
     assert infer_phase("General/03_Ontwerp 1/Nota.pdf") == "Definitief Ontwerp"
@@ -113,7 +113,7 @@ def test_taxonomy_heuristics_and_false_positive_guards() -> None:
 
     assert infer_doc_category("Bestek_HVAC.docx") == DocCategory.SPECIFICATION
     assert infer_doc_category("Documentenlijst_HVAC.xlsx") == DocCategory.DOCUMENT_REGISTER
-    assert is_bogus_heading("8000. Brugge") is True
+    assert is_bogus_heading("8000. Stad") is True
     assert is_bogus_heading("3.2 Luchtgroepen") is False
 
 
@@ -132,7 +132,7 @@ def test_parsed_doc_json_roundtrip_and_deterministic_id() -> None:
             )
         ],
         metadata=DocumentMetadata(
-            source_path="General/05_Uitvoering/Spec.pdf", project="06038.004"
+            source_path="General/05_Uitvoering/Spec.pdf", project="12345.001"
         ),
     )
     restored = ParsedDoc.model_validate_json(doc.model_dump_json())

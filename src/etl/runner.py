@@ -2,8 +2,9 @@
 
 import json
 import logging
+import re
 import threading
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -197,6 +198,7 @@ class ETLRunResult:
     discovered_files: int = 0
     processed_files: int = 0
     skipped_unchanged_files: int = 0
+    skipped_archive_files: int = 0
     scanned_empty_files: int = 0
     dropped_noisy_callouts: int = 0
     failed_files: int = 0
@@ -205,6 +207,19 @@ class ETLRunResult:
     limitations_logged: int = 0
     documents: list[ParsedDoc] = field(default_factory=list)
     output_json_paths: list[Path] = field(default_factory=list)
+
+
+def is_archive_path(relative_path: str | Path, archive_names: Iterable[str]) -> bool:
+    """Return True if any parent folder segment matches a configured archive/draft/rejected name."""
+    norm_names = [n.strip().lower() for n in archive_names if n.strip()]
+    if not norm_names:
+        return False
+    patterns = [re.compile(rf"(?<!\w){re.escape(n)}(?!\w)") for n in norm_names]
+    for part in Path(relative_path).parent.parts:
+        part_low = part.strip().lower()
+        if any(p.search(part_low) for p in patterns):
+            return True
+    return False
 
 
 class ETLRunner:
@@ -218,6 +233,7 @@ class ETLRunner:
         manifest_path: str | Path | None = None,
         limitations_report_path: str | Path | None = None,
         drop_noisy_callouts: bool = True,
+        skip_archive_folders: bool | None = None,
     ) -> None:
         settings = get_settings()
         self.markdown_out_dir = (
@@ -231,6 +247,10 @@ class ETLRunner:
             report_path=limitations_report_path or settings.limitations_report_path
         )
         self.drop_noisy_callouts = drop_noisy_callouts
+        self.skip_archive_folders = (
+            settings.skip_archive_folders if skip_archive_folders is None else skip_archive_folders
+        )
+        self.archive_folder_names = settings.archive_folder_names
 
         catalog = (
             ProjectCatalog.from_file(catalog_path)
@@ -426,7 +446,7 @@ class ETLRunner:
         loaded_regs = self.register_index.discover_and_load(root)
         logger.info("Pass 1: indexed %d Document Register entries under %s.", loaded_regs, root)
 
-        supported_files = [
+        all_supported = [
             p
             for p in sorted(root.rglob("*"))
             if p.is_file()
@@ -434,6 +454,15 @@ class ETLRunner:
             and p.suffix.lower() in SUPPORTED_EXTRACTION_EXTENSIONS
         ]
         result = ETLRunResult()
+        if self.skip_archive_folders:
+            supported_files = []
+            for p in all_supported:
+                if is_archive_path(p.relative_to(root), self.archive_folder_names):
+                    result.skipped_archive_files += 1
+                else:
+                    supported_files.append(p)
+        else:
+            supported_files = all_supported
         total = len(supported_files)
         done = 0
         logger.info("Pass 2: processing %d supported local file(s)...", total)
@@ -539,6 +568,21 @@ class ETLRunner:
         if extensions:
             norm_exts = {e.lower() if e.startswith(".") else f".{e.lower()}" for e in extensions}
             remote_items = [item for item in remote_items if item.extension in norm_exts]
+
+        if self.skip_archive_folders:
+            active_items = []
+            for item in remote_items:
+                if is_archive_path(item.relative_path, self.archive_folder_names):
+                    result.skipped_archive_files += 1
+                else:
+                    active_items.append(item)
+            if result.skipped_archive_files:
+                logger.info(
+                    "Skipped %d archive/draft file(s) in %s.",
+                    result.skipped_archive_files,
+                    sp.config.site_slug,
+                )
+            remote_items = active_items
 
         register_items = [
             item for item in remote_items if is_document_register_file(item.relative_path)

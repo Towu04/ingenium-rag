@@ -6,6 +6,7 @@ import os
 import re
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -163,6 +164,7 @@ class SharePointConnector:
             self.session.mount("http://", adapter)
         self._access_token: str | None = None
         self._auth_lock = threading.Lock()
+        self._staging_lock = threading.Lock()
         self._site_id: str | None = None
         self._drive_id: str | None = None
 
@@ -182,6 +184,7 @@ class SharePointConnector:
         child = SharePointConnector(sp_config=site_cfg, session=self.session)
         child._access_token = self._access_token
         child._auth_lock = self._auth_lock
+        child._staging_lock = self._staging_lock
         return child
 
     @classmethod
@@ -350,8 +353,9 @@ class SharePointConnector:
         *,
         supported_only: bool = True,
         folder_prefix: str | None = None,
+        discovery_workers: int = 8,
     ) -> list[RemoteDriveItem]:
-        """Traverse SharePoint drive (or a subfolder) and return remote file metadata."""
+        """Traverse SharePoint drive (or a subfolder) with bounded parallel BFS and return file metadata."""
         logger.info(
             "Connecting to SharePoint %s%s ...", self.config.hostname, self.config.site_path
         )
@@ -370,19 +374,47 @@ class SharePointConnector:
             logger.info("Scanning SharePoint drive '%s' from root...", self.config.drive_name)
 
         collected: list[RemoteDriveItem] = []
-        self._traverse_folder(drive_id, start_url, clean_prefix, collected, supported_only)
+        pending_folders: list[tuple[str, str]] = [(start_url, clean_prefix)]
+        eff_workers = max(1, discovery_workers)
+
+        if eff_workers == 1:
+            while pending_folders:
+                url, parent_rel = pending_folders.pop(0)
+                files, subfolders = self._list_folder_children(
+                    drive_id, url, parent_rel, supported_only
+                )
+                collected.extend(files)
+                pending_folders.extend(subfolders)
+        else:
+            with ThreadPoolExecutor(max_workers=eff_workers) as pool:
+                while pending_folders:
+                    batch = pending_folders
+                    pending_folders = []
+                    futures = [
+                        pool.submit(
+                            self._list_folder_children, drive_id, url, parent_rel, supported_only
+                        )
+                        for url, parent_rel in batch
+                    ]
+                    for fut in as_completed(futures):
+                        files, subfolders = fut.result()
+                        collected.extend(files)
+                        pending_folders.extend(subfolders)
+
         collected.sort(key=lambda item: item.relative_path)
         logger.info("SharePoint discovery complete: %d matching file(s) found.", len(collected))
         return collected
 
-    def _traverse_folder(
+    def _list_folder_children(
         self,
         drive_id: str,
         children_url: str,
         parent_rel_path: str,
-        collected: list[RemoteDriveItem],
         supported_only: bool,
-    ) -> None:
+    ) -> tuple[list[RemoteDriveItem], list[tuple[str, str]]]:
+        """List all pages of a single folder, returning `(files, [(sub_url, sub_rel_path), ...])`."""
+        files: list[RemoteDriveItem] = []
+        subfolders: list[tuple[str, str]] = []
         next_url: str | None = children_url
         while next_url:
             page = self._graph_get(next_url)
@@ -393,20 +425,15 @@ class SharePointConnector:
                     continue
                 if "folder" in raw_item:
                     folder_rel = f"{parent_rel_path}/{name}".strip("/") if parent_rel_path else name
-                    if folder_rel.count("/") <= 1:
-                        logger.debug(
-                            "Scanning folder: %s (%d files found so far)",
-                            folder_rel,
-                            len(collected),
-                        )
                     sub_url = f"{GRAPH_API_BASE_URL}/drives/{drive_id}/items/{item_id}/children"
-                    self._traverse_folder(drive_id, sub_url, folder_rel, collected, supported_only)
+                    subfolders.append((sub_url, folder_rel))
                 elif "file" in raw_item:
                     parsed = self._parse_drive_item(raw_item, fallback_parent=parent_rel_path)
                     if supported_only and parsed.extension not in SUPPORTED_EXTRACTION_EXTENSIONS:
                         continue
-                    collected.append(parsed)
+                    files.append(parsed)
             next_url = page.get("@odata.nextLink")
+        return files, subfolders
 
     @staticmethod
     def _parse_drive_item(raw_item: dict[str, Any], fallback_parent: str = "") -> RemoteDriveItem:
@@ -442,17 +469,27 @@ class SharePointConnector:
     ) -> Path:
         base_staging = Path(staging_dir) if staging_dir is not None else self.config.staging_dir
         local_path = base_staging / Path(target_rel_path or item.relative_path)
-        local_path.parent.mkdir(parents=True, exist_ok=True)
 
+        resp: Any = None
         if item.download_url:
-            resp = self._request_with_retry(
-                item.download_url,
-                target_label=item.relative_path,
-                use_auth=False,
-                stream=True,
-                timeout=120,
-            )
-        else:
+            try:
+                resp = self._request_with_retry(
+                    item.download_url,
+                    target_label=item.relative_path,
+                    use_auth=False,
+                    stream=True,
+                    timeout=120,
+                )
+            except SharePointAuthError as err:
+                if err.status_code != 401:
+                    raise
+                logger.info(
+                    "Pre-signed download URL expired (401) for '%s'; falling back to Graph /content.",
+                    item.relative_path,
+                )
+                resp = None
+
+        if resp is None:
             _, drive_id = self.resolve_site_and_drive()
             content_url = f"{GRAPH_API_BASE_URL}/drives/{drive_id}/items/{item.item_id}/content"
             resp = self._request_with_retry(
@@ -463,10 +500,15 @@ class SharePointConnector:
                 timeout=120,
             )
 
-        with local_path.open("wb") as fh:
+        with self._staging_lock:
+            local_path.parent.mkdir(parents=True, exist_ok=True)
+            fh = local_path.open("wb")
+        try:
             for chunk in resp.iter_content(chunk_size=65536):
                 if chunk:
                     fh.write(chunk)
+        finally:
+            fh.close()
         return local_path
 
     def cleanup_local_file(
@@ -474,23 +516,24 @@ class SharePointConnector:
         local_file_path: str | Path,
         staging_dir: str | Path | None = None,
     ) -> None:
-        """Delete a downloaded raw binary immediately and prune empty staging directories."""
+        """Delete a downloaded raw binary immediately and prune empty staging directories safely."""
         path = Path(local_file_path)
         base_staging = (
             Path(staging_dir).resolve()
             if staging_dir is not None
             else self.config.staging_dir.resolve()
         )
-        if path.exists() and path.is_file():
-            path.unlink(missing_ok=True)
+        with self._staging_lock:
+            if path.exists() and path.is_file():
+                path.unlink(missing_ok=True)
 
-        parent = path.parent.resolve()
-        while parent != base_staging and base_staging in parent.parents:
-            try:
-                if parent.exists() and not any(parent.iterdir()):
-                    parent.rmdir()
-                    parent = parent.parent
-                else:
+            parent = path.parent.resolve()
+            while parent != base_staging and base_staging in parent.parents:
+                try:
+                    if parent.exists() and not any(parent.iterdir()):
+                        parent.rmdir()
+                        parent = parent.parent
+                    else:
+                        break
+                except OSError:
                     break
-            except OSError:
-                break
