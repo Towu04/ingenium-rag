@@ -1,4 +1,5 @@
 .env
+credentials.txt
 data/
 __pycache__/
 *.py[cod]
@@ -9,7 +10,6 @@ __pycache__/
 dist/
 build/
 *.egg-info/
-
 
 ~$*.xlsx
 ~$*
@@ -23,3 +23,5 @@ groundtruth.json
 placeholder_testquestions_contexts.json
 
 deploy_on_Azure.bicep
+.DS_Store
+.DS_Store
