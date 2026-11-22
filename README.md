@@ -89,9 +89,12 @@ make check                      # ruff lint + full offline pytest & architecture
 Drop a shared `qdrant_poc/` folder from your team into `data/qdrant_poc/` and query immediately (no SharePoint credentials required):
 ```bash
 make inspect
+make demo                       # slide-style stakeholder walkthrough + live interactive Q&A
+make demo LIVE=1                # jump straight into interactive Q&A
 make query Q="Wat zijn de eisen voor brandwerende deuren?" DEBUG=1
 make api                        # starts FastAPI on http://127.0.0.1:8000
 ```
+*(Curated demo walkthrough scenarios are loaded from the gitignored `data/demo_scenarios.json`, or pass `SCENARIOS=path/to/scenarios.json` / `AUTO=1` for non-stop playback.)*
 
 **Option B — Run Multi-Site Ingestion Yourself:**
 Create a gitignored `data/sharepoint_sites.tsv` file (tab-separated, blank URLs skipped, duplicate site URLs deduplicated):
