@@ -18,6 +18,8 @@ from scripts._cli import (
     clean_preview,
     ensure_qdrant_ready,
     err_console,
+    format_duration,
+    format_page_ranges,
     out_console,
     run_cli,
     setup_cli_logging,
@@ -36,35 +38,51 @@ def _fmt_filters(filters: dict[str, str]) -> str:
     return ", ".join(f"{k}={v}" for k, v in filters.items()) if filters else "none"
 
 
+def _fmt_score(score: float) -> str:
+    if score >= 0.7:
+        return f"[bold green]{score:.4f}[/bold green]"
+    if score >= 0.3:
+        return f"[yellow]{score:.4f}[/yellow]"
+    return f"[dim]{score:.4f}[/dim]"
+
+
 def _render_sources_table(trace: RetrievalTrace, *, title: str = "Sources & Citations") -> Table:
     table = Table(title=title, show_lines=False, header_style="bold cyan")
     table.add_column("#", justify="right", style="bold", width=3)
-    table.add_column("Score", justify="right", style="green", width=7)
-    table.add_column("File", style="white")
-    table.add_column("Pages", justify="right", style="dim", width=9)
-    table.add_column("Section", style="yellow")
-    table.add_column("Building / Phase", style="magenta")
+    table.add_column("Score", justify="right", width=7)
+    table.add_column("File", style="white", no_wrap=True, overflow="ellipsis", max_width=28)
+    table.add_column("Pages", justify="right", style="dim", no_wrap=True)
+    table.add_column("Section", style="yellow", no_wrap=True, overflow="ellipsis", max_width=20)
+    table.add_column(
+        "Building / Phase", style="magenta", no_wrap=True, overflow="ellipsis", max_width=18
+    )
 
     for idx, res in enumerate(trace.results, start=1):
         p = res.parent_chunk
         m = p.metadata
         file_name = Path(m.source_path).name if m.source_path else p.document_id
-        pages = ",".join(map(str, p.page_numbers)) if p.page_numbers else "-"
+        pages = format_page_ranges(p.page_numbers)
         section = clean_preview(p.section_header or "-", max_chars=48)
-        bldg = ", ".join(m.buildings) if m.buildings else "-"
-        phase = m.phase or "-"
+        bldg = ", ".join(m.buildings) if m.buildings else ""
+        phase = m.phase or ""
+        if bldg and phase:
+            bp = f"{bldg} / {phase}"
+        elif bldg or phase:
+            bp = bldg or phase
+        else:
+            bp = "[dim]—[/dim]"
         table.add_row(
             str(idx),
-            f"{res.score:.4f}",
+            _fmt_score(res.score),
             file_name,
             pages,
             section,
-            f"{bldg} / {phase}",
+            bp,
         )
     return table
 
 
-def _render_debug_trace(trace: RetrievalTrace) -> None:
+def _render_debug_trace(trace: RetrievalTrace, *, full: bool = False) -> None:
     summary = Table(title="Retrieval Debug Trace", show_header=False, box=None, padding=(0, 2))
     summary.add_column("Key", style="bold cyan")
     summary.add_column("Value")
@@ -91,6 +109,7 @@ def _render_debug_trace(trace: RetrievalTrace) -> None:
     out_console.print()
     out_console.print(_render_sources_table(trace, title="Ranked Results"))
 
+    parent_limit = 800
     for idx, res in enumerate(trace.results, start=1):
         p = res.parent_chunk
         m = p.metadata
@@ -101,7 +120,7 @@ def _render_debug_trace(trace: RetrievalTrace) -> None:
         )
         meta_line = (
             f"project={m.project or '-'} | buildings={', '.join(m.buildings) or '-'} | "
-            f"phase={m.phase or '-'} | pages={p.page_numbers or '-'} | "
+            f"phase={m.phase or '-'} | pages={format_page_ranges(p.page_numbers)} | "
             f"section={p.section_header or '-'}"
         )
         child_block = (
@@ -109,17 +128,27 @@ def _render_debug_trace(trace: RetrievalTrace) -> None:
             if res.matched_child_text
             else "<not stored in payload; re-index to populate child text>"
         )
+        if full or len(p.text) <= parent_limit:
+            parent_block = p.text
+        else:
+            extra = len(p.text) - parent_limit
+            parent_block = (
+                f"{clean_preview(p.text, max_chars=parent_limit)}\n"
+                f"[dim](+{extra:,} chars hidden — pass --full to expand)[/dim]"
+            )
         body = (
             f"[dim]{meta_line}[/dim]\n\n"
             f"[bold cyan]Matched child ({res.matched_child_id}):[/bold cyan]\n{child_block}\n\n"
-            f"[bold cyan]Full parent chunk:[/bold cyan]\n{p.text}"
+            f"[bold cyan]Parent chunk ({len(p.text):,} chars):[/bold cyan]\n{parent_block}"
         )
+        out_console.print()
         out_console.print(Panel(body, title=header, border_style="blue"))
 
 
 def _render_answer(trace: RetrievalTrace, answer: Answer) -> None:
     out_console.print(Panel(answer.text, title="Answer", border_style="cyan"))
     if trace.results:
+        out_console.print()
         out_console.print(_render_sources_table(trace))
 
 
@@ -177,7 +206,12 @@ def _main() -> None:
     parser.add_argument(
         "--debug",
         action="store_true",
-        help="Show filters, funnel counts, RRF + rerank scores, matched child, and full parent.",
+        help="Show filters, funnel counts, RRF + rerank scores, matched child, and parent preview.",
+    )
+    parser.add_argument(
+        "--full",
+        action="store_true",
+        help="Show full untruncated parent chunks in --debug mode.",
     )
     add_common_args(parser, default_qdrant_path=settings.qdrant_path)
     args = parser.parse_args()
@@ -246,7 +280,7 @@ def _main() -> None:
 
     elapsed = time.perf_counter() - t0
     if not args.quiet and not args.as_json:
-        err_console.print(f"[dim]Completed in {elapsed:.1f}s.[/dim]")
+        err_console.print(f"[dim]Completed in {format_duration(elapsed)}.[/dim]")
 
     if args.as_json:
         payload: dict[str, object] = {"trace": trace.model_dump(mode="json")}
@@ -257,7 +291,7 @@ def _main() -> None:
         return
 
     if args.debug:
-        _render_debug_trace(trace)
+        _render_debug_trace(trace, full=args.full)
         if answer is not None:
             out_console.print()
             out_console.print(Panel(answer.text, title="Answer", border_style="cyan"))

@@ -10,13 +10,25 @@ Proof-of-Concept **Parent-Child Hybrid RAG** pipeline for engineering and constr
 
 ```mermaid
 flowchart LR
-    SRC["SharePoint / Local Files"] --> ETL["Stage 1: ETL<br/>(src/etl/)"]
-    ETL -->|"ParsedDoc"| CHK["Stage 2: Chunker<br/>(src/chunking/)"]
-    CHK -->|"ParentChunk[], ChildChunk[]"| EMB["Stage 3: BGE-M3 Embedder<br/>(src/embedding/)"]
-    EMB -->|"EmbeddedChildBatch"| DB["Stage 4: Local Qdrant<br/>(src/storage/)"]
-    DB -->|"SearchResult[] (RRF)"| RET["Stage 5: Filter + Reranker<br/>(src/retrieval/)"]
-    RET -->|"Top-k SearchResult[]"| GEN["Stage 6: Grounded Generator<br/>(src/generation/)"]
-    GEN -->|"Answer + Citation[]"| OUT["CLI / FastAPI / Eval"]
+    subgraph INGEST["Offline Ingestion (make ingest)"]
+        direction LR
+        SRC["SharePoint / Local Files"] --> ETL["Stage 1: ETL<br/>(src/etl/)"]
+        ETL -->|"ParsedDoc"| CHK["Stage 2: Chunker<br/>(src/chunking/)"]
+        CHK -->|"ParentChunk[], ChildChunk[]"| EMB["Stage 3: BGE-M3 Embedder<br/>(src/embedding/)"]
+    end
+
+    DB[("Stage 4: Local Qdrant<br/>documents | parents | children<br/>(Hybrid RRF)")]
+
+    subgraph QUERY["Online Query (make query / make api)"]
+        direction LR
+        UQ["User Question<br/>+ Metadata Filters"] --> QENC["BGE-M3 Query Encoder<br/>+ Auto/Explicit Filter"]
+        QENC --> RET["Stage 5: Hybrid Search<br/>+ BGE-M3 Reranker"]
+        RET -->|"Top-k SearchResult[]"| GEN["Stage 6: Grounded Generator<br/>(src/generation/)"]
+        GEN -->|"Answer + Citation[]"| OUT["CLI / FastAPI / Eval"]
+    end
+
+    EMB -->|"EmbeddedChildBatch"| DB
+    DB -->|"SearchResult[] (RRF)"| RET
 ```
 
 ### Pipes-and-Filters Stage Isolation
@@ -26,8 +38,8 @@ Every stage under `src/` is isolated and communicates exclusively through canoni
 | :--- | :--- |
 | `src/domain.py` | Zero-dependency Pydantic contracts (`ParsedDoc`, `ParentChunk`, `ChildChunk`, `SearchResult`, `RetrievalTrace`, `Citation`, `Answer`) and generic metadata normalization. |
 | `src/config.py` | Centralized `Settings` (`pydantic-settings` + `.env`), paths, thresholds, `detect_device()` (`cuda > mps > cpu`), and `configure_logging()`. |
-| `src/etl/` | PDF/DOCX/XLSX extractors, SharePoint Graph streaming connector, 3-layer metadata resolution (Document Register → Project Catalog → SharePoint URL / path & cover-page heuristics), and OCR/noise quality audit. |
-| `src/chunking/` | Token-accurate `ParentChildChunker` (`BAAI/bge-m3` tokenizer) with orphan-heading packing, Markdown table header repetition across splits, and oversized row sub-splitting. |
+| `src/etl/` | PDF/DOCX/XLSX extractors (with early-stop Excel row cap), SharePoint Graph streaming connector, 3-layer metadata resolution (Document Register → Project Catalog → SharePoint URL / path & cover-page heuristics), and OCR/noise quality audit. |
+| `src/chunking/` | Table-aware `ParentChildChunker` (fast pure-Python `approx_token_len` with lazy tokenizer) featuring orphan-heading packing, wide-table header guards, oversized row sub-splitting, and per-doc child chunk caps. |
 | `src/embedding/` | `BGEM3Embedder` generating 1024-dim dense float32 vectors and sparse lexical weights in a single forward pass (FP16 on CUDA/MPS). |
 | `src/storage/` | `LocalHybridRepository` over disk-persistent Qdrant (`documents`, `parent_chunks`, `child_chunks`) with native Reciprocal Rank Fusion (RRF), multi-building filtering, and `content_hash` delta sync. |
 | `src/retrieval/` | Metadata filter extraction (`query_filter.py` with dynamic `known_buildings` matching), `Searcher`, and `BGEM3Reranker` (`BAAI/bge-reranker-v2-m3`) with finite-score & optional `min_score` guards. |
@@ -94,7 +106,35 @@ make ingest-dry-run MODE=sharepoint SITES_FILE=data/sharepoint_sites.tsv
 make ingest MODE=sharepoint SITES_FILE=data/sharepoint_sites.tsv
 ```
 
-### 4. Plugging in a Local LLM (Ollama / vLLM)
+### 4. Sample CLI Output
+
+```text
+$ make inspect
+        Qdrant Index Overview
+          (data/qdrant_poc)
+┏━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━┓
+┃ Collection    ┃ Points ┃ Avg / Doc ┃
+┡━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━┩
+│ documents     │     89 │         - │
+│ parent_chunks │  1,590 │      17.9 │
+│ child_chunks  │  6,583 │      74.0 │
+└───────────────┴────────┴───────────┘
+
+$ make query Q="Wat zijn de eisen voor brandwerende deuren?" BUILDING="Blok A"
+╭────────────────────────── Answer ──────────────────────────╮
+│ Brandwerende deuren in Blok A dienen te voldoen aan EI1 30 │
+│ (of EI1 60 voor technische lokalen) volgens [1].           │
+╰────────────────────────────────────────────────────────────╯
+
+                    Sources & Citations
+┏━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━┓
+┃ # ┃  Score ┃ File                   ┃ Pages ┃ Building     ┃
+┡━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━┩
+│ 1 │ 0.9412 │ 12345.001_Bestek.pdf   │ 12-14 │ Blok A       │
+└───┴────────┴────────────────────────┴───────┴──────────────┘
+```
+
+### 5. Plugging in a Local LLM (Ollama / vLLM)
 By default, `make query` and `make api` run with the deterministic `ExtractiveStubLLM`. To enable full LLM synthesis, uncomment in `.env`:
 ```dotenv
 LLM_BASE_URL=http://localhost:11434/v1
